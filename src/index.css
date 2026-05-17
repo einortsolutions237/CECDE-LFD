@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --color-primary: #6C3BFF;
+  --color-primary-foreground: #FFFFFF;
+  --color-primary-hover: #5B2CE0;
+  --color-secondary: #16A34A;
+  --color-secondary-foreground: #FFFFFF;
+  --color-success: #22C55E;
+  --color-destructive: #EF4444;
+  --color-destructive-foreground: #FFFFFF;
+
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-fg);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-fg);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-fg);
+  --color-sidebar-muted: var(--sidebar-muted);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+}
+
+@layer base {
+  :root {
+    --bg: #F8FAFC;
+    --fg: #0F172A;
+    --card: #FFFFFF;
+    --card-fg: #0F172A;
+    --border: #E2E8F0;
+    --muted: #F1F5F9;
+    --muted-fg: #64748B;
+    --sidebar: #FFFFFF;
+    --sidebar-fg: #0F172A;
+    --sidebar-muted: #64748B;
+  }
+
+  .dark {
+    --bg: #0A0A0A;
+    --fg: #FAFAFA;
+    --card: #121212;
+    --card-fg: #FAFAFA;
+    --border: #262626;
+    --muted: #1F1F1F;
+    --muted-fg: #A3A3A3;
+    --sidebar: #0A0A0A;
+    --sidebar-fg: #FAFAFA;
+    --sidebar-muted: #A3A3A3;
+  }
+}
+
+@layer components {
+  /* Common Buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium hover:opacity-90 transition-all shadow-sm focus:ring-2 focus:ring-primary/50 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-card border border-border text-foreground rounded-xl text-sm font-medium hover:bg-muted transition-all shadow-sm focus:ring-2 focus:ring-border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 bg-transparent border border-destructive text-destructive rounded-xl text-sm font-medium hover:bg-destructive/10 transition-all focus:ring-2 focus:ring-destructive/50 focus:outline-none disabled:opacity-50;
+  }
+  
+  /* Form Inputs */
+  .input-field {
+    @apply w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all text-foreground shadow-sm placeholder:text-muted-foreground;
+  }
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}

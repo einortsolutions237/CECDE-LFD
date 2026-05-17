@@ -1,0 +1,86 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile document",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "referralCode": { "type": "string" },
+        "sponsorId": { "type": "string" },
+        "currentRank": { "type": "string" },
+        "walletBalance": { "type": "number" },
+        "role": { "type": "string", "enum": ["super_admin", "admin", "member"] },
+        "accountStatus": { "type": "string", "enum": ["active", "suspended"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["fullName", "email", "referralCode", "role", "accountStatus", "createdAt"]
+    },
+    "Network": {
+      "title": "Network Stats",
+      "description": "Network statistics for a user",
+      "type": "object",
+      "properties": {
+        "sponsorId": { "type": "string" },
+        "directReferrals": { "type": "array", "items": { "type": "string" } },
+        "totalDownlineCount": { "type": "number" },
+        "activeDownlineCount": { "type": "number" },
+        "levelDepth": { "type": "number" }
+      },
+      "required": ["totalDownlineCount", "activeDownlineCount", "levelDepth"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "System notifications for users",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "title", "message", "isRead", "createdAt"]
+    },
+    "Team": {
+      "title": "Team",
+      "description": "Team document assigning a leader to a group of users",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "teamLeaderId": { "type": "string" },
+        "teamLeaderName": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "totalMembers": { "type": "number" },
+        "activeMembers": { "type": "number" },
+        "directReferrals": { "type": "number" },
+        "indirectReferrals": { "type": "number" },
+        "leaderPerformanceScore": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["name", "teamLeaderId", "teamLeaderName", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile collection"
+    },
+    "/teams/{teamId}": {
+      "schema": { "$ref": "#/entities/Team" },
+      "description": "Teams collection"
+    },
+    "/network/{userId}": {
+      "schema": { "$ref": "#/entities/Network" },
+      "description": "Network stats collection"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Notifications collection"
+    }
+  }
+}
