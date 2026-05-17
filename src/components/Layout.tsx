@@ -29,8 +29,8 @@ export const Layout = () => {
   ];
 
   return (
-    <div className="h-screen bg-background flex flex-col md:flex-row overflow-hidden">
-      <div className="md:hidden flex items-center justify-between bg-card p-6 border-b border-border">
+    <div className="h-[100dvh] w-full bg-background flex flex-col md:flex-row overflow-hidden">
+      <div className="md:hidden fixed top-0 w-full z-50 flex items-center justify-between bg-card p-4 sm:p-6 border-b border-border shadow-sm shrink-0">
         <div className="flex items-center gap-3">
           <img src="https://i.imgur.com/Adh2bcY.png" alt="Logo" className="w-8 h-8 object-contain" />
           <div className="text-xl font-bold text-primary">CECDE</div>
@@ -40,11 +40,14 @@ export const Layout = () => {
         </button>
       </div>
 
+      {/* Spacer for Mobile Header */}
+      <div className="md:hidden h-[73px] sm:h-[81px] w-full shrink-0"></div>
+
       <aside className={cn(
         "bg-sidebar w-full md:w-[260px] flex-shrink-0 transition-transform duration-300 ease-in-out md:static fixed z-20 h-full flex flex-col text-sidebar-foreground border-r border-border shadow-xl md:shadow-none",
         sidebarOpen ? "left-0" : "-left-full"
       )}>
-        <div className="p-6 hidden md:flex flex-col items-center gap-4 border-b border-border">
+        <div className="p-6 hidden md:flex flex-col items-center gap-6 border-b border-border">
           <img src="https://i.imgur.com/Adh2bcY.png" alt="Logo" className="w-12 h-12 object-contain" />
           <div className="text-xl font-bold tracking-tight text-sidebar-foreground">
             <span className="text-primary">CECDE</span>
@@ -104,8 +107,8 @@ export const Layout = () => {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="h-[72px] bg-card border-b border-border flex items-center justify-between px-8 shrink-0 shadow-sm z-10">
+      <main className="flex-1 flex flex-col h-full overflow-hidden min-w-0 min-h-0">
+        <header className="hidden md:flex h-[72px] bg-card border-b border-border items-center justify-between px-8 shrink-0 shadow-sm z-10">
           <div className="flex items-center gap-2 text-[14px] text-muted-foreground">
             <span>Pages</span> / <span className="text-foreground font-medium capitalize">{location.pathname.split('/')[1] || 'Dashboard'}</span>
           </div>

@@ -184,32 +184,32 @@ export default function TeamMembers() {
               </h2>
             </div>
             
-            <div className="overflow-x-auto">
+            <div className="table-scroll-container">
               {teamMembers.length > 0 ? (
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border tracking-wider">
+                <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
+                  <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border tracking-wider whitespace-nowrap">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Name & Email</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Rank</th>
-                      <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Referrals</th>
-                      <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Status</th>
+                      <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Name & Email</th>
+                      <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Rank</th>
+                      <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Referrals</th>
+                      <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
                     {teamMembers.map(member => (
                       <tr key={member.id} className="hover:bg-muted/50 transition-colors">
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                           <div className="font-bold text-foreground">{member.fullName || 'Unknown'}</div>
                           <div className="text-xs text-muted-foreground">{member.email}</div>
                           <div className="text-xs text-muted-foreground mt-1">Ref Code: <span className="font-mono text-primary">{member.referralCode}</span></div>
                         </td>
-                        <td className="px-6 py-4 font-medium text-primary">
+                        <td className="px-4 py-3 md:px-6 md:py-4 font-medium text-primary whitespace-nowrap">
                           {member.currentRank || 'Unranked'}
                         </td>
-                        <td className="px-6 py-4 text-center font-bold">
+                        <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
                           {member.calculatedDirectReferrals || 0}
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-4 py-3 md:px-6 md:py-4 text-center whitespace-nowrap">
                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${member.accountStatus === 'active' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
                             {member.accountStatus || 'Pending'}
                           </span>

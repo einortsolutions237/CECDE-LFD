@@ -126,27 +126,27 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
         </div>
 
         <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <div className="table-scroll-container">
+            <table className="w-full text-left min-w-[700px] md:min-w-full">
               <thead>
                 <tr className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
-                  <th className="px-6 py-4 font-semibold">Rank</th>
-                  <th className="px-6 py-4 font-semibold">Team Leader</th>
-                  <th className="px-6 py-4 font-semibold text-center">Total Members</th>
-                  <th className="px-6 py-4 font-semibold text-center">Direct Referrals</th>
-                  <th className="px-6 py-4 font-semibold text-center">Indirect Referrals</th>
-                  <th className="px-6 py-4 font-semibold text-right">Performance Score</th>
+                  <th className="px-4 py-3 md:px-6 md:py-4 font-semibold whitespace-nowrap">Rank</th>
+                  <th className="px-4 py-3 md:px-6 md:py-4 font-semibold whitespace-nowrap">Team Leader</th>
+                  <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Total Members</th>
+                  <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Direct Referrals</th>
+                  <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Indirect Referrals</th>
+                  <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-right whitespace-nowrap">Performance Score</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {leaders.slice(3).map((leader, index) => (
                   <tr key={leader.id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                       <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted text-muted-foreground font-bold">
                         {index + 4}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
                           {(leader.teamLeaderName || 'U')[0]}
@@ -157,16 +157,16 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center font-bold">
+                    <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
                        {(leader.calculatedTotalDownline !== undefined ? leader.calculatedTotalDownline : leader.totalDownlineCount || 0) + 1}
                     </td>
-                    <td className="px-6 py-4 text-center font-bold">
+                    <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
                        {leader.calculatedDirectReferrals !== undefined ? leader.calculatedDirectReferrals : (leader.directReferralsCount || leader.directReferrals || 0)}
                     </td>
-                    <td className="px-6 py-4 text-center font-bold">
+                    <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
                        {leader.calculatedTotalDownline !== undefined ? Math.max(0, leader.calculatedTotalDownline - (leader.calculatedDirectReferrals || 0)) : (leader.totalDownlineCount ? Math.max(0, leader.totalDownlineCount - (leader.directReferralsCount || leader.directReferrals || 0)) : 0)}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-4 py-3 md:px-6 md:py-4 text-right whitespace-nowrap">
                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-bold">
                          {leader.leaderPerformanceScore || 0} pts
                        </span>
@@ -175,7 +175,7 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
                 ))}
                 {leaders.length <= 3 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground whitespace-nowrap">
                       No more teams found.
                     </td>
                   </tr>

@@ -175,15 +175,15 @@ export default function AdminTeams() {
            </h2>
         </div>
         
-        <div className="overflow-x-auto">
-           <table className="w-full text-sm text-left">
-             <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border tracking-wider">
+        <div className="table-scroll-container">
+           <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
+             <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border tracking-wider whitespace-nowrap">
                <tr>
-                 <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Team Name</th>
-                 <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Leader Name</th>
-                 <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Score</th>
-                 <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Members</th>
-                 <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Status</th>
+                 <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Team Name</th>
+                 <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Leader Name</th>
+                 <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Score</th>
+                 <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Members</th>
+                 <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Status</th>
                </tr>
              </thead>
              <tbody className="divide-y divide-border">
@@ -191,23 +191,23 @@ export default function AdminTeams() {
                   const liveStats = getLiveTeamStats(team);
                   return (
                   <tr key={team.id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                       <div className="font-bold text-foreground">{team.name}</div>
                       <div className="text-xs text-muted-foreground">{team.description || 'No description'}</div>
                     </td>
-                    <td className="px-6 py-4 font-medium text-foreground flex items-center gap-3">
+                    <td className="px-4 py-3 md:px-6 md:py-4 font-medium text-foreground flex items-center gap-3 whitespace-nowrap">
                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold uppercase shrink-0">
                          {(team.teamLeaderName || 'U').charAt(0)}
                        </div>
                        {team.teamLeaderName || 'Unknown Leader'}
                     </td>
-                    <td className="px-6 py-4 text-center font-bold text-primary">
+                    <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold text-primary whitespace-nowrap">
                        {liveStats.score}
                     </td>
-                    <td className="px-6 py-4 text-center font-bold">
+                    <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
                        {liveStats.totalMembers}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 py-3 md:px-6 md:py-4 text-center whitespace-nowrap">
                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${team.status === 'active' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
                          {team.status || 'Active'}
                        </span>
@@ -215,7 +215,7 @@ export default function AdminTeams() {
                   </tr>
                 )}) : (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">
                       No teams found. Create your first team!
                     </td>
                   </tr>

@@ -367,26 +367,26 @@ export default function AdminUsers() {
           </div>
         </div>
         
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border">
+        <div className="table-scroll-container">
+          <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
+            <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border whitespace-nowrap">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">User</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Ref Code</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Sponsor</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Rank</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Role</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Join Date</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Actions</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">User</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Ref Code</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Sponsor</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Rank</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Role</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Status</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Join Date</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
-                 <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground">Loading users...</td></tr>
+                 <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground whitespace-nowrap">Loading users...</td></tr>
               ) : users.filter(u => u.email.includes(searchTerm.toLowerCase()) || u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || (u.referralCode || '').toLowerCase().includes(searchTerm.toLowerCase())).map(user => (
                 <tr key={user.id} className="hover:bg-muted/50 transition-colors">
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase">
                         {(user.fullName || 'U').charAt(0)}
@@ -397,14 +397,14 @@ export default function AdminUsers() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-mono text-xs font-bold text-primary">{user.referralCode || 'NONE'}</td>
-                  <td className="px-6 py-4 text-muted-foreground font-medium">{user.sponsorReferralCode || user.sponsorId || 'SYSTEM'}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 md:px-6 md:py-4 font-mono text-xs font-bold text-primary whitespace-nowrap">{user.referralCode || 'NONE'}</td>
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-muted-foreground font-medium whitespace-nowrap">{user.sponsorReferralCode || user.sponsorId || 'SYSTEM'}</td>
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
                       {user.currentRank || 'Bronze'}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     {isSuperAdmin && user.id !== userData?.uid ? (
                       <select 
                          value={
@@ -432,7 +432,7 @@ export default function AdminUsers() {
                       )
                     )}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     {user.accountStatus === 'active' || !user.accountStatus ? (
                       <span className="text-success font-medium flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-success"></span>
@@ -445,10 +445,10 @@ export default function AdminUsers() {
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-muted-foreground whitespace-nowrap">
                     {user.createdAt ? new Date(user.createdAt.toDate ? user.createdAt.toDate() : user.createdAt).toLocaleDateString() : 'Unknown'}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     <div className="flex items-center justify-end gap-2">
                       <button 
                         onClick={() => handleUpdateReferralCode(user.email, user.id)}

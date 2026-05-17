@@ -145,42 +145,42 @@ export default function Rankings() {
               <div className="p-6 border-b border-border flex items-center justify-between">
                  <h2 className="text-xl font-semibold tracking-tight text-foreground">Global Individual Leaderboard</h2>
               </div>
-              <div className="overflow-x-auto">
-                 <table className="w-full text-sm text-left">
-                   <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border">
+              <div className="table-scroll-container">
+                 <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
+                   <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border whitespace-nowrap">
                      <tr>
-                       <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Pos</th>
-                       <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">User</th>
-                       <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Rank</th>
-                       <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Directs</th>
-                       <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Team Size</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Pos</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">User</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Rank</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Directs</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Team Size</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-border">
                       {loading ? (
                         <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">Loading leaderboard...</td>
+                          <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">Loading leaderboard...</td>
                         </tr>
                       ) : leaderboard.length > 0 ? leaderboard.map((user, pos) => (
                         <tr key={user.id} className="hover:bg-muted/50 transition-colors">
-                          <td className="px-6 py-4 font-bold text-muted-foreground">#{pos + 1}</td>
-                          <td className="px-6 py-4 font-medium text-foreground flex items-center gap-3">
+                          <td className="px-4 py-3 md:px-6 md:py-4 font-bold text-muted-foreground whitespace-nowrap">#{pos + 1}</td>
+                          <td className="px-4 py-3 md:px-6 md:py-4 font-medium text-foreground flex items-center gap-3 whitespace-nowrap">
                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs shrink-0 font-bold uppercase">
                                {(user.fullName || 'U').charAt(0)}
                              </div>
                              {user.fullName || 'Member'}
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-500 border border-blue-500/20">
                                {user.currentRank || 'Member'}
                              </span>
                           </td>
-                          <td className="px-6 py-4 font-medium">{user.calculatedDirectReferrals || 0}</td>
-                          <td className="px-6 py-4 font-medium">{user.calculatedTotalDownline || 0}</td>
+                          <td className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">{user.calculatedDirectReferrals || 0}</td>
+                          <td className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">{user.calculatedTotalDownline || 0}</td>
                         </tr>
                       )) : (
                         <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">No data available for leaderboard.</td>
+                          <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">No data available for leaderboard.</td>
                         </tr>
                       )}
                    </tbody>

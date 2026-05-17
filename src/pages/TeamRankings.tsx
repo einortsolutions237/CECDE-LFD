@@ -87,28 +87,28 @@ export default function TeamRankings({ inTab = false }: { inTab?: boolean }) {
              Team Members
            </h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+        <div className="table-scroll-container">
+          <table className="w-full text-left min-w-[700px] md:min-w-full">
             <thead>
               <tr className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
-                <th className="px-6 py-4 font-semibold">Position</th>
-                <th className="px-6 py-4 font-semibold">Member Name</th>
-                <th className="px-6 py-4 font-semibold text-center">Rank Badge</th>
-                <th className="px-6 py-4 font-semibold text-center">Directs</th>
-                <th className="px-6 py-4 font-semibold text-center">Status</th>
-                <th className="px-6 py-4 font-semibold text-right">Contribution Score</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold whitespace-nowrap">Position</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold whitespace-nowrap">Member Name</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Rank Badge</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Directs</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Status</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-right whitespace-nowrap">Contribution Score</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {members.map((member, index) => (
                 <tr key={member.id} className={`hover:bg-muted/30 transition-colors ${member.id === userData?.uid ? 'bg-primary/5' : ''}`}>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     {index === 0 && <Medal className="w-6 h-6 text-yellow-400" />}
                     {index === 1 && <Medal className="w-6 h-6 text-slate-400" />}
                     {index === 2 && <Medal className="w-6 h-6 text-amber-600" />}
                     {index > 2 && <span className="font-bold text-muted-foreground ml-2">#{index + 1}</span>}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
                         {(member.fullName || member.email || 'U')[0]}
@@ -121,18 +121,18 @@ export default function TeamRankings({ inTab = false }: { inTab?: boolean }) {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-center whitespace-nowrap">
                     <span className="px-2 py-1 bg-muted rounded-lg text-xs font-semibold uppercase">{member.currentRank || 'Member'}</span>
                   </td>
-                  <td className="px-6 py-4 text-center font-bold">
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
                     {member.directReferralsCount || 0}
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-center whitespace-nowrap">
                     <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${member.activityState === 'active' ? 'bg-success/10 text-success' : 'bg-purple-500/10 text-purple-500'}`}>
                       {member.activityState === 'active' ? 'Active' : 'Dormant'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-right whitespace-nowrap">
                     <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-bold">
                       {member.contributionScore || 0} pts
                     </span>
@@ -141,7 +141,7 @@ export default function TeamRankings({ inTab = false }: { inTab?: boolean }) {
               ))}
               {members.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground whitespace-nowrap">
                     You are not part of any team.
                   </td>
                 </tr>

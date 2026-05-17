@@ -594,19 +594,19 @@ export default function NetworkTree() {
             )}
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border">
+        <div className="table-scroll-container">
+          <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
+            <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border whitespace-nowrap">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">User</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Rank</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Sponsor Code</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Direct Referrals</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Activity State</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Total Downline</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Join Date</th>
-                <th className="px-6 py-4"></th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">User</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Rank</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Sponsor Code</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Direct Referrals</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Activity State</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Total Downline</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Status</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Join Date</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -615,7 +615,7 @@ export default function NetworkTree() {
                 .filter(m => (m.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) || (m.referralCode || '').toLowerCase().includes(searchQuery.toLowerCase()))
                 .map(member => (
                 <tr key={member.id} className="hover:bg-muted/50 transition-colors">
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
                         {(member.fullName || 'U').charAt(0)}
@@ -623,14 +623,14 @@ export default function NetworkTree() {
                       <span className="font-semibold text-foreground">{member.fullName}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
                       {member.currentRank || 'Member'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-muted-foreground">{member.sponsorReferralCode || member.sponsorId}</td>
-                  <td className="px-6 py-4 text-center font-semibold">{member.calculatedDirectReferrals || 0}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-muted-foreground whitespace-nowrap">{member.sponsorReferralCode || member.sponsorId}</td>
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-center font-semibold whitespace-nowrap">{member.calculatedDirectReferrals || 0}</td>
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     {member.activityState === 'active' ? (
                       <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-success/10 text-success border border-success/20 w-fit whitespace-nowrap">
                         Active
@@ -641,8 +641,8 @@ export default function NetworkTree() {
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-center font-semibold">{member.totalDownlineCount || 0}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-center font-semibold whitespace-nowrap">{member.totalDownlineCount || 0}</td>
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     {member.accountStatus === 'active' ? (
                       <span className="text-success font-medium flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-success"></span>
@@ -655,10 +655,10 @@ export default function NetworkTree() {
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-muted-foreground whitespace-nowrap">
                     {new Date(member.timestamp).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-right whitespace-nowrap">
                     <button className="p-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors">
                       <MoreHorizontal className="w-4 h-4" />
                     </button>
@@ -667,7 +667,7 @@ export default function NetworkTree() {
               ))}
               {directMembers.length === 0 && (
                 <tr>
-                   <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
+                   <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">
                       No direct members found.
                    </td>
                 </tr>

@@ -335,17 +335,17 @@ export default function AdminNetwork() {
               )}
            </div>
 
-           <div className="overflow-x-auto">
+           <div className="table-scroll-container">
               <table className="w-full text-left border-collapse min-w-[800px]">
                 <thead>
                   <tr className="bg-muted/50 border-b border-border text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                    <th className="px-5 py-3">Member</th>
-                    <th className="px-5 py-3">Rank</th>
-                    <th className="px-5 py-3 text-center">Directs</th>
-                    <th className="px-5 py-3 text-center">Downlines</th>
-                    <th className="px-5 py-3">Activity</th>
-                    <th className="px-5 py-3">Status</th>
-                    <th className="px-5 py-3"></th>
+                    <th className="px-5 py-3 whitespace-nowrap">Member</th>
+                    <th className="px-5 py-3 whitespace-nowrap">Rank</th>
+                    <th className="px-5 py-3 text-center whitespace-nowrap">Directs</th>
+                    <th className="px-5 py-3 text-center whitespace-nowrap">Downlines</th>
+                    <th className="px-5 py-3 whitespace-nowrap">Activity</th>
+                    <th className="px-5 py-3 whitespace-nowrap">Status</th>
+                    <th className="px-5 py-3 whitespace-nowrap"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -355,7 +355,7 @@ export default function AdminNetwork() {
                         onClick={() => setSelectedUserForTree(user)}
                         className={cn("cursor-pointer hover:bg-muted/30 transition-colors", selectedUserForTree?.id === user.id ? "bg-primary/5" : "")}
                      >
-                        <td className="px-5 py-4">
+                        <td className="px-5 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase">
                               {(user.fullName || user.email || 'U').charAt(0)}
@@ -366,18 +366,18 @@ export default function AdminNetwork() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-3 whitespace-nowrap">
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
                             {user.currentRank}
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-center font-semibold text-sm">
+                        <td className="px-5 py-3 text-center font-semibold text-sm whitespace-nowrap">
                           {user.calculatedDirectReferrals || 0}
                         </td>
-                        <td className="px-5 py-3 text-center font-semibold text-sm">
+                        <td className="px-5 py-3 text-center font-semibold text-sm whitespace-nowrap">
                           {user.calculatedTotalDownline || 0}
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-3 whitespace-nowrap">
                           <span className={cn(
                             "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border whitespace-nowrap",
                             user.activityState === 'active' ? "bg-success/10 text-success border-success/20" : "bg-purple-500/10 text-purple-500 border-purple-500/20"
@@ -385,7 +385,7 @@ export default function AdminNetwork() {
                             {user.activityState}
                           </span>
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-3 whitespace-nowrap">
                           <span className={cn(
                             "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border whitespace-nowrap",
                             user.accountStatus === 'active' ? "bg-success/10 text-success border-success/20" : "bg-destructive/10 text-destructive border-destructive/20"
@@ -393,7 +393,7 @@ export default function AdminNetwork() {
                             {user.accountStatus}
                           </span>
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-3 whitespace-nowrap">
                           <button 
                             onClick={() => setSelectedUserForTree(user)}
                             className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -405,7 +405,7 @@ export default function AdminNetwork() {
                      </tr>
                    )) : (
                      <tr>
-                        <td colSpan={7} className="px-5 py-8 text-center text-muted-foreground text-sm">
+                        <td colSpan={7} className="px-5 py-8 text-center text-muted-foreground text-sm whitespace-nowrap">
                           No members matching your criteria.
                         </td>
                      </tr>

@@ -24,9 +24,9 @@ export function AdminLayout() {
   ];
 
   return (
-    <div className="h-screen bg-background flex flex-col md:flex-row overflow-hidden">
+    <div className="h-[100dvh] w-full bg-background flex flex-col md:flex-row overflow-hidden">
       {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between bg-card p-6 border-b border-border shadow-sm">
+      <div className="md:hidden fixed top-0 w-full z-50 flex items-center justify-between bg-card p-4 sm:p-6 border-b border-border shadow-sm shrink-0">
         <div className="flex items-center gap-2">
           <img src="https://i.imgur.com/Adh2bcY.png" alt="Logo" className="w-8 h-8 object-contain" />
           <div className="text-xl font-bold text-primary tracking-tight">ADMIN</div>
@@ -35,6 +35,9 @@ export function AdminLayout() {
           {sidebarOpen ? <X /> : <Menu />}
         </button>
       </div>
+
+      {/* Spacer for Mobile Header */}
+      <div className="md:hidden h-[73px] sm:h-[81px] w-full shrink-0"></div>
 
       {/* Sidebar */}
       <div className={cn(
@@ -103,7 +106,7 @@ export function AdminLayout() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0 min-h-0">
         {/* Top Navbar */}
         <header className="hidden md:flex items-center justify-between px-8 bg-card border-b border-border h-[72px] shadow-sm z-10 shrink-0">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">

@@ -108,27 +108,27 @@ export default function AdminRankings() {
            </div>
         ) : (
           <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+            <div className="table-scroll-container">
+              <table className="w-full text-left min-w-[700px] md:min-w-full">
                 <thead>
                   <tr className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
-                    <th className="px-6 py-4 font-semibold">Rank</th>
-                    <th className="px-6 py-4 font-semibold">Team Leader</th>
-                    <th className="px-6 py-4 font-semibold text-center">Total Members</th>
-                    <th className="px-6 py-4 font-semibold text-center">Direct Referrals</th>
-                    <th className="px-6 py-4 font-semibold text-center">Indirect Referrals</th>
-                    <th className="px-6 py-4 font-semibold text-right">Performance Score</th>
+                    <th className="px-4 py-3 md:px-6 md:py-4 font-semibold whitespace-nowrap">Rank</th>
+                    <th className="px-4 py-3 md:px-6 md:py-4 font-semibold whitespace-nowrap">Team Leader</th>
+                    <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Total Members</th>
+                    <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Direct Referrals</th>
+                    <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Indirect Referrals</th>
+                    <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-right whitespace-nowrap">Performance Score</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {teamLeaders.map((leader, index) => (
                     <tr key={leader.id} className="hover:bg-muted/50 transition-colors">
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted text-muted-foreground font-bold">
                           {index + 1}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
                             {(leader.teamLeaderName || 'U')[0]}
@@ -139,16 +139,16 @@ export default function AdminRankings() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center font-bold">
+                      <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
                          {(leader.calculatedTotalDownline !== undefined ? leader.calculatedTotalDownline : leader.totalDownlineCount || 0) + 1}
                       </td>
-                      <td className="px-6 py-4 text-center font-bold">
+                      <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
                          {leader.calculatedDirectReferrals !== undefined ? leader.calculatedDirectReferrals : (leader.directReferralsCount || leader.directReferrals || 0)}
                       </td>
-                      <td className="px-6 py-4 text-center font-bold">
+                      <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
                          {leader.calculatedTotalDownline !== undefined ? Math.max(0, leader.calculatedTotalDownline - (leader.calculatedDirectReferrals || 0)) : (leader.totalDownlineCount ? Math.max(0, leader.totalDownlineCount - (leader.directReferralsCount || leader.directReferrals || 0)) : 0)}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 py-3 md:px-6 md:py-4 text-right whitespace-nowrap">
                          <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-bold">
                            {leader.leaderPerformanceScore || 0} pts
                          </span>
@@ -157,7 +157,7 @@ export default function AdminRankings() {
                   ))}
                   {teamLeaders.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                      <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground whitespace-nowrap">
                         No team leaders found.
                       </td>
                     </tr>
@@ -180,22 +180,22 @@ export default function AdminRankings() {
           <div className="flex justify-center py-10"><div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>
         ) : (
           <div className="bg-card shadow-sm rounded-2xl border border-border flex flex-col">
-              <div className="overflow-x-auto">
-                 <table className="w-full text-sm text-left">
-                   <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border">
+              <div className="table-scroll-container">
+                 <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
+                   <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border whitespace-nowrap">
                      <tr>
-                       <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Rank</th>
-                       <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">User</th>
-                       <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Status / Role</th>
-                       <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Directs</th>
-                       <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Team Size</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Rank</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">User</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Status / Role</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Directs</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Team Size</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-border">
                       {individuals.length > 0 ? individuals.map((user, pos) => (
                         <tr key={user.id} className="hover:bg-muted/50 transition-colors">
-                          <td className="px-6 py-4 font-bold text-muted-foreground">#{pos + 1}</td>
-                          <td className="px-6 py-4 font-medium text-foreground flex items-center gap-3">
+                          <td className="px-4 py-3 md:px-6 md:py-4 font-bold text-muted-foreground whitespace-nowrap">#{pos + 1}</td>
+                          <td className="px-4 py-3 md:px-6 md:py-4 font-medium text-foreground flex items-center gap-3 whitespace-nowrap">
                              <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 text-xs shrink-0 font-bold uppercase">
                                {(user.fullName || 'U').charAt(0)}
                              </div>
@@ -204,7 +204,7 @@ export default function AdminRankings() {
                                <div className="text-xs text-muted-foreground">{user.email || 'No email'}</div>
                              </div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                              <div className="flex flex-col items-start gap-1">
                                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-500/10 text-slate-500 border border-slate-500/20">
                                  {user.currentRank || 'Member'}
@@ -216,12 +216,12 @@ export default function AdminRankings() {
                                )}
                              </div>
                           </td>
-                          <td className="px-6 py-4 font-bold text-center">{user.calculatedDirectReferrals || 0}</td>
-                          <td className="px-6 py-4 font-bold text-center">{user.calculatedTotalDownline || 0}</td>
+                          <td className="px-4 py-3 md:px-6 md:py-4 font-bold text-center whitespace-nowrap">{user.calculatedDirectReferrals || 0}</td>
+                          <td className="px-4 py-3 md:px-6 md:py-4 font-bold text-center whitespace-nowrap">{user.calculatedTotalDownline || 0}</td>
                         </tr>
                       )) : (
                         <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">No data available for individual leaderboard.</td>
+                          <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">No data available for individual leaderboard.</td>
                         </tr>
                       )}
                    </tbody>

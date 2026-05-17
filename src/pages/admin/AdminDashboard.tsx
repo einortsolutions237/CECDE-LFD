@@ -279,29 +279,29 @@ export default function AdminDashboard() {
         <div className="p-6 border-b border-border">
           <h2 className="text-xl font-semibold tracking-tight text-foreground">Recent Registrations</h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border">
+        <div className="table-scroll-container">
+          <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
+            <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border whitespace-nowrap">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Action</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">User</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Time</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30">Status</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Action</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">User</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Time</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {recentActivities.length > 0 ? recentActivities.map((act) => (
                 <tr key={act.id} className="hover:bg-muted/50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-foreground">User Registration</td>
-                  <td className="px-6 py-4">{act.fullName} ({act.currentRank || 'Member'})</td>
-                  <td className="px-6 py-4 text-muted-foreground">{new Date(act.timestamp).toLocaleString()}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 md:px-6 md:py-4 font-medium text-foreground whitespace-nowrap">User Registration</td>
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">{act.fullName} ({act.currentRank || 'Member'})</td>
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-muted-foreground whitespace-nowrap">{new Date(act.timestamp).toLocaleString()}</td>
+                  <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     <span className="text-success text-xs font-bold uppercase">Success</span>
                   </td>
                 </tr>
               )) : (
                 <tr>
-                   <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">No recent activities.</td>
+                   <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground whitespace-nowrap">No recent activities.</td>
                 </tr>
               )}
             </tbody>
