@@ -6,7 +6,6 @@ import {
   Network, FolderTree, UserCheck, X, Eye
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { buildNetworkStats } from '../../lib/networkUtils';
 
 interface NetworkUser {
   id: string;
@@ -16,8 +15,6 @@ interface NetworkUser {
   sponsorId: string;
   referralCode: string;
   directReferralsCount: number;
-  calculatedDirectReferrals?: number;
-  calculatedTotalDownline?: number;
   totalDownlineCount: number;
   activityState: string;
   accountStatus: string;
@@ -63,15 +60,6 @@ export default function AdminNetwork() {
             createdAt: data.createdAt,
             timestamp: data.createdAt?.toMillis() || Date.now()
           });
-        });
-        
-        const stats = buildNetworkStats(loadedUsers);
-        loadedUsers.forEach(u => {
-          const uStats = stats.get(u.id);
-          if (uStats) {
-             u.calculatedDirectReferrals = uStats.directCount;
-             u.calculatedTotalDownline = uStats.downlineCount;
-          }
         });
 
         setUsers(loadedUsers.sort((a, b) => b.timestamp - a.timestamp));
@@ -279,7 +267,7 @@ export default function AdminNetwork() {
             </div>
              <h3 className="text-sm font-medium text-muted-foreground">Avg. Directs</h3>
           </div>
-          <div className="text-3xl font-bold tracking-tight text-foreground">{stats.total > 0 ? (users.reduce((acc, u) => acc + (u.calculatedDirectReferrals || 0), 0) / stats.total).toFixed(1) : 0}</div>
+          <div className="text-3xl font-bold tracking-tight text-foreground">{stats.total > 0 ? (users.reduce((acc, u) => acc + (u.directReferralsCount || 0), 0) / stats.total).toFixed(1) : 0}</div>
         </div>
       </div>
 
@@ -372,10 +360,10 @@ export default function AdminNetwork() {
                           </span>
                         </td>
                         <td className="px-5 py-3 text-center font-semibold text-sm whitespace-nowrap">
-                          {user.calculatedDirectReferrals || 0}
+                          {user.directReferralsCount || 0}
                         </td>
                         <td className="px-5 py-3 text-center font-semibold text-sm whitespace-nowrap">
-                          {user.calculatedTotalDownline || 0}
+                          {user.totalDownlineCount || 0}
                         </td>
                         <td className="px-5 py-3 whitespace-nowrap">
                           <span className={cn(

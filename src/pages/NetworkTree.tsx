@@ -83,53 +83,17 @@ export default function NetworkTree() {
         rootNode.children = children;
         setTreeData(rootNode);
 
-        // Compute actual downline count and activity states
-        try {
-          const allUsers = await getDocs(collection(db, 'users'));
-          const usersMap: Record<string, string> = {};
-          const userStates: Record<string, string> = {};
-          
-          // Adj list to compute direct referrals for everyone dynamically
-          const adjList = new Map<string, string[]>();
-          allUsers.forEach(u => adjList.set(u.id, []));
+        // Use precomputed values on the user instead of computing full adj list
+        let activeCount = 0;
+        let dormantCount = 0;
+        loadedMembers.forEach(m => {
+          if (m.activityState === 'active') activeCount++;
+          else dormantCount++;
+        });
 
-          allUsers.forEach(u => {
-            const data = u.data();
-            usersMap[u.id] = data.sponsorId;
-            userStates[u.id] = data.activityState || 'dormant';
-            
-            if (data.sponsorId && adjList.has(data.sponsorId)) {
-               adjList.get(data.sponsorId)!.push(u.id);
-            }
-          });
-          
-          // Dynamically compute direct referrals counting for directMembers
-          loadedMembers.forEach(m => {
-             m.calculatedDirectReferrals = (adjList.get(m.id) || []).length;
-          });
-          setDirectMembers([...loadedMembers]);
-
-          let downlines = 0;
-          let activeCount = 0;
-          let dormantCount = 0;
-          
-          const countDownlines = (sponsorId: string) => {
-             Object.keys(usersMap).forEach(uid => {
-                if (usersMap[uid] === sponsorId) {
-                    downlines++;
-                    if (userStates[uid] === 'active') activeCount++;
-                    else dormantCount++;
-                    countDownlines(uid);
-                }
-             });
-          };
-          countDownlines(userData.uid);
-          setActualDownlineCount(downlines);
-          setActiveM(activeCount);
-          setDormantM(dormantCount);
-        } catch (e) {
-          console.error("Failed true downline computation", e);
-        }
+        setActualDownlineCount(userData?.totalDownlineCount || 0);
+        setActiveM(activeCount);
+        setDormantM(dormantCount);
 
       } catch (err: any) {
         console.error("Error fetching network tree:", err);
@@ -267,7 +231,7 @@ export default function NetworkTree() {
   // Compute stats from direct members for charts
   const { rankDistribution, topRecruiters, growthData } = useMemo(() => {
     const rDist: Record<string, number> = {};
-    const tRec = [...directMembers].sort((a, b) => (b.calculatedDirectReferrals || 0) - (a.calculatedDirectReferrals || 0)).slice(0, 5);
+    const tRec = [...directMembers].sort((a, b) => ((b.directReferralsCount || b.directReferrals || 0) - (a.directReferralsCount || a.directReferrals || 0))).slice(0, 5);
     
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentMonth = new Date().getMonth();
@@ -532,7 +496,7 @@ export default function NetworkTree() {
                   </div>
                 </div>
                 <div className="flex flex-col items-end">
-                  <div className="text-sm font-bold text-foreground">{recruiter.calculatedDirectReferrals || 0}</div>
+                  <div className="text-sm font-bold text-foreground">{recruiter.directReferralsCount || recruiter.directReferrals || 0}</div>
                   <div className="text-[10px] text-muted-foreground uppercase">Directs</div>
                 </div>
               </div>
@@ -629,7 +593,7 @@ export default function NetworkTree() {
                     </span>
                   </td>
                   <td className="px-4 py-3 md:px-6 md:py-4 text-muted-foreground whitespace-nowrap">{member.sponsorReferralCode || member.sponsorId}</td>
-                  <td className="px-4 py-3 md:px-6 md:py-4 text-center font-semibold whitespace-nowrap">{member.calculatedDirectReferrals || 0}</td>
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-center font-semibold whitespace-nowrap">{member.directReferralsCount || member.directReferrals || 0}</td>
                   <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     {member.activityState === 'active' ? (
                       <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-success/10 text-success border border-success/20 w-fit whitespace-nowrap">

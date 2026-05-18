@@ -156,36 +156,18 @@ export default function Dashboard() {
              }
              setChartData(cData);
              
-             // Compute exact total downline for demo robustness
-             try {
-               const allUsers = await getDocs(collection(db, 'users'));
-               const usersMap: Record<string, string> = {};
-               const userStates: Record<string, string> = {};
-               allUsers.forEach(u => {
-                 usersMap[u.id] = u.data().sponsorId;
-                 userStates[u.id] = u.data().activityState || 'dormant';
-               });
-               
-               let downlines = 0;
-               let activeCount = 0;
-               let dormantCount = 0;
-               const countDownlines = (sponsorId: string) => {
-                  Object.keys(usersMap).forEach(uid => {
-                     if (usersMap[uid] === sponsorId) {
-                         downlines++;
-                         if (userStates[uid] === 'active') activeCount++;
-                         else dormantCount++;
-                         countDownlines(uid);
-                     }
-                  });
-               };
-               countDownlines(userData.uid);
-               setActualDownlineCount(downlines);
-               setActiveMembers(activeCount);
-               setDormantMembers(dormantCount);
-             } catch (e) {
-               console.error("Failed downline computation:", e);
-             }
+             // Use precomputed values for efficiency
+             setActualDownlineCount(userData.totalDownlineCount || 0);
+             
+             let activeCount = 0;
+             let dormantCount = 0;
+             referrals.forEach(ref => {
+               if (ref.activityState === 'active') activeCount++;
+               else dormantCount++;
+             });
+             setActiveMembers(activeCount);
+             setDormantMembers(dormantCount);
+
           }
         } catch (error: any) {
           console.error("Error fetching network data:", error);

@@ -22,70 +22,37 @@ export default function TeamMembers() {
 
       try {
         setLoading(true);
-        // Fetch all users to accurately map the network
-        const usersQuery = query(collection(db, 'users'));
+        // Fetch only the direct members or team members
+        const conditions = [where('sponsorId', '==', userData.uid)];
+        if (userData.teamId) {
+           conditions.push(where('teamId', '==', userData.teamId));
+        }
+        
+        const usersQuery = query(collection(db, 'users'), or(...conditions));
         
         unsubscribe = onSnapshot(usersQuery, (snapshot) => {
-          const allUsers: any[] = [];
-          snapshot.forEach(doc => {
-             allUsers.push({ id: doc.id, ...doc.data() });
-          });
-
-          // Build adjacency list for exact downline calculation
-          const adjList = new Map<string, string[]>();
-          allUsers.forEach(u => adjList.set(u.id, []));
-          allUsers.forEach(u => {
-            if (u.sponsorId && adjList.has(u.sponsorId)) {
-               adjList.get(u.sponsorId)!.push(u.id);
-            }
-          });
-
-          // Determine the team members
           let members: any[] = [];
-          if (userData.teamId) {
-             members = allUsers.filter(u => u.teamId === userData.teamId || u.sponsorId === userData.uid);
-          } else {
-             members = allUsers.filter(u => u.sponsorId === userData.uid);
-          }
-
-          // De-duplicate in case of overlap
-          members = Array.from(new Set(members.map(m => m.id))).map(id => members.find(m => m.id === id));
-          
-          // Remove the leader themselves
-          members = members.filter(m => m.id !== userData.uid);
-
           let activeCount = 0;
-          let calculatedTotalDownline = 0;
-
-          // Compute exact referals dynamically 
-          members.forEach(member => {
-             const directs = adjList.get(member.id) || [];
-             member.calculatedDirectReferrals = directs.length;
-
-             // active check
-             if (member.accountStatus === 'active') {
-                activeCount++;
+          
+          snapshot.forEach(doc => {
+             const data = doc.data();
+             // Prevent the leader themselves showing up as a member
+             if (doc.id !== userData.uid) {
+               members.push({ id: doc.id, ...data });
+               if (data.accountStatus === 'active') {
+                  activeCount++;
+               }
              }
           });
 
           // Sort by computed referrals desc
-          members.sort((a, b) => (b.calculatedDirectReferrals || 0) - (a.calculatedDirectReferrals || 0));
-
-          // Calculate total network growth specifically for the leader
-          let leaderDownlineCount = 0;
-          const stack = [...(adjList.get(userData.uid) || [])];
-          while (stack.length > 0) {
-            const current = stack.pop()!;
-            leaderDownlineCount++;
-            const children = adjList.get(current) || [];
-            stack.push(...children);
-          }
+          members.sort((a, b) => ((b.directReferralsCount || b.directReferrals || 0) - (a.directReferralsCount || a.directReferrals || 0)));
 
           setTeamMembers(members);
           setTeamStats({
-            totalMembers: leaderDownlineCount + 1, // Leader + directs + indirects
+            totalMembers: (userData.totalDownlineCount || 0) + 1, // Leader + downlines 
             activeMembers: activeCount + (userData.accountStatus === 'active' ? 1 : 0),
-            totalDownline: leaderDownlineCount
+            totalDownline: userData.totalDownlineCount || 0
           });
           setLoading(false);
         }, (err) => {
@@ -207,7 +174,7 @@ export default function TeamMembers() {
                           {member.currentRank || 'Unranked'}
                         </td>
                         <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
-                          {member.calculatedDirectReferrals || 0}
+                          {member.directReferralsCount || member.directReferrals || 0}
                         </td>
                         <td className="px-4 py-3 md:px-6 md:py-4 text-center whitespace-nowrap">
                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${member.accountStatus === 'active' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../../lib/firebase';
-import { buildNetworkStats } from '../../lib/networkUtils';
 import { Trophy, Users, TrendingUp } from 'lucide-react';
 
 export default function AdminRankings() {
@@ -21,24 +20,6 @@ export default function AdminRankings() {
           data.push({ id: doc.id, ...doc.data() });
         });
 
-        // Also fetch users to precisely calculate team members
-        const uQ = query(collection(db, 'users'));
-        const uSnap = await getDocs(uQ);
-        const users: any[] = [];
-        uSnap.forEach(d => users.push({ id: d.id, ...d.data() }));
-
-        const stats = buildNetworkStats(users);
-
-        data.forEach(team => {
-          if (team.teamLeaderId) {
-             const usrStats = stats.get(team.teamLeaderId);
-             if (usrStats) {
-                team.calculatedDirectReferrals = usrStats.directCount;
-                team.calculatedTotalDownline = usrStats.downlineCount;
-             }
-          }
-        });
-
         setTeamLeaders(data);
       } catch (err: any) {
         if (err.message && err.message.toLowerCase().includes('permission')) {
@@ -55,28 +36,23 @@ export default function AdminRankings() {
   useEffect(() => {
     const fetchIndividuals = async () => {
       try {
-        const fullQ = await getDocs(collection(db, 'users'));
+        const q = query(
+          collection(db, 'users'),
+          orderBy('totalDownlineCount', 'desc'),
+          limit(50)
+        );
+        const querySnapshot = await getDocs(q);
+        
         const allUsers: any[] = [];
-        fullQ.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
+        querySnapshot.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
         
-        const stats = buildNetworkStats(allUsers);
-        allUsers.forEach(u => {
-           const uStats = stats.get(u.id);
-           if (uStats) {
-             u.calculatedDirectReferrals = uStats.directCount;
-             u.calculatedTotalDownline = uStats.downlineCount;
-           }
-        });
-        
-        // Sort in memory by downline count to guarantee accuracy
-        allUsers.sort((a, b) => (b.calculatedTotalDownline || 0) - (a.calculatedTotalDownline || 0));
-        
-        setIndividuals(allUsers.slice(0, 50));
+        setIndividuals(allUsers);
       } catch (err: any) {
         console.error("Error fetching individuals:", err);
         if (err.message && err.message.toLowerCase().includes('permission')) {
-          setIndividuals([{ id: 'error', fullName: 'Permission Error', currentRank: 'Error', calculatedDirectReferrals: 0, calculatedTotalDownline: 0 }]);
+          setIndividuals([{ id: 'error', fullName: 'Permission Error', currentRank: 'Error', totalDownlineCount: 0, directReferralsCount: 0 }]);
         } else {
+          console.log('You might need an index for totalDownlineCount in users.', err.message);
           handleFirestoreError(err, OperationType.LIST, 'users');
         }
       } finally {
@@ -140,13 +116,13 @@ export default function AdminRankings() {
                         </div>
                       </td>
                       <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
-                         {(leader.calculatedTotalDownline !== undefined ? leader.calculatedTotalDownline : leader.totalDownlineCount || 0) + 1}
+                         {(leader.totalDownlineCount || 0) + 1}
                       </td>
                       <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
-                         {leader.calculatedDirectReferrals !== undefined ? leader.calculatedDirectReferrals : (leader.directReferralsCount || leader.directReferrals || 0)}
+                         {leader.directReferralsCount || leader.directReferrals || 0}
                       </td>
                       <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
-                         {leader.calculatedTotalDownline !== undefined ? Math.max(0, leader.calculatedTotalDownline - (leader.calculatedDirectReferrals || 0)) : (leader.totalDownlineCount ? Math.max(0, leader.totalDownlineCount - (leader.directReferralsCount || leader.directReferrals || 0)) : 0)}
+                         {Math.max(0, (leader.totalDownlineCount || 0) - (leader.directReferralsCount || leader.directReferrals || 0))}
                       </td>
                       <td className="px-4 py-3 md:px-6 md:py-4 text-right whitespace-nowrap">
                          <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-bold">
@@ -216,8 +192,8 @@ export default function AdminRankings() {
                                )}
                              </div>
                           </td>
-                          <td className="px-4 py-3 md:px-6 md:py-4 font-bold text-center whitespace-nowrap">{user.calculatedDirectReferrals || 0}</td>
-                          <td className="px-4 py-3 md:px-6 md:py-4 font-bold text-center whitespace-nowrap">{user.calculatedTotalDownline || 0}</td>
+                          <td className="px-4 py-3 md:px-6 md:py-4 font-bold text-center whitespace-nowrap">{user.directReferralsCount || user.directReferrals || 0}</td>
+                          <td className="px-4 py-3 md:px-6 md:py-4 font-bold text-center whitespace-nowrap">{user.totalDownlineCount || 0}</td>
                         </tr>
                       )) : (
                         <tr>

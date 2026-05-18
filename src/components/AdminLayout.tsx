@@ -41,7 +41,7 @@ export function AdminLayout() {
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed md:static inset-y-0 z-40 bg-sidebar border-r border-border w-[260px] flex flex-col transition-transform duration-300 shadow-xl md:shadow-none",
+        "fixed md:static inset-y-0 z-40 bg-sidebar border-r border-border w-[260px] flex flex-col transition-transform duration-300 shadow-xl md:shadow-none pt-[73px] sm:pt-[81px] md:pt-0",
         sidebarOpen ? "left-0" : "-left-full"
       )}>
         <div className="p-6 hidden md:flex flex-col items-center gap-6 border-b border-border">

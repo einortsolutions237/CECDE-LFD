@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { buildNetworkStats } from '../lib/networkUtils';
 import { Trophy, Users, TrendingUp, Award, Medal } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router';
@@ -14,7 +13,6 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        // Assume leaderboards/global stores the ranking documents
         const q = query(collection(db, 'teams'), orderBy('leaderPerformanceScore', 'desc'), limit(50));
         const snapshot = await getDocs(q);
         
@@ -23,24 +21,7 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
           data.push({ id: doc.id, ...doc.data() });
         });
 
-        // Also fetch users to precisely calculate team members based on full network tree
-        const uQ = query(collection(db, 'users'));
-        const uSnap = await getDocs(uQ);
-        const users: any[] = [];
-        uSnap.forEach(d => users.push({ id: d.id, ...d.data() }));
-
-        const stats = buildNetworkStats(users);
-
-        data.forEach(team => {
-          if (team.teamLeaderId) {
-             const usrStats = stats.get(team.teamLeaderId);
-             if (usrStats) {
-                team.calculatedDirectReferrals = usrStats.directCount;
-                team.calculatedTotalDownline = usrStats.downlineCount;
-             }
-          }
-        });
-
+        // No recalculation needed, using precomputed fields directly
         setLeaders(data);
       } catch (err: any) {
         if (err.message && err.message.toLowerCase().includes('permission')) {
@@ -114,7 +95,7 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
               <div className="grid grid-cols-2 gap-6 w-full mt-4 border-t border-border pt-4 text-sm">
                 <div className="flex flex-col items-center">
                   <span className="text-muted-foreground">Members</span>
-                  <span className="font-bold flex items-center gap-1"><Users className="w-3 h-3"/> {(leader.calculatedTotalDownline !== undefined ? leader.calculatedTotalDownline : leader.totalDownlineCount || 0) + 1}</span>
+                  <span className="font-bold flex items-center gap-1"><Users className="w-3 h-3"/> {(leader.totalDownlineCount || 0) + 1}</span>
                 </div>
                 <div className="flex flex-col items-center">
                   <span className="text-muted-foreground">Active</span>
@@ -158,13 +139,13 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
                       </div>
                     </td>
                     <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
-                       {(leader.calculatedTotalDownline !== undefined ? leader.calculatedTotalDownline : leader.totalDownlineCount || 0) + 1}
+                       {(leader.totalDownlineCount || 0) + 1}
                     </td>
                     <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
-                       {leader.calculatedDirectReferrals !== undefined ? leader.calculatedDirectReferrals : (leader.directReferralsCount || leader.directReferrals || 0)}
+                       {leader.leaderDirectReferralsCount || leader.directReferralsCount || 0}
                     </td>
                     <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
-                       {leader.calculatedTotalDownline !== undefined ? Math.max(0, leader.calculatedTotalDownline - (leader.calculatedDirectReferrals || 0)) : (leader.totalDownlineCount ? Math.max(0, leader.totalDownlineCount - (leader.directReferralsCount || leader.directReferrals || 0)) : 0)}
+                       {Math.max(0, (leader.totalDownlineCount || 0) - (leader.leaderDirectReferralsCount || leader.directReferralsCount || 0))}
                     </td>
                     <td className="px-4 py-3 md:px-6 md:py-4 text-right whitespace-nowrap">
                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-bold">

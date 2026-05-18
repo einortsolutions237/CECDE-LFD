@@ -5,7 +5,6 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { db, firebaseConfig } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
-import { buildNetworkStats } from '../../lib/networkUtils';
 
 export default function AdminUsers() {
   const { userData } = useAuth();
@@ -30,18 +29,11 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
+      setLoading(true);
       const snap = await getDocs(collection(db, 'users'));
       const usersList: any[] = [];
       snap.forEach(doc => {
         usersList.push({ id: doc.id, ...doc.data() });
-      });
-      const stats = buildNetworkStats(usersList);
-      usersList.forEach(u => {
-        const uStats = stats.get(u.id);
-        if (uStats) {
-           u.calculatedDirectReferrals = uStats.directCount;
-           u.calculatedTotalDownline = uStats.downlineCount;
-        }
       });
       setUsers(usersList);
     } catch (err) {
@@ -131,10 +123,7 @@ export default function AdminUsers() {
       alert(`Success! Referral code updated to ${newCode.toUpperCase()}`);
       
       // Refresh user list
-      const snap = await getDocs(collection(db, 'users'));
-      const usersList: any[] = [];
-      snap.forEach(d => usersList.push({ id: d.id, ...d.data() }));
-      setUsers(usersList);
+      fetchUsers();
     } catch (err: any) {
       console.error(err);
       setUpdateStatus(`Error updating code: ${err.message}`);
@@ -159,10 +148,7 @@ export default function AdminUsers() {
        await updateDoc(doc(db, 'users', userId), { role: userRole, roleType: userRoleType });
        setUpdateStatus('Role updated successfully.');
        
-       const snap = await getDocs(collection(db, 'users'));
-       const usersList: any[] = [];
-       snap.forEach(d => usersList.push({ id: d.id, ...d.data() }));
-       setUsers(usersList);
+       fetchUsers();
     } catch (err: any) {
        console.error(err);
        setUpdateStatus(`Error updating role: ${err.message}`);
@@ -190,10 +176,7 @@ export default function AdminUsers() {
        await deleteDoc(doc(db, 'users', userId));
        setUpdateStatus(`User ${userEmail} deleted successfully.`);
        
-       const snap = await getDocs(collection(db, 'users'));
-       const usersList: any[] = [];
-       snap.forEach(d => usersList.push({ id: d.id, ...d.data() }));
-       setUsers(usersList);
+       fetchUsers();
     } catch (err: any) {
        console.error("Failed to delete user:", err);
        setUpdateStatus(`Error deleting user: ${err.message}`);

@@ -5,7 +5,6 @@ import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import TeamRankings from './TeamRankings';
 import GlobalLeaderboard from './GlobalLeaderboard';
-import { buildNetworkStats } from '../lib/networkUtils';
 
 const ranks = [
   { name: 'Bronze', color: 'text-amber-700 bg-amber-700/10', requirements: '5 Directs, $50 Bal' },
@@ -25,28 +24,24 @@ export default function Rankings() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const fullQ = await getDocs(collection(db, 'users'));
+        const q = query(
+          collection(db, 'users'),
+          orderBy('totalDownlineCount', 'desc'),
+          limit(10)
+        );
+        const querySnapshot = await getDocs(q);
+        
         const allUsers: any[] = [];
-        fullQ.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
+        querySnapshot.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
         
-        const stats = buildNetworkStats(allUsers);
-        allUsers.forEach(u => {
-           const uStats = stats.get(u.id);
-           if (uStats) {
-             u.calculatedDirectReferrals = uStats.directCount;
-             u.calculatedTotalDownline = uStats.downlineCount;
-           }
-        });
-        
-        // Sort in memory by downline count to guarantee accuracy
-        allUsers.sort((a, b) => (b.calculatedTotalDownline || 0) - (a.calculatedTotalDownline || 0));
-        
-        setLeaderboard(allUsers.slice(0, 10));
+        setLeaderboard(allUsers);
       } catch (err: any) {
         console.error("Error fetching leaderboard:", err);
         if (err.message && err.message.toLowerCase().includes('permission')) {
-          setLeaderboard([{ id: 'error', fullName: 'Permission Error', currentRank: 'Error', calculatedDirectReferrals: 0, calculatedTotalDownline: 0 }]);
+          setLeaderboard([{ id: 'error', fullName: 'Permission Error', currentRank: 'Error', directReferralsCount: 0, totalDownlineCount: 0 }]);
         } else {
+          // If the index is missing, error will contain the url
+          console.log('You might need an index for totalDownlineCount', err.message);
           handleFirestoreError(err, OperationType.LIST, 'users');
         }
       } finally {
@@ -175,8 +170,8 @@ export default function Rankings() {
                                {user.currentRank || 'Member'}
                              </span>
                           </td>
-                          <td className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">{user.calculatedDirectReferrals || 0}</td>
-                          <td className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">{user.calculatedTotalDownline || 0}</td>
+                          <td className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">{user.directReferralsCount || 0}</td>
+                          <td className="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">{user.totalDownlineCount || 0}</td>
                         </tr>
                       )) : (
                         <tr>

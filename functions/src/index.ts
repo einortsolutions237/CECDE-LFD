@@ -248,3 +248,121 @@ export const updateAllUserRanks = functions.pubsub
       console.error('Error during scheduled background rank update job', error);
     }
   });
+
+export const updateMetricsSync = functions.pubsub
+  .schedule('every 1 hours')
+  .onRun(async (context) => {
+    try {
+      const usersSnap = await db.collection('users').get();
+      const teamsSnap = await db.collection('teams').get();
+
+      const users: any[] = [];
+      usersSnap.forEach(u => users.push({ id: u.id, ...u.data() }));
+
+      const teams: any[] = [];
+      teamsSnap.forEach(t => teams.push({ id: t.id, ...t.data() }));
+
+      let batch = db.batch();
+      let operationCount = 0;
+
+      const commitBatchIfNeeded = async () => {
+        if (operationCount >= 490) {
+          await batch.commit();
+          batch = db.batch();
+          operationCount = 0;
+        }
+      };
+
+      const adjList = new Map<string, string[]>();
+      users.forEach(u => adjList.set(u.id, []));
+      users.forEach(u => {
+        if (u.sponsorId && adjList.has(u.sponsorId)) {
+           adjList.get(u.sponsorId)!.push(u.id);
+        }
+      });
+
+      for (const user of users) {
+        const directs = adjList.get(user.id) || [];
+        const directCount = directs.length;
+        
+        let downlineCount = 0;
+        const stack = [...directs];
+        while (stack.length > 0) {
+          const current = stack.pop()!;
+          downlineCount++;
+          const children = adjList.get(current) || [];
+          stack.push(...children);
+        }
+
+        if (user.directReferralsCount !== directCount || user.totalDownlineCount !== downlineCount) {
+          const userRef = db.collection('users').doc(user.id);
+          batch.update(userRef, { 
+            directReferralsCount: directCount,
+            totalDownlineCount: downlineCount
+          });
+          user.directReferralsCount = directCount;
+          user.totalDownlineCount = downlineCount;
+          operationCount++;
+          await commitBatchIfNeeded();
+        }
+      }
+
+      for (const team of teams) {
+        const leaderId = team.teamLeaderId;
+        let leaderDownlineCount = 0;
+        let leaderActiveDownlineCount = 0;
+        let leaderPerformanceScore = 0;
+
+        const leads = adjList.get(leaderId) || [];
+        const stack = [...leads];
+        const networkMembersId = new Set<string>();
+        while (stack.length > 0) {
+           const current = stack.pop()!;
+           if (!networkMembersId.has(current)) {
+               networkMembersId.add(current);
+               const children = adjList.get(current) || [];
+               stack.push(...children);
+           }
+        }
+
+        leaderDownlineCount = networkMembersId.size;
+
+        networkMembersId.forEach(uid => {
+           const u = users.find(user => user.id === uid);
+           if (u) {
+             if (u.accountStatus === 'active') {
+                leaderActiveDownlineCount++;
+             }
+             const direct = u.directReferralsCount || 0;
+             const downline = u.totalDownlineCount || 0;
+             const active = u.activityState === 'active' ? 1 : 0;
+             leaderPerformanceScore += (direct * 5) + ((downline - direct) * 2) + (active * 3);
+           }
+        });
+
+        if (
+          team.totalDownlineCount !== leaderDownlineCount ||
+          team.activeDownlineCount !== leaderActiveDownlineCount ||
+          team.leaderPerformanceScore !== leaderPerformanceScore ||
+          team.leaderDirectReferralsCount !== leads.length
+        ) {
+          const teamRef = db.collection('teams').doc(team.id);
+          batch.update(teamRef, {
+            totalDownlineCount: leaderDownlineCount,
+            activeDownlineCount: leaderActiveDownlineCount,
+            leaderPerformanceScore,
+            leaderDirectReferralsCount: leads.length
+          });
+          operationCount++;
+          await commitBatchIfNeeded();
+        }
+      }
+
+      if (operationCount > 0) {
+        await batch.commit();
+      }
+      console.log('Successfully completed scheduled metrics sync.');
+    } catch (err) {
+      console.error('Error during scheduled background metrics sync', err);
+    }
+  });

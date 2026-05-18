@@ -5,7 +5,6 @@ import {
   Menu, X, Home, Users, Trello, Award, FileText, Settings, LogOut, ShieldAlert
 } from 'lucide-react';
 import { cn } from '../lib/utils';
-import BackgroundMetricsSync from './BackgroundMetricsSync';
 
 export const Layout = () => {
   const { userData, logout } = useAuth();
@@ -44,7 +43,7 @@ export const Layout = () => {
       <div className="md:hidden h-[73px] sm:h-[81px] w-full shrink-0"></div>
 
       <aside className={cn(
-        "fixed md:static inset-y-0 z-40 bg-sidebar border-r border-border w-[260px] flex flex-col text-sidebar-foreground transition-transform duration-300 shadow-xl md:shadow-none",
+        "fixed md:static inset-y-0 z-40 bg-sidebar border-r border-border w-[260px] flex flex-col text-sidebar-foreground transition-transform duration-300 shadow-xl md:shadow-none pt-[73px] sm:pt-[81px] md:pt-0",
         sidebarOpen ? "left-0" : "-left-full"
       )}>
         <div className="p-6 hidden md:flex flex-col items-center gap-6 border-b border-border">
@@ -130,8 +129,6 @@ export const Layout = () => {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      
-      <BackgroundMetricsSync />
     </div>
   );
 };
