@@ -44,7 +44,7 @@ export const Layout = () => {
       <div className="md:hidden h-[73px] sm:h-[81px] w-full shrink-0"></div>
 
       <aside className={cn(
-        "bg-sidebar w-full md:w-[260px] flex-shrink-0 transition-transform duration-300 ease-in-out md:static fixed z-20 h-full flex flex-col text-sidebar-foreground border-r border-border shadow-xl md:shadow-none",
+        "fixed md:static inset-y-0 z-40 bg-sidebar border-r border-border w-[260px] flex flex-col text-sidebar-foreground transition-transform duration-300 shadow-xl md:shadow-none",
         sidebarOpen ? "left-0" : "-left-full"
       )}>
         <div className="p-6 hidden md:flex flex-col items-center gap-6 border-b border-border">
@@ -126,7 +126,7 @@ export const Layout = () => {
       
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-10 md:hidden backdrop-blur-sm" 
+          className="fixed inset-0 bg-black/60 z-30 md:hidden backdrop-blur-sm transition-opacity" 
           onClick={() => setSidebarOpen(false)}
         />
       )}

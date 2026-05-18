@@ -13,6 +13,7 @@ import { AdminLayout } from './components/AdminLayout';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
+import NotFound from './pages/NotFound';
 import Dashboard from './pages/Dashboard';
 import NetworkTree from './pages/NetworkTree';
 import Rankings from './pages/Rankings';
@@ -68,7 +69,8 @@ export default function App() {
               <Route path="logs" element={<AdminLogs />} />
             </Route>
             
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
