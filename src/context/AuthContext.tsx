@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import toast from 'react-hot-toast';
 
 interface UserData {
   uid: string;
@@ -14,6 +15,11 @@ interface UserData {
   sponsorId?: string;
   currentRank: string;
   walletBalance: number;
+  totalDownlineCount?: number;
+  directReferralsCount?: number;
+  phone?: string;
+  country?: string;
+  activityState?: 'active' | 'dormant';
   accountStatus: 'active' | 'suspended';
 }
 
@@ -50,42 +56,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           unsubscribeSnapshot = onSnapshot(userRef, (docSnap) => {
              if (docSnap.exists()) {
                const data = docSnap.data();
-               // Special override for super admin user
-               if (currentUser.email?.toLowerCase() === 'njeirheinard@gmail.com') {
-                 if (data.role !== 'super_admin' || data.referralCode !== 'MAXIM26') {
-                   updateDoc(userRef, { role: 'super_admin', referralCode: 'MAXIM26' }).catch(console.error);
-                 }
-               }
                setUserData({ uid: currentUser.uid, email: currentUser.email || '', ...data } as UserData);
              } else {
-               if (currentUser.email?.toLowerCase() === 'njeirheinard@gmail.com') {
-                 import('firebase/firestore').then(({ setDoc }) => {
-                   setDoc(userRef, {
-                      fullName: 'Njei Rheinard',
-                      email: 'njeirheinard@gmail.com',
-                      phoneNumber: '',
-                      referralCode: 'MAXIM26',
-                      role: 'super_admin',
-                      accountStatus: 'active',
-                      currentRank: 'Diamond',
-                      walletBalance: 0,
-                      directReferralsCount: 0,
-                      totalDownlineCount: 0,
-                      createdAt: new Date()
-                   }).catch(console.error);
-                 });
-               } else {
-                 setUserData(null);
-               }
+               setUserData(null);
              }
              setLoading(false);
           }, (error: any) => {
              console.error("Error fetching user data:", error);
              if (error.message && error.message.toLowerCase().includes('permission')) {
-               alert("Permission denied. Since you connected a custom Firebase project (lfd-mlm), make sure to copy the rules from the `firestore.rules` file in this editor and deploy them in your Firebase Console under 'Firestore Database' -> 'Rules'.");
+               toast.error("Permission denied. Check your Firestore rules.");
              } else if (error.message && error.message.includes('the client is offline')) {
                console.error("Please check your Firebase configuration.");
-               alert("Could not connect to the database. Please ensure Cloud Firestore is enabled in your Firebase Console, or check your internet connection.");
+               toast.error("Could not connect to the database. You might be offline.");
              } else {
                handleFirestoreError(error, OperationType.GET, `users/${currentUser.uid}`);
              }

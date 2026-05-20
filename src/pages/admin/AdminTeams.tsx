@@ -167,7 +167,7 @@ export default function AdminTeams() {
       )}
 
       {/* Teams Grid / List */}
-      <div className="bg-card shadow-sm rounded-2xl border border-border flex flex-col">
+      <div className="card flex flex-col">
         <div className="p-6 border-b border-border bg-muted/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
            <h2 className="font-bold flex items-center gap-2">
              <Trophy className="w-5 h-5 text-primary"/>
@@ -199,7 +199,12 @@ export default function AdminTeams() {
                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold uppercase shrink-0">
                          {(team.teamLeaderName || 'U').charAt(0)}
                        </div>
-                       {team.teamLeaderName || 'Unknown Leader'}
+                       <div className="flex items-center gap-2">
+                         <span>{team.teamLeaderName || 'Unknown Leader'}</span>
+                         <span className="badge bg-muted text-muted-foreground px-2 py-0.5 rounded">
+                           {users.find(u => u.id === team.teamLeaderId)?.currentRank || 'Member'}
+                         </span>
+                       </div>
                     </td>
                     <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold text-primary whitespace-nowrap">
                        {liveStats.score}

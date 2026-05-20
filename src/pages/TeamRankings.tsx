@@ -80,7 +80,7 @@ export default function TeamRankings({ inTab = false }: { inTab?: boolean }) {
         </div>
       </div>
 
-      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+      <div className="card overflow-hidden">
         <div className="p-6 border-b border-border flex justify-between items-center bg-muted/20">
            <h2 className="font-bold flex items-center gap-2">
              <Users className="w-5 h-5 text-primary"/>

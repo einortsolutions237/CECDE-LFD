@@ -142,7 +142,7 @@ export default function Reports() {
 
       {/* METRICS SUMMARY */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex items-center gap-6 hover:-translate-y-1 transition-transform">
+        <div className="card flex items-center gap-6 card-hover">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
             <Users className="w-6 h-6" />
           </div>
@@ -152,7 +152,7 @@ export default function Reports() {
           </div>
         </div>
         
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex items-center gap-6 hover:-translate-y-1 transition-transform">
+        <div className="card flex items-center gap-6 card-hover">
           <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center text-success">
             <Target className="w-6 h-6" />
           </div>
@@ -162,7 +162,7 @@ export default function Reports() {
           </div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex items-center gap-6 hover:-translate-y-1 transition-transform">
+        <div className="card flex items-center gap-6 card-hover">
           <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
             <TrendingUp className="w-6 h-6" />
           </div>
@@ -172,7 +172,7 @@ export default function Reports() {
           </div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex items-center gap-6 hover:-translate-y-1 transition-transform">
+        <div className="card flex items-center gap-6 card-hover">
           <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
             <Users className="w-6 h-6" />
           </div>
@@ -185,7 +185,7 @@ export default function Reports() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* NETWORK GROWTH OVER TIME (AREA CHART) */}
-        <div className="xl:col-span-2 bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col">
+        <div className="xl:col-span-2 card flex flex-col">
           <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Cumulative Network Growth (6 Months)</h2>
           <div className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -214,7 +214,7 @@ export default function Reports() {
         </div>
 
         {/* RANK DISTRIBUTION PIE CHART */}
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Directs Rank Distribution</h2>
           <div className="w-full h-[220px] mb-4">
             <ResponsiveContainer width="100%" height="100%">
@@ -253,7 +253,7 @@ export default function Reports() {
       </div>
 
       {/* REFERRAL PERFORMANCE BARCHART */}
-      <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col">
+      <div className="card flex flex-col">
         <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Recent Referral Performance (Last 4 Weeks)</h2>
         <div className="flex gap-6 mb-4 items-center">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -287,7 +287,7 @@ export default function Reports() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex items-start gap-6 cursor-pointer hover:bg-muted/30 transition-colors">
+        <div className="card flex items-start gap-6 cursor-pointer hover:bg-muted/30 transition-colors">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
              <FileText className="w-6 h-6 text-primary" />
           </div>
@@ -296,7 +296,7 @@ export default function Reports() {
             <p className="text-xs text-muted-foreground">Download a detailed overview of all network stats, referral conversion rates, and ranks for the previous month.</p>
           </div>
         </div>
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex items-start gap-6 cursor-pointer hover:bg-muted/30 transition-colors">
+        <div className="card flex items-start gap-6 cursor-pointer hover:bg-muted/30 transition-colors">
           <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0">
              <FileText className="w-6 h-6 text-secondary" />
           </div>

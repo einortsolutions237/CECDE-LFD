@@ -109,7 +109,7 @@ export default function Rankings() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1 bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col justify-center items-center text-center">
+            <div className="md:col-span-1 card flex flex-col justify-center items-center text-center">
               <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                  <Trophy className="w-10 h-10 text-primary" />
               </div>
@@ -118,11 +118,11 @@ export default function Rankings() {
               <p className="text-xs text-muted-foreground">Keep building your network to reach the next tier.</p>
             </div>
 
-            <div className="md:col-span-2 bg-card rounded-2xl border border-border p-6 shadow-sm overflow-x-auto">
+            <div className="md:col-span-2 card overflow-x-auto">
               <h3 className="text-xl font-semibold tracking-tight text-foreground mb-4">Rank Requirements</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
                 {ranks.map(r => (
-                  <div key={r.name} className="flex flex-col gap-2 p-4 rounded-xl border border-border hover:-translate-y-1 transition-all duration-300">
+                  <div key={r.name} className="flex flex-col gap-2 p-4 rounded-xl border border-border card-hover">
                     <div className={`w-fit px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${r.color}`}>
                       {r.name}
                     </div>
@@ -136,7 +136,7 @@ export default function Rankings() {
             </div>
           </div>
           
-          <div className="bg-card shadow-sm rounded-2xl border border-border flex flex-col">
+          <div className="card flex flex-col">
               <div className="p-6 border-b border-border flex items-center justify-between">
                  <h2 className="text-xl font-semibold tracking-tight text-foreground">Global Individual Leaderboard</h2>
               </div>

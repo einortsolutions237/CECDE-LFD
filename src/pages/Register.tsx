@@ -5,6 +5,8 @@ import { doc, getDocs, getDoc, query, collection, where, writeBatch, arrayUnion,
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { UserPlus, Eye, EyeOff } from 'lucide-react';
 
+import toast from 'react-hot-toast';
+
 export default function Register() {
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get('ref') || '';
@@ -282,7 +284,7 @@ export default function Register() {
           <span className="text-primary text-[#6C3BAA]">CECDE</span>
         </div>
       </div>
-      <div className="bg-card w-full max-w-md rounded-2xl shadow-sm border border-border p-8 md:p-10 mb-8">
+      <div className="card w-full max-w-md p-8 md:p-10 mb-8">
         <div className="flex flex-col mb-8">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Create Account</h1>
           <p className="text-muted-foreground text-sm mt-1">Join the premier MLM platform</p>

@@ -159,7 +159,7 @@ export default function AdminSettings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Appearance Settings */}
-        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col lg:col-span-2">
+        <div className="card overflow-hidden flex flex-col lg:col-span-2">
            <div className="p-6 border-b border-border flex items-center gap-3">
               <Palette className="w-5 h-5 text-indigo-500" />
               <h2 className="text-xl font-semibold tracking-tight">Appearance</h2>
@@ -201,7 +201,7 @@ export default function AdminSettings() {
         </div>
 
         {/* Core Settings */}
-        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col">
+        <div className="card overflow-hidden flex flex-col">
            <div className="p-6 border-b border-border flex items-center gap-3">
               <Settings className="w-5 h-5 text-primary" />
               <h2 className="text-xl font-semibold tracking-tight">General Configuration</h2>
@@ -229,7 +229,7 @@ export default function AdminSettings() {
         </div>
 
         {/* Security & Access */}
-        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col">
+        <div className="card overflow-hidden flex flex-col">
            <div className="p-6 border-b border-border flex items-center gap-3">
               <Shield className="w-5 h-5 text-destructive" />
               <h2 className="text-xl font-semibold tracking-tight">Access & Security</h2>
@@ -260,7 +260,7 @@ export default function AdminSettings() {
         </div>
 
         {/* Gamification & Points */}
-        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col lg:col-span-2">
+        <div className="card overflow-hidden flex flex-col lg:col-span-2">
            <div className="p-6 border-b border-border flex items-center gap-3">
               <Palette className="w-5 h-5 text-yellow-500" />
               <h2 className="text-xl font-semibold tracking-tight">Points & Gamification Drivers</h2>
@@ -306,7 +306,7 @@ export default function AdminSettings() {
         </div>
 
         {/* Database & Sync Tools */}
-        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col lg:col-span-2">
+        <div className="card overflow-hidden flex flex-col lg:col-span-2">
            <div className="p-6 border-b border-border flex items-center gap-3">
               <Database className="w-5 h-5 text-blue-500" />
               <h2 className="text-xl font-semibold tracking-tight">Database Tools & Utilities</h2>

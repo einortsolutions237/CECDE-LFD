@@ -106,7 +106,7 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
           ))}
         </div>
 
-        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="card overflow-hidden">
           <div className="table-scroll-container">
             <table className="w-full text-left min-w-[700px] md:min-w-full">
               <thead>

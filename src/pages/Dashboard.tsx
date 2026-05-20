@@ -219,7 +219,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="col-span-1 md:col-span-2 bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col justify-center relative overflow-hidden">
+        <div className="col-span-1 md:col-span-2 card flex flex-col justify-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
           
           <div className="flex items-start justify-between z-10">
@@ -284,7 +284,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col justify-center">
+        <div className="card flex flex-col justify-center">
            <h3 className="text-sm font-medium text-muted-foreground mb-3">Rank Progress</h3>
            <div className="flex items-end gap-2 mb-2">
              <div className="text-3xl font-bold text-foreground">{progressPercent}<span className="text-lg text-muted-foreground">%</span></div>
@@ -361,7 +361,7 @@ export default function Dashboard() {
                <h3 className="text-3xl font-bold tracking-tight text-success">{teamData?.activeMembers || 0}</h3>
             </div>
             
-            <div className="bg-card rounded-2xl border border-border p-5 shadow-sm overflow-hidden relative">
+            <div className="card overflow-hidden relative">
                <p className="text-sm text-muted-foreground font-medium mb-1">{userData.roleType === 'team_leader' ? 'Team Score' : 'Leader Name'}</p>
                <h3 className="text-3xl font-bold tracking-tight text-foreground">
                  {userData.roleType === 'team_leader' ? `${teamData?.leaderPerformanceScore || 0} pts` : teamData?.teamLeaderName || '-'}
@@ -375,7 +375,7 @@ export default function Dashboard() {
       <div>
         <h2 className="text-xl font-semibold tracking-tight text-foreground mb-4">Team Activity Status</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="bg-card rounded-2xl border border-success/20 p-5 shadow-sm flex flex-col relative overflow-hidden">
+          <div className="card border-success/20 p-5 flex flex-col relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-success/5 rounded-bl-full -z-10"></div>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -392,7 +392,7 @@ export default function Dashboard() {
             </div>
             <p className="text-xs text-muted-foreground mt-2">Total active downlines</p>
           </div>
-          <div className="bg-card rounded-2xl border border-purple-500/20 p-5 shadow-sm flex flex-col relative overflow-hidden">
+          <div className="card border-purple-500/20 p-5 flex flex-col relative overflow-hidden">
              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-bl-full -z-10"></div>
              <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -413,7 +413,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold tracking-tight text-foreground">Referral Growth</h2>
           </div>
@@ -439,7 +439,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Recent Activity</h2>
           <div className="flex flex-col gap-6">
             {recentActivities.length > 0 ? recentActivities.map((act, i) => (
@@ -467,9 +467,9 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ title, value, icon, trend, trendUp }: any) {
+const StatCard = React.memo(({ title, value, icon, trend, trendUp }: any) => {
   return (
-    <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col hover:-translate-y-1 transition-all duration-300">
+    <div className="card flex flex-col card-hover">
       <div className="flex items-center justify-between mb-4">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
           {icon}
@@ -484,4 +484,5 @@ function StatCard({ title, value, icon, trend, trendUp }: any) {
       <div className="text-3xl font-bold text-foreground">{value}</div>
     </div>
   );
-}
+});
+StatCard.displayName = 'StatCard';

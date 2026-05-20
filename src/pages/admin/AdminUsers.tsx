@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, MoreHorizontal, ShieldAlert, CheckCircle, XCircle, Trash2, KeyRound, Plus, X } from 'lucide-react';
-import { collection, query, where, getDocs, updateDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, setDoc, deleteDoc, orderBy, limit, startAfter } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { db, firebaseConfig } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
+
+import toast from 'react-hot-toast';
 
 export default function AdminUsers() {
   const { userData } = useAuth();
@@ -27,17 +29,54 @@ export default function AdminUsers() {
     sponsorReferralCode: ''
   });
 
+  const [lastDoc, setLastDoc] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const snap = await getDocs(collection(db, 'users'));
+      const q = query(
+        collection(db, 'users'),
+        orderBy('createdAt', 'desc'),
+        limit(50)
+      );
+      const snap = await getDocs(q);
       const usersList: any[] = [];
       snap.forEach(doc => {
         usersList.push({ id: doc.id, ...doc.data() });
       });
       setUsers(usersList);
+      if (snap.docs.length > 0) {
+        setLastDoc(snap.docs[snap.docs.length - 1]);
+      }
     } catch (err) {
       console.error("Failed to fetch users", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMore = async () => {
+    if (!lastDoc) return;
+    try {
+      setLoading(true);
+      const q = query(
+        collection(db, 'users'),
+        orderBy('createdAt', 'desc'),
+        startAfter(lastDoc),
+        limit(50)
+      );
+      const snap = await getDocs(q);
+      const usersList = [...users];
+      snap.forEach(doc => {
+        usersList.push({ id: doc.id, ...doc.data() });
+      });
+      setUsers(usersList);
+      if (snap.docs.length > 0) {
+        setLastDoc(snap.docs[snap.docs.length - 1]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch more users", err);
     } finally {
       setLoading(false);
     }
@@ -99,14 +138,14 @@ export default function AdminUsers() {
       });
 
       setUpdateStatus(`Success: Created user ${newUser.email}`);
-      alert('User created successfully!');
+      toast.success('User created successfully!');
       setIsModalOpen(false);
       setNewUser({ fullName: '', email: '', password: '', role: 'member', referralCode: '', sponsorReferralCode: '' });
       fetchUsers();
     } catch (err: any) {
       console.error("Failed to create user:", err);
       setUpdateStatus(`Error creating user: ${err.message}`);
-      alert(`Error creating user: ${err.message}`);
+      toast.error(`Error creating user: ${err.message}`);
     } finally {
       setIsCreating(false);
     }
@@ -120,7 +159,7 @@ export default function AdminUsers() {
       setUpdateStatus(`Updating code for ${userEmail}...`);
       await updateDoc(doc(db, 'users', currentId), { referralCode: newCode.toUpperCase() });
       setUpdateStatus(`Success: Referral code for ${userEmail} updated to ${newCode.toUpperCase()}`);
-      alert(`Success! Referral code updated to ${newCode.toUpperCase()}`);
+      toast.success(`Success! Referral code updated to ${newCode.toUpperCase()}`);
       
       // Refresh user list
       fetchUsers();
@@ -152,18 +191,18 @@ export default function AdminUsers() {
     } catch (err: any) {
        console.error(err);
        setUpdateStatus(`Error updating role: ${err.message}`);
-       alert(`Error updating role: ${err.message}`);
+       toast.error(`Error updating role: ${err.message}`);
     }
   };
 
   const handleDeleteUser = async (userId: string, userEmail: string) => {
     if (!isSuperAdmin) {
-       alert("Only Super Admins can delete users.");
+       toast.error("Only Super Admins can delete users.");
        return;
     }
     
     if (userId === userData?.uid) {
-       alert("You cannot delete your own account.");
+       toast.error("You cannot delete your own account.");
        return;
     }
 
@@ -180,7 +219,7 @@ export default function AdminUsers() {
     } catch (err: any) {
        console.error("Failed to delete user:", err);
        setUpdateStatus(`Error deleting user: ${err.message}`);
-       alert(`Error deleting user: ${err.message}`);
+       toast.error(`Error deleting user: ${err.message}`);
     }
   };
 
@@ -210,7 +249,7 @@ export default function AdminUsers() {
       {/* Add User Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-md rounded-2xl shadow-xl border border-border">
+          <div className="card w-full max-w-md">
             <div className="flex items-center justify-between p-6 border-b border-border">
               <h2 className="text-xl font-bold text-foreground">Add New User</h2>
               <button 
@@ -310,7 +349,7 @@ export default function AdminUsers() {
         </div>
       )}
 
-      <div className="bg-card rounded-2xl border border-border flex flex-col shadow-sm">
+      <div className="card">
         <div className="p-6 border-b border-border flex flex-col sm:flex-row justify-between gap-6">
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
@@ -464,13 +503,15 @@ export default function AdminUsers() {
             </tbody>
           </table>
         </div>
-        <div className="p-4 border-t border-border flex justify-between items-center bg-muted/10">
-          <span className="text-xs text-muted-foreground font-medium">Showing 1 to 5 of 5 entries</span>
-          <div className="flex gap-1">
-            <button className="px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold disabled:opacity-50 text-foreground">Prev</button>
-            <button className="px-3 py-1.5 bg-primary border text-primary-foreground border-transparent rounded-lg text-xs font-semibold text-white cursor-default">1</button>
-            <button className="px-3 py-1.5 bg-card border border-border rounded-lg text-xs font-semibold disabled:opacity-50 text-foreground">Next</button>
-          </div>
+        <div className="p-4 border-t border-border flex justify-center items-center bg-muted/10">
+          <button 
+            type="button" 
+            onClick={loadMore} 
+            disabled={!lastDoc || loading}
+            className="px-6 py-2 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 disabled:opacity-50 transition-colors text-sm"
+          >
+            {loading ? 'Loading...' : 'Load More Users'}
+          </button>
         </div>
       </div>
     </div>

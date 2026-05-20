@@ -13,16 +13,20 @@ service cloud.firestore {
       return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
           && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin');
     }
+    
+    function isSuperAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin';
+    }
 
     match /users/{userId} {
-      allow read: if true;
-      allow create: if isSignedIn();
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      // For create: only user can create their own profile, or admin
+      allow create: if isSignedIn() && (request.auth.uid == userId);
       allow update: if isSignedIn() && (
-        request.auth.uid == userId || 
-        isAdmin() ||
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['directReferralsCount', 'totalDownlineCount', 'activityState'])
+        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'walletBalance', 'sponsorId', 'teamId', 'rankingScore', 'activityState', 'currentRank', 'directReferralsCount', 'totalDownlineCount'])) || isAdmin()
       );
-      allow delete: if isAdmin();
+      allow delete: if isSuperAdmin();
     }
 
     match /network/{userId} {
@@ -38,8 +42,13 @@ service cloud.firestore {
     match /teams/{teamId} {
       allow read: if isSignedIn();
       allow create: if isAdmin();
-      allow update: if isSignedIn();
+      allow update: if isAdmin() || (isSignedIn() && resource.data.teamLeaderId == request.auth.uid);
       allow delete: if isAdmin();
+    }
+
+    match /system_settings/{document} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     match /notifications/{notificationId} {

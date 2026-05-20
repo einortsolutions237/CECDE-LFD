@@ -24,7 +24,19 @@ export const updateActivityState = functions.firestore
     }
 
     if (currentState !== nextState) {
-      await change.after.ref.update({ activityState: nextState });
+      const updates: any = { activityState: nextState };
+      await change.after.ref.update(updates);
+
+      // Increment/Decrement team active members
+      if (newData.teamId && newData.teamId !== newData.sponsorId) {
+        const d = nextState === 'active' ? 1 : -1;
+        const scoreInc = nextState === 'active' ? 3 : -3;
+        await db.collection('teams').doc(newData.teamId).update({
+           activeMembers: admin.firestore.FieldValue.increment(d),
+           activeDownlineCount: admin.firestore.FieldValue.increment(d),
+           leaderPerformanceScore: admin.firestore.FieldValue.increment(scoreInc)
+        }).catch(err => console.error('Failed to update team active counts', err));
+      }
       
       if (nextState === 'active') {
         const userId = context.params.userId;
@@ -40,7 +52,7 @@ export const updateActivityState = functions.firestore
     return null;
   });
 
-export const updateDirectReferrals = functions.firestore
+export const handleNewUserRegistration = functions.firestore
   .document('users/{userId}')
   .onCreate(async (snap, context) => {
     const newUser = snap.data();
@@ -50,10 +62,9 @@ export const updateDirectReferrals = functions.firestore
     if (!sponsorId || sponsorId === 'SYSTEM') return null;
 
     try {
-      // Logic handled securely on server side
       const uRef = db.collection('users').doc(sponsorId);
-      
       let newTeamLeaderId = sponsorId;
+
       await db.runTransaction(async (transaction) => {
         const uDoc = await transaction.get(uRef);
         if (uDoc.exists) {
@@ -74,36 +85,10 @@ export const updateDirectReferrals = functions.firestore
         }
       });
       
-      // Assign the new user to the sponsor's team immediately
       await snap.ref.update({ teamId: newTeamLeaderId, roleType: 'team_member' });
 
-    } catch (e) {
-      console.error("Error updating direct referrals", e);
-    }
-    return null;
-  });
-
-// Triggered when a new user is created
-export const onUserCreated = functions.firestore
-  .document('users/{userId}')
-  .onCreate(async (snap, context) => {
-    const newUser = snap.data();
-    const sponsorId = newUser.sponsorId;
-    const userId = context.params.userId;
-
-    if (!sponsorId || sponsorId === 'SYSTEM') return;
-
-    try {
-      // Find the sponsor document by referralCode
-      const sponsorSnapshot = await db.collection('users').where('referralCode', '==', sponsorId).get();
-      
-      if (sponsorSnapshot.empty) return;
-      
-      const sponsorDoc = sponsorSnapshot.docs[0];
-      const sponsorUid = sponsorDoc.id;
-
       // Update sponsor's network stats
-      const sponsorNetworkRef = db.collection('network').doc(sponsorUid);
+      const sponsorNetworkRef = db.collection('network').doc(sponsorId);
       
       await db.runTransaction(async (transaction) => {
         const networkDoc = await transaction.get(sponsorNetworkRef);
@@ -115,254 +100,163 @@ export const onUserCreated = functions.firestore
           if (!currentDirects.includes(userId)) {
             transaction.update(sponsorNetworkRef, {
               directReferrals: admin.firestore.FieldValue.arrayUnion(userId),
-              totalDownlineCount: admin.firestore.FieldValue.increment(1),
-              activeDownlineCount: admin.firestore.FieldValue.increment(1) // Assuming actively registered
+              activeDownlineCount: admin.firestore.FieldValue.increment(1)
             });
           }
         }
       });
+      // Ranking calculation is handled in propagateNetworkGrowth
+    } catch (e) {
+      console.error("Error processing new user registration", e);
+    }
+    return null;
+  });
 
-      // Recalculate Rank for Sponsor
-      const updatedNetworkSnap = await sponsorNetworkRef.get();
-      const updatedNetwork = updatedNetworkSnap.data();
-      const directCount = updatedNetwork?.directReferrals?.length || 0;
-      const totalDownline = updatedNetwork?.totalDownlineCount || 0;
-      
-      let newRank = 'Bronze';
-      if (totalDownline >= 500) newRank = 'Diamond';
-      else if (totalDownline >= 100) newRank = 'Platinum';
-      else if (totalDownline >= 50) newRank = 'Gold';
-      else if (totalDownline >= 20) newRank = 'Silver';
-      else if (directCount >= 5) newRank = 'Bronze';
-      else newRank = 'Member';
+// Event-driven rank update and ancestor stats update
+export const propagateNetworkGrowth = functions.firestore
+  .document('users/{userId}')
+  .onCreate(async (snap, context) => {
+    const newUser = snap.data();
+    let currentSponsorId = newUser.sponsorId;
+    
+    if (!currentSponsorId || currentSponsorId === 'SYSTEM') return null;
 
-      if (sponsorDoc.data().currentRank !== newRank) {
-        await sponsorDoc.ref.update({ currentRank: newRank });
+    try {
+      const batch = db.batch();
+      let sponsorIds = [];
+      let currentId = currentSponsorId;
+
+      // Collect all ancestors (to avoid infinite loops, cap at 50 levels)
+      for (let i = 0; i < 50; i++) {
+        if (!currentId || currentId === 'SYSTEM') break;
+        const parentDoc = await db.collection('users').doc(currentId).get();
+        if (!parentDoc.exists) break;
         
-        // Create a notification
+        sponsorIds.push(currentId);
+        currentId = parentDoc.data()?.sponsorId;
+      }
+
+      // Propagate totalDownlineCount increment
+      for (const sId of sponsorIds) {
+        const uRef = db.collection('users').doc(sId);
+        const netRef = db.collection('network').doc(sId);
+        
+        batch.update(uRef, {
+          totalDownlineCount: admin.firestore.FieldValue.increment(1)
+        });
+        batch.update(netRef, {
+          totalDownlineCount: admin.firestore.FieldValue.increment(1)
+        });
+      }
+
+      // Increment team metrics if applicable
+      const assignedTeamId = newUser.teamId || null;
+      if (assignedTeamId) {
+        let scoreIncrement = 2; // +1 downline = +2 score
+        let isDirectForTeam = false;
+        
+        // If the new user's sponsor is actually the team leader
+        if (assignedTeamId === currentSponsorId) {
+           isDirectForTeam = true;
+           scoreIncrement = 5;
+        }
+
+        const teamRef = db.collection('teams').doc(assignedTeamId);
+        
+        const teamUpdates: any = {
+          totalMembers: admin.firestore.FieldValue.increment(1),
+          totalDownlineCount: admin.firestore.FieldValue.increment(1),
+          leaderPerformanceScore: admin.firestore.FieldValue.increment(scoreIncrement)
+        };
+        
+        if (isDirectForTeam) {
+            teamUpdates.leaderDirectReferralsCount = admin.firestore.FieldValue.increment(1);
+        }
+
+        batch.update(teamRef, teamUpdates);
+      }
+      
+      await batch.commit();
+
+      // Check and update ranks for all ancestors
+      for (const sId of sponsorIds) {
+        const uRef = db.collection('users').doc(sId);
+        const uDoc = await uRef.get();
+        if (uDoc.exists) {
+          const uData = uDoc.data()!;
+          const totalDownline = uData.totalDownlineCount || 0;
+          const directCount = uData.directReferralsCount || 0;
+          const walletBalance = uData.walletBalance || 0;
+          
+          let newRank = 'Member';
+          if (totalDownline >= 1000 && walletBalance >= 5000) newRank = 'Crown Ambassador';
+          else if (totalDownline >= 500 && walletBalance >= 1000) newRank = 'Diamond';
+          else if (totalDownline >= 100 && walletBalance >= 500) newRank = 'Platinum';
+          else if (totalDownline >= 50 && walletBalance >= 200) newRank = 'Gold';
+          else if (totalDownline >= 20 && walletBalance >= 100) newRank = 'Silver';
+          else if (directCount >= 5 && walletBalance >= 50) newRank = 'Bronze';
+          
+          if (uData.currentRank !== newRank) {
+            await uRef.update({ currentRank: newRank });
+            await db.collection('notifications').add({
+              userId: sId,
+              title: 'Rank Upgraded!',
+              message: `Congratulations! Your rank has been upgraded to ${newRank}.`,
+              isRead: false,
+              createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Error propagating network growth", e);
+    }
+    return null;
+  });
+
+export const checkRankOnWalletUpdate = functions.firestore
+  .document('users/{userId}')
+  .onUpdate(async (change, context) => {
+    const newData = change.after.data();
+    const oldData = change.before.data();
+    
+    // Only proceed if walletBalance has changed
+    if (newData.walletBalance === oldData.walletBalance) {
+      return null;
+    }
+
+    try {
+      const uRef = change.after.ref;
+      const totalDownline = newData.totalDownlineCount || 0;
+      const directCount = newData.directReferralsCount || 0;
+      const walletBalance = newData.walletBalance || 0;
+      
+      let newRank = 'Member';
+      if (totalDownline >= 1000 && walletBalance >= 5000) newRank = 'Crown Ambassador';
+      else if (totalDownline >= 500 && walletBalance >= 1000) newRank = 'Diamond';
+      else if (totalDownline >= 100 && walletBalance >= 500) newRank = 'Platinum';
+      else if (totalDownline >= 50 && walletBalance >= 200) newRank = 'Gold';
+      else if (totalDownline >= 20 && walletBalance >= 100) newRank = 'Silver';
+      else if (directCount >= 5 && walletBalance >= 50) newRank = 'Bronze';
+      
+      if (newData.currentRank !== newRank) {
+        await uRef.update({ currentRank: newRank });
+        const rankOrder = ['Member', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Crown Ambassador'];
+        const isUpgrade = rankOrder.indexOf(newRank) > rankOrder.indexOf(newData.currentRank || 'Member');
+        
         await db.collection('notifications').add({
-          userId: sponsorUid,
-          title: 'Rank Upgrade!',
-          message: `Congratulations! You have been upgraded to ${newRank}.`,
+          userId: context.params.userId,
+          title: isUpgrade ? 'Rank Upgrade!' : 'Rank Adjustment',
+          message: isUpgrade 
+            ? `Congratulations! Your rank has been upgraded to ${newRank}.`
+            : `Your rank has been adjusted to ${newRank}.`,
           isRead: false,
           createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
       }
-
-    } catch (error) {
-      console.error("Error processing new user in network", error);
+    } catch (e) {
+      console.error("Error evaluating rank on wallet update", e);
     }
+    return null;
   });
 
-// Background job to periodically check and update ranks for all users
-// Runs every 24 hours
-export const updateAllUserRanks = functions.pubsub
-  .schedule('every 24 hours')
-  .onRun(async (context) => {
-    try {
-      const usersSnapshot = await db.collection('users').get();
-      
-      // Firestore transactions/batch have a limit of 500 operations.
-      // We process updates in chunks of 500.
-      let batch = db.batch();
-      let operationCount = 0;
-
-      for (const userDoc of usersSnapshot.docs) {
-        const userData = userDoc.data();
-        const userId = userDoc.id;
-        
-        // Fetch user's network stats
-        const networkDoc = await db.collection('network').doc(userId).get();
-        const networkData = networkDoc.exists ? networkDoc.data() : null;
-        
-        const directCount = networkData?.directReferrals?.length || 0;
-        const totalDownline = networkData?.totalDownlineCount || 0;
-        const walletBalance = userData?.walletBalance || 0;
-        
-        // Define Rank Levels Based on Business Logic (includes walletBalance and team size constraints)
-        let newRank = 'Member';
-        
-        if (totalDownline >= 1000 && walletBalance >= 5000) {
-          newRank = 'Crown Ambassador';
-        } else if (totalDownline >= 500 && walletBalance >= 1000) {
-          newRank = 'Diamond';
-        } else if (totalDownline >= 100 && walletBalance >= 500) {
-          newRank = 'Platinum';
-        } else if (totalDownline >= 50 && walletBalance >= 200) {
-          newRank = 'Gold';
-        } else if (totalDownline >= 20 && walletBalance >= 100) {
-          newRank = 'Silver';
-        } else if (directCount >= 5 && walletBalance >= 50) {
-          newRank = 'Bronze';
-        }
-        
-        const currentRank = userData?.currentRank || 'Member';
-
-        // Check if rank has changed
-        if (currentRank !== newRank) {
-          batch.update(userDoc.ref, { currentRank: newRank });
-          operationCount++;
-
-          // Determine if it's an upgrade or downgrade for the notification message
-          const rankOrder = ['Member', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Crown Ambassador'];
-          const isUpgrade = rankOrder.indexOf(newRank) > rankOrder.indexOf(currentRank);
-          
-          if (isUpgrade) {
-            const notificationRef = db.collection('notifications').doc();
-            batch.set(notificationRef, {
-              userId: userId,
-              title: 'Rank Upgrade!',
-              message: `Congratulations! Your rank has been upgraded to ${newRank} due to network and wallet performance.`,
-              isRead: false,
-              createdAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-            operationCount++;
-          } else {
-            const notificationRef = db.collection('notifications').doc();
-            batch.set(notificationRef, {
-              userId: userId,
-              title: 'Rank Adjustment',
-              message: `Your rank has been adjusted to ${newRank} based on the current network performance criteria.`,
-              isRead: false,
-              createdAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-            operationCount++;
-          }
-          
-          // Commit batch if it's close to the 500 limit
-          if (operationCount >= 490) {
-            await batch.commit();
-            batch = db.batch(); // Create a new batch
-            operationCount = 0;
-          }
-        }
-      }
-
-      // Commit any remaining operations in the last batch
-      if (operationCount > 0) {
-        await batch.commit();
-      }
-      
-      console.log('Successfully completed scheduled rank updates.');
-    } catch (error) {
-      console.error('Error during scheduled background rank update job', error);
-    }
-  });
-
-export const updateMetricsSync = functions.pubsub
-  .schedule('every 1 hours')
-  .onRun(async (context) => {
-    try {
-      const usersSnap = await db.collection('users').get();
-      const teamsSnap = await db.collection('teams').get();
-
-      const users: any[] = [];
-      usersSnap.forEach(u => users.push({ id: u.id, ...u.data() }));
-
-      const teams: any[] = [];
-      teamsSnap.forEach(t => teams.push({ id: t.id, ...t.data() }));
-
-      let batch = db.batch();
-      let operationCount = 0;
-
-      const commitBatchIfNeeded = async () => {
-        if (operationCount >= 490) {
-          await batch.commit();
-          batch = db.batch();
-          operationCount = 0;
-        }
-      };
-
-      const adjList = new Map<string, string[]>();
-      users.forEach(u => adjList.set(u.id, []));
-      users.forEach(u => {
-        if (u.sponsorId && adjList.has(u.sponsorId)) {
-           adjList.get(u.sponsorId)!.push(u.id);
-        }
-      });
-
-      for (const user of users) {
-        const directs = adjList.get(user.id) || [];
-        const directCount = directs.length;
-        
-        let downlineCount = 0;
-        const stack = [...directs];
-        while (stack.length > 0) {
-          const current = stack.pop()!;
-          downlineCount++;
-          const children = adjList.get(current) || [];
-          stack.push(...children);
-        }
-
-        if (user.directReferralsCount !== directCount || user.totalDownlineCount !== downlineCount) {
-          const userRef = db.collection('users').doc(user.id);
-          batch.update(userRef, { 
-            directReferralsCount: directCount,
-            totalDownlineCount: downlineCount
-          });
-          user.directReferralsCount = directCount;
-          user.totalDownlineCount = downlineCount;
-          operationCount++;
-          await commitBatchIfNeeded();
-        }
-      }
-
-      for (const team of teams) {
-        const leaderId = team.teamLeaderId;
-        let leaderDownlineCount = 0;
-        let leaderActiveDownlineCount = 0;
-        let leaderPerformanceScore = 0;
-
-        const leads = adjList.get(leaderId) || [];
-        const stack = [...leads];
-        const networkMembersId = new Set<string>();
-        while (stack.length > 0) {
-           const current = stack.pop()!;
-           if (!networkMembersId.has(current)) {
-               networkMembersId.add(current);
-               const children = adjList.get(current) || [];
-               stack.push(...children);
-           }
-        }
-
-        leaderDownlineCount = networkMembersId.size;
-
-        networkMembersId.forEach(uid => {
-           const u = users.find(user => user.id === uid);
-           if (u) {
-             if (u.accountStatus === 'active') {
-                leaderActiveDownlineCount++;
-             }
-             const direct = u.directReferralsCount || 0;
-             const downline = u.totalDownlineCount || 0;
-             const active = u.activityState === 'active' ? 1 : 0;
-             leaderPerformanceScore += (direct * 5) + ((downline - direct) * 2) + (active * 3);
-           }
-        });
-
-        if (
-          team.totalDownlineCount !== leaderDownlineCount ||
-          team.activeDownlineCount !== leaderActiveDownlineCount ||
-          team.leaderPerformanceScore !== leaderPerformanceScore ||
-          team.leaderDirectReferralsCount !== leads.length
-        ) {
-          const teamRef = db.collection('teams').doc(team.id);
-          batch.update(teamRef, {
-            totalDownlineCount: leaderDownlineCount,
-            activeDownlineCount: leaderActiveDownlineCount,
-            leaderPerformanceScore,
-            leaderDirectReferralsCount: leads.length
-          });
-          operationCount++;
-          await commitBatchIfNeeded();
-        }
-      }
-
-      if (operationCount > 0) {
-        await batch.commit();
-      }
-      console.log('Successfully completed scheduled metrics sync.');
-    } catch (err) {
-      console.error('Error during scheduled background metrics sync', err);
-    }
-  });

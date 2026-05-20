@@ -112,7 +112,7 @@ export default function TeamMembers() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex items-center gap-6">
+            <div className="card flex items-center gap-6">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                 <Users className="w-6 h-6" />
               </div>
@@ -122,7 +122,7 @@ export default function TeamMembers() {
               </div>
             </div>
             
-            <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex items-center gap-6">
+            <div className="card flex items-center gap-6">
               <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center text-success">
                 <Award className="w-6 h-6" />
               </div>
@@ -132,7 +132,7 @@ export default function TeamMembers() {
               </div>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex items-center gap-6">
+            <div className="card flex items-center gap-6">
               <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
                 <TrendingUp className="w-6 h-6" />
               </div>
@@ -143,7 +143,7 @@ export default function TeamMembers() {
             </div>
           </div>
 
-          <div className="bg-card shadow-sm rounded-2xl border border-border overflow-hidden">
+          <div className="card overflow-hidden">
             <div className="p-5 border-b border-border bg-muted/20">
               <h2 className="font-bold text-lg flex items-center gap-2">
                 <User className="w-5 h-5 text-primary" />

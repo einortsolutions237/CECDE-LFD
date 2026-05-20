@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../../lib/firebase';
 import { 
   Search, Filter, ChevronRight, ChevronDown, User, Users, 
@@ -42,7 +42,8 @@ export default function AdminNetwork() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'users'));
+        const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(100));
+        const querySnapshot = await getDocs(q);
         const loadedUsers: NetworkUser[] = [];
         querySnapshot.forEach((doc) => {
           const data = doc.data();
@@ -230,7 +231,7 @@ export default function AdminNetwork() {
 
       {/* KPI STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-         <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex flex-col">
+         <div className="card flex flex-col">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
               <Network className="w-4 h-4" />
@@ -240,7 +241,7 @@ export default function AdminNetwork() {
           <div className="text-3xl font-bold tracking-tight text-foreground">{stats.total}</div>
         </div>
         
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center text-success">
               <UserCheck className="w-4 h-4" />
@@ -250,7 +251,7 @@ export default function AdminNetwork() {
           <div className="text-3xl font-bold tracking-tight text-foreground">{stats.activityActive}</div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500">
               <Users className="w-4 h-4" />
@@ -260,7 +261,7 @@ export default function AdminNetwork() {
           <div className="text-3xl font-bold tracking-tight text-foreground">{stats.activityDormant}</div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
               <FolderTree className="w-4 h-4" />
@@ -274,7 +275,7 @@ export default function AdminNetwork() {
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6">
         
         {/* USERS TABLE */}
-        <div className="bg-card rounded-2xl border border-border flex flex-col shadow-sm overflow-hidden h-fit">
+        <div className="card overflow-hidden h-fit">
            <div className="p-5 border-b border-border flex flex-col gap-6">
               <div className="flex items-center justify-between">
                  <h2 className="text-xl font-semibold tracking-tight text-foreground">System Members</h2>
@@ -406,7 +407,7 @@ export default function AdminNetwork() {
         {/* GENEALOGY TREE PREVIEW */}
         <div className="flex flex-col gap-6">
            {selectedUserForTree ? (
-             <div className="bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden sticky top-6 max-h-[80vh]">
+             <div className="card flex flex-col overflow-hidden sticky top-6 max-h-[80vh]">
                <div className="p-5 border-b border-border flex items-center justify-between">
                   <h2 className="text-xl font-semibold tracking-tight text-foreground flex items-center gap-2">
                     <FolderTree className="w-5 h-5 text-primary" />
@@ -424,7 +425,7 @@ export default function AdminNetwork() {
                </div>
              </div>
            ) : (
-             <div className="hidden xl:flex bg-card rounded-2xl border border-border border-dashed shadow-sm flex-col items-center justify-center p-8 text-center text-muted-foreground min-h-[400px]">
+             <div className="hidden xl:flex card flex-col items-center justify-center p-8 text-center text-muted-foreground min-h-[400px]">
                 <FolderTree className="w-12 h-12 text-muted-foreground/30 mb-4" />
                 <h3 className="font-semibold text-foreground mb-2">Genealogy Preview</h3>
                 <p className="text-sm max-w-[250px]">Click the tree icon on any member to view their complete downline structure.</p>

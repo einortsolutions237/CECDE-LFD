@@ -40,7 +40,7 @@ export default function Login() {
           <span className="text-primary text-[#6C3BAA]">CECDE</span>
         </div>
       </div>
-      <div className="bg-card w-full max-w-md rounded-2xl shadow-sm border border-border p-8 md:p-10">
+      <div className="card w-full max-w-md p-8 md:p-10">
         <div className="flex flex-col mb-8">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome Back</h1>
           <p className="text-muted-foreground text-sm mt-1">Sign in to your dashboard</p>

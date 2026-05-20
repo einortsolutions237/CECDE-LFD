@@ -12,6 +12,7 @@ import { Layout } from './components/Layout';
 import { AdminLayout } from './components/AdminLayout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingFallback } from './components/LoadingFallback';
+import { Toaster } from 'react-hot-toast';
 
 // Lazy loaded pages to optimize bundle size
 const Login = lazy(() => import('./pages/Login'));
@@ -39,6 +40,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="system">
+        <Toaster position="top-right" />
         <AuthProvider>
           <BrowserRouter>
             <Suspense fallback={<LoadingFallback />}>

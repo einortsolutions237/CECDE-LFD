@@ -98,7 +98,7 @@ export default function AdminDashboard() {
     <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <Users className="w-5 h-5" />
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
           <div className="text-3xl font-bold tracking-tight text-foreground">{stats.totalUsers}</div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success">
               <UserCheck className="w-5 h-5" />
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
           <div className="text-3xl font-bold tracking-tight text-foreground">{stats.activeUsers}</div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
               <Users className="w-5 h-5" />
@@ -128,7 +128,7 @@ export default function AdminDashboard() {
           <div className="text-3xl font-bold tracking-tight text-foreground">{stats.dormantUsers}</div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive">
               <UserX className="w-5 h-5" />
@@ -138,7 +138,7 @@ export default function AdminDashboard() {
           <div className="text-3xl font-bold tracking-tight text-foreground">{stats.suspended}</div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <Network className="w-5 h-5" />
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
           <div className="text-3xl font-bold tracking-tight text-foreground">0</div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center text-[#F59E0B]">
               <GitMerge className="w-5 h-5" />
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
           <div className="text-3xl font-bold tracking-tight text-foreground">{stats.totalDownlines}</div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success">
               <DollarSign className="w-5 h-5" />
@@ -171,7 +171,7 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Growth Chart */}
-        <div className="lg:col-span-2 bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col">
+        <div className="lg:col-span-2 card flex flex-col">
           <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">User Registration & Growth (Last 6 Months)</h2>
           <div className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Rank Distribution */}
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Rank Distribution</h2>
           <div className="w-full h-[200px] mb-6">
             <ResponsiveContainer width="100%" height="100%">
@@ -231,7 +231,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Activity Distribution */}
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col">
+        <div className="card flex flex-col">
           <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Activity Distribution</h2>
           <div className="w-full h-[200px] mb-6">
             <ResponsiveContainer width="100%" height="100%">
@@ -275,7 +275,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Activity Feed */}
-      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col">
+      <div className="card overflow-hidden flex flex-col">
         <div className="p-6 border-b border-border">
           <h2 className="text-xl font-semibold tracking-tight text-foreground">Recent Registrations</h2>
         </div>

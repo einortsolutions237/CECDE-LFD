@@ -83,7 +83,7 @@ export default function AdminRankings() {
              <p className="font-bold">{teamLeaders[0].message}</p>
            </div>
         ) : (
-          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="card overflow-hidden">
             <div className="table-scroll-container">
               <table className="w-full text-left min-w-[700px] md:min-w-full">
                 <thead>
@@ -155,7 +155,7 @@ export default function AdminRankings() {
         {loadingIndividuals ? (
           <div className="flex justify-center py-10"><div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>
         ) : (
-          <div className="bg-card shadow-sm rounded-2xl border border-border flex flex-col">
+          <div className="card flex flex-col">
               <div className="table-scroll-container">
                  <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
                    <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border whitespace-nowrap">

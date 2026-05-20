@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import toast from 'react-hot-toast';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { 
   ChevronRight, ChevronDown, User, UserPlus, Copy, Users, 
@@ -98,18 +99,15 @@ export default function NetworkTree() {
       } catch (err: any) {
         console.error("Error fetching network tree:", err);
         if (err.message && err.message.toLowerCase().includes('permission')) {
-          setTreeData([{
-            id: 'error',
+          setTreeData({
+            uid: 'error',
             fullName: 'Permission Error',
-            rank: 'Error',
-            level: 0,
-            directs: 0,
-            email: 'Check your Firebase rules',
-            status: 'inactive',
+            currentRank: 'Error',
+            sponsorId: '',
             referralCode: '',
             isOpen: false,
             children: []
-          }]);
+          });
         } else {
           handleFirestoreError(err, OperationType.LIST, 'users');
         }
@@ -224,7 +222,7 @@ export default function NetworkTree() {
   const copyReferralLink = () => {
     if (userData?.referralCode) {
       navigator.clipboard.writeText(`${window.location.origin}/register?ref=${userData.referralCode}`);
-      alert("Referral link copied!");
+      toast.success("Referral link copied!");
     }
   };
 
@@ -278,7 +276,7 @@ export default function NetworkTree() {
             <p className="text-sm text-muted-foreground mt-1">View your referral network, team growth, and genealogy tree.</p>
           </div>
         </div>
-        <div className="bg-card rounded-2xl border border-border p-12 shadow-sm flex flex-col items-center justify-center text-center">
+        <div className="card flex flex-col items-center justify-center text-center">
           <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
             <Users className="w-8 h-8 text-primary" />
           </div>
@@ -313,7 +311,7 @@ export default function NetworkTree() {
 
       {/* NETWORK SUMMARY CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col hover:-translate-y-1 transition-transform">
+        <div className="card flex flex-col card-hover">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <Award className="w-5 h-5" />
@@ -323,7 +321,7 @@ export default function NetworkTree() {
           <div className="text-xl font-semibold tracking-tight text-foreground truncate">{userData.roleType !== 'team_leader' && userData.teamId && userData.teamId !== userData.uid ? 'Managed internally' : 'You (Team Leader)'}</div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col hover:-translate-y-1 transition-transform">
+        <div className="card flex flex-col card-hover">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <Users className="w-5 h-5" />
@@ -333,7 +331,7 @@ export default function NetworkTree() {
           <div className="text-3xl font-bold text-foreground">{directCount}</div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col hover:-translate-y-1 transition-transform">
+        <div className="card flex flex-col card-hover">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <Network className="w-5 h-5" />
@@ -343,7 +341,7 @@ export default function NetworkTree() {
           <div className="text-3xl font-bold text-foreground">{Math.max(0, (actualDownlineCount > 0 ? actualDownlineCount : (userData.totalDownlineCount || 0)) - directCount)}</div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col hover:-translate-y-1 transition-transform">
+        <div className="card flex flex-col card-hover">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <UserCheck className="w-5 h-5" />
@@ -353,7 +351,7 @@ export default function NetworkTree() {
           <div className="text-3xl font-bold text-foreground">{directMembers.filter(m => m.activityState === 'active').length}</div>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col hover:-translate-y-1 transition-transform">
+        <div className="card flex flex-col card-hover">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <FolderTree className="w-5 h-5" />
@@ -366,7 +364,7 @@ export default function NetworkTree() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* REFERRAL TREE VISUALIZATION */}
-        <div className="lg:col-span-3 bg-card rounded-2xl border border-border p-6 md:p-8 shadow-sm flex flex-col overflow-hidden relative">
+        <div className="lg:col-span-3 card flex flex-col overflow-hidden relative">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-6">
             <div>
               <h2 className="text-xl font-semibold tracking-tight text-foreground">Genealogy Tree</h2>
@@ -396,7 +394,7 @@ export default function NetworkTree() {
         </div>
 
         {/* TEAM RANK DISTRIBUTION */}
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col h-full">
+        <div className="card flex flex-col h-full">
           <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Team Rank Distribution</h2>
           <div className="w-full h-[200px] mb-6">
             <ResponsiveContainer width="100%" height="100%">
@@ -434,7 +432,7 @@ export default function NetworkTree() {
         </div>
 
         {/* ACTIVITY OVERVIEW CHART */}
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col h-full">
+        <div className="card flex flex-col h-full">
           <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Activity Status</h2>
           <div className="w-full h-[200px] mb-6">
             <ResponsiveContainer width="100%" height="100%">
@@ -478,7 +476,7 @@ export default function NetworkTree() {
         </div>
 
         {/* TOP PERFORMERS SECTION */}
-        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col h-full">
+        <div className="card flex flex-col h-full">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold tracking-tight text-foreground">Top Recruiters</h2>
             <Award className="w-5 h-5 text-primary" />
@@ -508,7 +506,7 @@ export default function NetworkTree() {
       </div>
 
       {/* TEAM GROWTH CHART */}
-      <div className="bg-card rounded-2xl border border-border p-6 shadow-sm flex flex-col">
+      <div className="card flex flex-col">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-6">
           <h2 className="text-xl font-semibold tracking-tight text-foreground">Network Growth (Last 6 Months)</h2>
         </div>
@@ -529,7 +527,7 @@ export default function NetworkTree() {
       </div>
 
       {/* NETWORK MEMBERS TABLE */}
-      <div className="bg-card rounded-2xl border border-border flex flex-col shadow-sm">
+      <div className="card">
         <div className="p-6 border-b border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <h2 className="text-xl font-semibold tracking-tight text-foreground">Team Members</h2>
           <div className="flex items-center gap-2 w-full sm:w-auto relative">

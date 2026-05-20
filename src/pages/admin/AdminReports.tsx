@@ -143,35 +143,35 @@ export default function AdminReports() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="bg-card border border-border p-5 rounded-2xl shadow-sm flex flex-col">
+        <div className="card flex flex-col">
            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-3">
              <Users className="w-5 h-5" />
            </div>
            <p className="text-sm font-medium text-muted-foreground">Total Users</p>
            <h3 className="text-3xl font-bold tracking-tight">{kpis.totalUsers}</h3>
         </div>
-        <div className="bg-card border border-border p-5 rounded-2xl shadow-sm flex flex-col">
+        <div className="card flex flex-col">
            <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success mb-3">
              <CheckCircle className="w-5 h-5" />
            </div>
            <p className="text-sm font-medium text-muted-foreground">Active Users</p>
            <h3 className="text-3xl font-bold tracking-tight">{kpis.active}</h3>
         </div>
-        <div className="bg-card border border-border p-5 rounded-2xl shadow-sm flex flex-col">
+        <div className="card flex flex-col">
            <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive mb-3">
              <XCircle className="w-5 h-5" />
            </div>
            <p className="text-sm font-medium text-muted-foreground">Suspended</p>
            <h3 className="text-3xl font-bold tracking-tight">{kpis.suspended}</h3>
         </div>
-        <div className="bg-card border border-border p-5 rounded-2xl shadow-sm flex flex-col">
+        <div className="card flex flex-col">
            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-3">
              <UsersRound className="w-5 h-5" />
            </div>
            <p className="text-sm font-medium text-muted-foreground">Total Teams</p>
            <h3 className="text-3xl font-bold tracking-tight">{kpis.totalTeams}</h3>
         </div>
-        <div className="bg-card border border-border p-5 rounded-2xl shadow-sm flex flex-col">
+        <div className="card flex flex-col">
            <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-600 mb-3">
              <TrendingUp className="w-5 h-5" />
            </div>
@@ -182,7 +182,7 @@ export default function AdminReports() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
         {/* Growth Trends */}
-        <div className="bg-card border border-border p-6 rounded-2xl shadow-sm">
+        <div className="card">
           <h2 className="text-xl font-semibold tracking-tight mb-6 flex items-center gap-2"><UserPlus className="w-5 h-5 text-primary" /> Growth Trends (Last 12 Months)</h2>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -201,7 +201,7 @@ export default function AdminReports() {
         </div>
 
         {/* Rank Distribution */}
-        <div className="bg-card border border-border p-6 rounded-2xl shadow-sm">
+        <div className="card">
           <h2 className="text-xl font-semibold tracking-tight mb-6 flex items-center gap-2"><FileText className="w-5 h-5 text-blue-500" /> Rank Distribution</h2>
           <div className="h-[300px]">
              <ResponsiveContainer width="100%" height="100%">
@@ -220,7 +220,7 @@ export default function AdminReports() {
         </div>
 
         {/* Roles Distribution */}
-        <div className="bg-card border border-border p-6 rounded-2xl shadow-sm">
+        <div className="card">
           <h2 className="text-xl font-semibold tracking-tight mb-6 flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-yellow-500" /> Roles Distribution</h2>
           <div className="h-[250px] flex items-center justify-center">
              <ResponsiveContainer width="100%" height="100%">
@@ -238,7 +238,7 @@ export default function AdminReports() {
         </div>
 
         {/* Activity Status */}
-        <div className="bg-card border border-border p-6 rounded-2xl shadow-sm">
+        <div className="card">
           <h2 className="text-xl font-semibold tracking-tight mb-6 flex items-center gap-2"><Users className="w-5 h-5 text-success" /> Activity Status</h2>
           <div className="h-[250px] flex items-center justify-center">
              <ResponsiveContainer width="100%" height="100%">
@@ -260,7 +260,7 @@ export default function AdminReports() {
       </div>
       
       {/* Detailed Platform Summary */}
-      <div className="mt-8 bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+      <div className="mt-8 card overflow-hidden">
          <div className="p-6 border-b border-border bg-muted/20">
             <h2 className="text-xl font-semibold tracking-tight">System Detailed Summary</h2>
          </div>
