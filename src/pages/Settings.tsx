@@ -51,10 +51,10 @@ export default function Settings() {
   ];
 
   return (
-    <div className="flex flex-col gap-6 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage your account preferences and configurations.</p>
+    <div className="flex flex-col gap-8 max-w-5xl mx-auto">
+      <div className="mb-2">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Settings</h1>
+        <p className="text-sm font-medium text-muted-foreground mt-1">Manage your account preferences and configurations.</p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
@@ -77,10 +77,10 @@ export default function Settings() {
           </nav>
         </aside>
 
-        <main className="flex-1 card">
+        <main className="flex-1 card p-8 border border-border">
           {activeTab === 'profile' && (
-            <form onSubmit={handleSaveProfile} className="flex flex-col gap-6">
-              <h2 className="text-xl font-semibold tracking-tight text-foreground border-b border-border pb-4 mb-2">Profile Information</h2>
+            <form onSubmit={handleSaveProfile} className="flex flex-col gap-8">
+              <h2 className="text-2xl font-bold tracking-tight text-foreground border-b border-border pb-4 mb-2">Profile Information</h2>
               
               {saveSuccess && (
                 <div className="p-3 bg-success/10 text-success rounded-lg text-sm font-medium">
@@ -141,8 +141,8 @@ export default function Settings() {
           )}
 
           {activeTab === 'security' && (
-             <div className="flex flex-col gap-6">
-                <h2 className="text-xl font-semibold tracking-tight text-foreground border-b border-border pb-4 mb-2">Security & Password</h2>
+             <div className="flex flex-col gap-8">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground border-b border-border pb-4 mb-2">Security & Password</h2>
                 <div className="space-y-4 max-w-md">
                    <div className="flex flex-col gap-1.5">
                       <label className="text-sm font-semibold text-foreground">Current Password</label>
@@ -166,8 +166,8 @@ export default function Settings() {
           )}
 
           {activeTab === 'appearance' && (
-            <div className="flex flex-col gap-6">
-              <h2 className="text-xl font-semibold tracking-tight text-foreground border-b border-border pb-4 mb-2">Appearance</h2>
+            <div className="flex flex-col gap-8">
+              <h2 className="text-2xl font-bold tracking-tight text-foreground border-b border-border pb-4 mb-2">Appearance</h2>
               <div className="flex flex-col gap-6">
                 <p className="text-sm text-foreground">Select your preferred theme for the application.</p>
                 
@@ -207,8 +207,8 @@ export default function Settings() {
           )}
 
           {activeTab === 'notifications' && (
-             <div className="flex flex-col gap-6">
-                 <h2 className="text-xl font-semibold tracking-tight text-foreground border-b border-border pb-4 mb-2">Notification Preferences</h2>
+             <div className="flex flex-col gap-8">
+                 <h2 className="text-2xl font-bold tracking-tight text-foreground border-b border-border pb-4 mb-2">Notification Preferences</h2>
                  <div className="space-y-6">
                     <div className="flex items-center justify-between">
                        <div>
@@ -242,8 +242,8 @@ export default function Settings() {
           )}
 
           {activeTab === 'referral' && (
-            <div className="flex flex-col gap-6">
-              <h2 className="text-xl font-semibold tracking-tight text-foreground border-b border-border pb-4 mb-2">Referral Configuration</h2>
+            <div className="flex flex-col gap-8">
+              <h2 className="text-2xl font-bold tracking-tight text-foreground border-b border-border pb-4 mb-2">Referral Configuration</h2>
               <div className="space-y-6">
                  <div className="flex flex-col gap-1.5 max-w-md">
                     <label className="text-sm font-semibold text-foreground">Custom Referral Code</label>

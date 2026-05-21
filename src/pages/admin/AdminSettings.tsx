@@ -130,11 +130,11 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-12">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto pb-12">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold text-foreground">Top-Level Settings</h1>
-          <p className="text-muted-foreground">Configure global parameters and system behaviors.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Top-Level Settings</h1>
+          <p className="text-sm font-medium text-muted-foreground">Configure global parameters and system behaviors.</p>
         </div>
         <button
           onClick={handleSaveSettings}
@@ -159,10 +159,10 @@ export default function AdminSettings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Appearance Settings */}
-        <div className="card overflow-hidden flex flex-col lg:col-span-2">
-           <div className="p-6 border-b border-border flex items-center gap-3">
-              <Palette className="w-5 h-5 text-indigo-500" />
-              <h2 className="text-xl font-semibold tracking-tight">Appearance</h2>
+        <div className="card p-0 overflow-hidden flex flex-col lg:col-span-2 border border-border">
+           <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
+              <Palette className="w-6 h-6 text-indigo-500" />
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Appearance</h2>
            </div>
            <div className="p-6">
               <p className="text-sm text-foreground mb-4">Select your preferred theme for the admin dashboard.</p>
@@ -201,10 +201,10 @@ export default function AdminSettings() {
         </div>
 
         {/* Core Settings */}
-        <div className="card overflow-hidden flex flex-col">
-           <div className="p-6 border-b border-border flex items-center gap-3">
-              <Settings className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-semibold tracking-tight">General Configuration</h2>
+        <div className="card p-0 overflow-hidden flex flex-col border border-border">
+           <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
+              <Settings className="w-6 h-6 text-primary" />
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">General Configuration</h2>
            </div>
            <div className="p-6 flex flex-col gap-5 flex-1">
               <div>
@@ -229,10 +229,10 @@ export default function AdminSettings() {
         </div>
 
         {/* Security & Access */}
-        <div className="card overflow-hidden flex flex-col">
-           <div className="p-6 border-b border-border flex items-center gap-3">
-              <Shield className="w-5 h-5 text-destructive" />
-              <h2 className="text-xl font-semibold tracking-tight">Access & Security</h2>
+        <div className="card p-0 overflow-hidden flex flex-col border border-border">
+           <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
+              <Shield className="w-6 h-6 text-destructive" />
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Access & Security</h2>
            </div>
            <div className="p-6 flex flex-col gap-6 flex-1">
               <label className="flex items-center justify-between cursor-pointer group">
@@ -260,10 +260,10 @@ export default function AdminSettings() {
         </div>
 
         {/* Gamification & Points */}
-        <div className="card overflow-hidden flex flex-col lg:col-span-2">
-           <div className="p-6 border-b border-border flex items-center gap-3">
-              <Palette className="w-5 h-5 text-yellow-500" />
-              <h2 className="text-xl font-semibold tracking-tight">Points & Gamification Drivers</h2>
+        <div className="card p-0 overflow-hidden flex flex-col lg:col-span-2 border border-border">
+           <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
+              <Palette className="w-6 h-6 text-yellow-500" />
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Points & Gamification Drivers</h2>
            </div>
            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
@@ -306,10 +306,10 @@ export default function AdminSettings() {
         </div>
 
         {/* Database & Sync Tools */}
-        <div className="card overflow-hidden flex flex-col lg:col-span-2">
-           <div className="p-6 border-b border-border flex items-center gap-3">
-              <Database className="w-5 h-5 text-blue-500" />
-              <h2 className="text-xl font-semibold tracking-tight">Database Tools & Utilities</h2>
+        <div className="card p-0 overflow-hidden flex flex-col lg:col-span-2 border border-border">
+           <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
+              <Database className="w-6 h-6 text-blue-500" />
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Database Tools & Utilities</h2>
            </div>
            <div className="p-6 flex flex-col sm:flex-row sm:items-start gap-6">
               <div className="flex-1">

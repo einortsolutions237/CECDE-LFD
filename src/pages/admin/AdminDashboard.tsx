@@ -98,82 +98,74 @@ export default function AdminDashboard() {
     <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-        <div className="card flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <Users className="w-5 h-5" />
+        <div className="card card-hover flex flex-col border-primary/20 bg-primary/5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-card flex items-center justify-center text-primary shadow-sm border border-primary/20">
+              <Users className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Users</h3>
-          <div className="text-3xl font-bold tracking-tight text-foreground">{stats.totalUsers}</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-2">Total Users</h3>
+          <div className="text-4xl font-extrabold tracking-tight text-foreground">{stats.totalUsers?.toLocaleString()}</div>
         </div>
 
-        <div className="card flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success">
-              <UserCheck className="w-5 h-5" />
+        <div className="card card-hover flex flex-col border-success/20 bg-success/5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-card flex items-center justify-center text-success shadow-sm border border-success/20">
+              <UserCheck className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Active Users</h3>
-          <div className="text-3xl font-bold tracking-tight text-foreground">{stats.activeUsers}</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-success mb-2">Active Users</h3>
+          <div className="text-4xl font-extrabold tracking-tight text-foreground">{stats.activeUsers?.toLocaleString()}</div>
         </div>
 
-        <div className="card flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
-              <Users className="w-5 h-5" />
+        <div className="card card-hover flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-purple-500 shadow-sm border border-border">
+              <Users className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Dormant Users</h3>
-          <div className="text-3xl font-bold tracking-tight text-foreground">{stats.dormantUsers}</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Dormant Users</h3>
+          <div className="text-4xl font-extrabold tracking-tight text-foreground">{stats.dormantUsers?.toLocaleString()}</div>
         </div>
 
-        <div className="card flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive">
-              <UserX className="w-5 h-5" />
+        <div className="card card-hover flex flex-col border-destructive/20 bg-destructive/5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-card flex items-center justify-center text-destructive shadow-sm border border-destructive/20">
+              <UserX className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Suspended</h3>
-          <div className="text-3xl font-bold tracking-tight text-foreground">{stats.suspended}</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-destructive mb-2">Suspended</h3>
+          <div className="text-4xl font-extrabold tracking-tight text-foreground">{stats.suspended?.toLocaleString()}</div>
         </div>
 
-        <div className="card flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <Network className="w-5 h-5" />
+        <div className="card card-hover flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-primary shadow-sm border border-border">
+              <Network className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Rank Changes</h3>
-          <div className="text-3xl font-bold tracking-tight text-foreground">0</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Rank Changes</h3>
+          <div className="text-4xl font-extrabold tracking-tight text-foreground">0</div>
         </div>
 
-        <div className="card flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center text-[#F59E0B]">
-              <GitMerge className="w-5 h-5" />
+        <div className="card card-hover flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-[#F59E0B] shadow-sm border border-border">
+              <GitMerge className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Downlines</h3>
-          <div className="text-3xl font-bold tracking-tight text-foreground">{stats.totalDownlines}</div>
-        </div>
-
-        <div className="card flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success">
-              <DollarSign className="w-5 h-5" />
-            </div>
-          </div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Total Revenue</h3>
-          <div className="text-3xl font-bold tracking-tight text-foreground">$0.00</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Total Downlines</h3>
+          <div className="text-4xl font-extrabold tracking-tight text-foreground">{stats.totalDownlines?.toLocaleString()}</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Growth Chart */}
         <div className="lg:col-span-2 card flex flex-col">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">User Registration & Growth (Last 6 Months)</h2>
-          <div className="w-full h-[300px]">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">User Registration & Growth (Last 6 Months)</h2>
+          </div>
+          <div className="w-full h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={growthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
@@ -194,7 +186,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Rank Distribution */}
         <div className="card flex flex-col">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Rank Distribution</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">Rank Distribution</h2>
           <div className="w-full h-[200px] mb-6">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -232,7 +224,7 @@ export default function AdminDashboard() {
 
         {/* Activity Distribution */}
         <div className="card flex flex-col">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Activity Distribution</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">Activity Distribution</h2>
           <div className="w-full h-[200px] mb-6">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -275,9 +267,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Activity Feed */}
-      <div className="card overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-border">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground">Recent Registrations</h2>
+      <div className="card p-0 overflow-hidden flex flex-col border border-border">
+        <div className="p-6 border-b border-border bg-muted/20">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Recent Registrations</h2>
         </div>
         <div className="table-scroll-container">
           <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">

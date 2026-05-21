@@ -32,7 +32,7 @@ export const Layout = () => {
       <div className="md:hidden fixed top-0 w-full z-50 flex items-center justify-between bg-card p-4 sm:p-6 border-b border-border shadow-sm shrink-0">
         <div className="flex items-center gap-3">
           <img src="https://i.imgur.com/Adh2bcY.png" alt="Logo" className="w-8 h-8 object-contain" />
-          <div className="text-xl font-bold text-primary">CECDE</div>
+          <div className="text-xl font-bold text-primary">Lfdcecde</div>
         </div>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2">
           {sidebarOpen ? <X /> : <Menu />}
@@ -49,7 +49,7 @@ export const Layout = () => {
         <div className="p-6 hidden md:flex flex-col items-center gap-6 border-b border-border">
           <img src="https://i.imgur.com/Adh2bcY.png" alt="Logo" className="w-12 h-12 object-contain" />
           <div className="text-xl font-bold tracking-tight text-sidebar-foreground">
-            <span className="text-primary">CECDE</span>
+            <span className="text-primary">Lfdcecde</span>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto py-4">

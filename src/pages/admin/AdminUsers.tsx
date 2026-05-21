@@ -349,8 +349,8 @@ export default function AdminUsers() {
         </div>
       )}
 
-      <div className="card">
-        <div className="p-6 border-b border-border flex flex-col sm:flex-row justify-between gap-6">
+      <div className="card p-0 overflow-hidden border-border border">
+        <div className="p-6 border-b border-border flex flex-col sm:flex-row justify-between gap-6 bg-muted/20">
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />

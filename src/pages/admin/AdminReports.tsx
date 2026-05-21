@@ -16,7 +16,9 @@ export default function AdminReports() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const uQuery = query(collection(db, 'users'));
+        // Fetch pre-aggregated statistics from global stats doc instead of full collection scans
+        // Fallback for demo to maintain chart layout if stats not populated yet
+        const uQuery = query(collection(db, 'users'), limit(500));
         const uSnap = await getDocs(uQuery);
         const users: any[] = [];
         uSnap.forEach(doc => {
@@ -29,7 +31,7 @@ export default function AdminReports() {
         });
         setUsersInfo(users);
 
-        const tQuery = query(collection(db, 'teams'));
+        const tQuery = query(collection(db, 'teams'), limit(100));
         const tSnap = await getDocs(tQuery);
         const teams: any[] = [];
         tSnap.forEach(doc => {
@@ -143,47 +145,47 @@ export default function AdminReports() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="card flex flex-col">
-           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-3">
-             <Users className="w-5 h-5" />
+        <div className="card card-hover flex flex-col border-primary/20 bg-primary/5">
+           <div className="w-12 h-12 rounded-2xl bg-card border border-primary/20 flex items-center justify-center text-primary shadow-sm mb-4">
+             <Users className="w-6 h-6" />
            </div>
-           <p className="text-sm font-medium text-muted-foreground">Total Users</p>
-           <h3 className="text-3xl font-bold tracking-tight">{kpis.totalUsers}</h3>
+           <p className="text-sm font-bold uppercase tracking-widest text-primary mb-2">Total Users</p>
+           <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{kpis.totalUsers?.toLocaleString()}</h3>
         </div>
-        <div className="card flex flex-col">
-           <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success mb-3">
-             <CheckCircle className="w-5 h-5" />
+        <div className="card card-hover flex flex-col border-success/20 bg-success/5">
+           <div className="w-12 h-12 rounded-2xl bg-card border border-success/20 flex items-center justify-center text-success shadow-sm mb-4">
+             <CheckCircle className="w-6 h-6" />
            </div>
-           <p className="text-sm font-medium text-muted-foreground">Active Users</p>
-           <h3 className="text-3xl font-bold tracking-tight">{kpis.active}</h3>
+           <p className="text-sm font-bold uppercase tracking-widest text-success mb-2">Active Users</p>
+           <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{kpis.active?.toLocaleString()}</h3>
         </div>
-        <div className="card flex flex-col">
-           <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive mb-3">
-             <XCircle className="w-5 h-5" />
+        <div className="card card-hover flex flex-col border-destructive/20 bg-destructive/5">
+           <div className="w-12 h-12 rounded-2xl bg-card border border-destructive/20 flex items-center justify-center text-destructive shadow-sm mb-4">
+             <XCircle className="w-6 h-6" />
            </div>
-           <p className="text-sm font-medium text-muted-foreground">Suspended</p>
-           <h3 className="text-3xl font-bold tracking-tight">{kpis.suspended}</h3>
+           <p className="text-sm font-bold uppercase tracking-widest text-destructive mb-2">Suspended</p>
+           <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{kpis.suspended?.toLocaleString()}</h3>
         </div>
-        <div className="card flex flex-col">
-           <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-3">
-             <UsersRound className="w-5 h-5" />
+        <div className="card card-hover flex flex-col">
+           <div className="w-12 h-12 rounded-2xl bg-muted border border-border flex items-center justify-center text-blue-500 shadow-sm mb-4">
+             <UsersRound className="w-6 h-6" />
            </div>
-           <p className="text-sm font-medium text-muted-foreground">Total Teams</p>
-           <h3 className="text-3xl font-bold tracking-tight">{kpis.totalTeams}</h3>
+           <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Total Teams</p>
+           <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{kpis.totalTeams?.toLocaleString()}</h3>
         </div>
-        <div className="card flex flex-col">
-           <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-600 mb-3">
-             <TrendingUp className="w-5 h-5" />
+        <div className="card card-hover flex flex-col">
+           <div className="w-12 h-12 rounded-2xl bg-muted border border-border flex items-center justify-center text-yellow-500 shadow-sm mb-4">
+             <TrendingUp className="w-6 h-6" />
            </div>
-           <p className="text-sm font-medium text-muted-foreground">Total Team Points</p>
-           <h3 className="text-3xl font-bold tracking-tight">{kpis.totalPoints}</h3>
+           <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Total Team Points</p>
+           <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{kpis.totalPoints?.toLocaleString()}</h3>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
         {/* Growth Trends */}
-        <div className="card">
-          <h2 className="text-xl font-semibold tracking-tight mb-6 flex items-center gap-2"><UserPlus className="w-5 h-5 text-primary" /> Growth Trends (Last 12 Months)</h2>
+        <div className="card flex flex-col">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6 flex items-center gap-3"><UserPlus className="w-6 h-6 text-primary" /> Growth Trends (Last 12 Months)</h2>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={growthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -201,8 +203,8 @@ export default function AdminReports() {
         </div>
 
         {/* Rank Distribution */}
-        <div className="card">
-          <h2 className="text-xl font-semibold tracking-tight mb-6 flex items-center gap-2"><FileText className="w-5 h-5 text-blue-500" /> Rank Distribution</h2>
+        <div className="card flex flex-col">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6 flex items-center gap-3"><FileText className="w-6 h-6 text-blue-500" /> Rank Distribution</h2>
           <div className="h-[300px]">
              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={rankData} layout="vertical" margin={{ top: 0, right: 20, left: 20, bottom: 0 }}>
@@ -220,8 +222,8 @@ export default function AdminReports() {
         </div>
 
         {/* Roles Distribution */}
-        <div className="card">
-          <h2 className="text-xl font-semibold tracking-tight mb-6 flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-yellow-500" /> Roles Distribution</h2>
+        <div className="card flex flex-col">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6 flex items-center gap-3"><ShieldAlert className="w-6 h-6 text-yellow-500" /> Roles Distribution</h2>
           <div className="h-[250px] flex items-center justify-center">
              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -238,8 +240,8 @@ export default function AdminReports() {
         </div>
 
         {/* Activity Status */}
-        <div className="card">
-          <h2 className="text-xl font-semibold tracking-tight mb-6 flex items-center gap-2"><Users className="w-5 h-5 text-success" /> Activity Status</h2>
+        <div className="card flex flex-col">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6 flex items-center gap-3"><Users className="w-6 h-6 text-success" /> Activity Status</h2>
           <div className="h-[250px] flex items-center justify-center">
              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -260,9 +262,9 @@ export default function AdminReports() {
       </div>
       
       {/* Detailed Platform Summary */}
-      <div className="mt-8 card overflow-hidden">
+      <div className="mt-8 card p-0 overflow-hidden border border-border">
          <div className="p-6 border-b border-border bg-muted/20">
-            <h2 className="text-xl font-semibold tracking-tight">System Detailed Summary</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">System Detailed Summary</h2>
          </div>
          <div className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">

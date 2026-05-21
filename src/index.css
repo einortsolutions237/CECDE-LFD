@@ -65,11 +65,11 @@
 @layer components {
   /* Reusable global components to help gradual refactor */
   .card {
-    @apply bg-card rounded-2xl border border-border flex flex-col shadow-sm transition-all duration-300;
+    @apply bg-card rounded-[1.25rem] border border-border flex flex-col p-6 shadow-sm transition-all duration-300;
   }
   
   .card-hover {
-    @apply hover:shadow-md hover:-translate-y-1;
+    @apply hover:shadow-lg hover:border-primary/20 hover:-translate-y-[2px];
   }
   
   .badge {

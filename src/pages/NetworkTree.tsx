@@ -272,17 +272,17 @@ export default function NetworkTree() {
       <div className="flex flex-col gap-6 max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Network Management</h1>
-            <p className="text-sm text-muted-foreground mt-1">View your referral network, team growth, and genealogy tree.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Network Management</h1>
+            <p className="text-sm font-medium text-muted-foreground mt-2">View your referral network, team growth, and genealogy tree.</p>
           </div>
         </div>
-        <div className="card flex flex-col items-center justify-center text-center">
-          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-            <Users className="w-8 h-8 text-primary" />
+        <div className="card flex flex-col items-center justify-center text-center p-12">
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+            <Users className="w-10 h-10 text-primary" />
           </div>
-          <h2 className="text-xl font-bold text-foreground mb-2">No Network Yet</h2>
-          <p className="text-muted-foreground mb-6 max-w-md">Start growing your network by inviting members. Share your referral link to expand your downline.</p>
-          <button onClick={copyReferralLink} className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 hover:shadow-md transition-all">
+          <h2 className="text-2xl font-bold text-foreground mb-3">No Network Yet</h2>
+          <p className="text-muted-foreground font-medium mb-8 max-w-md">Start growing your network by inviting members. Share your referral link to expand your downline.</p>
+          <button onClick={copyReferralLink} className="flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-bold rounded-xl hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 transition-all">
             <UserPlus className="w-5 h-5" /> Invite First Member
           </button>
         </div>
@@ -296,14 +296,14 @@ export default function NetworkTree() {
       {/* PAGE HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Network Management</h1>
-          <p className="text-sm text-muted-foreground mt-1">View your referral network, team growth, and genealogy tree.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Network Management</h1>
+          <p className="text-sm font-medium text-muted-foreground mt-2">View your referral network, team growth, and genealogy tree.</p>
         </div>
-        <div className="flex gap-3 w-full md:w-auto">
+        <div className="flex gap-4 w-full md:w-auto">
           <button onClick={copyReferralLink} className="btn-secondary">
             <Copy className="w-4 h-4" /> Copy Link
           </button>
-          <button onClick={copyReferralLink} className="flex-1 sm:flex-none btn-primary">
+          <button onClick={copyReferralLink} className="flex-1 sm:flex-none btn-primary shadow-sm hover:shadow-md">
             <UserPlus className="w-4 h-4" /> Invite Member
           </button>
         </div>
@@ -311,75 +311,75 @@ export default function NetworkTree() {
 
       {/* NETWORK SUMMARY CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="card flex flex-col card-hover">
+        <div className="card card-hover flex flex-col border-primary/20 bg-primary/5">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <Award className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-2xl bg-card border border-primary/20 flex items-center justify-center text-primary shadow-sm">
+              <Award className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Your Team Leader</h3>
-          <div className="text-xl font-semibold tracking-tight text-foreground truncate">{userData.roleType !== 'team_leader' && userData.teamId && userData.teamId !== userData.uid ? 'Managed internally' : 'You (Team Leader)'}</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-2">Your Team Leader</h3>
+          <div className="text-2xl font-extrabold tracking-tight text-foreground truncate">{userData.roleType !== 'team_leader' && userData.teamId && userData.teamId !== userData.uid ? 'Managed internally' : 'You (Team Leader)'}</div>
         </div>
 
-        <div className="card flex flex-col card-hover">
+        <div className="card card-hover flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <Users className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-2xl bg-muted border border-border flex items-center justify-center text-primary shadow-sm">
+              <Users className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Direct Members</h3>
-          <div className="text-3xl font-bold text-foreground">{directCount}</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Direct Members</h3>
+          <div className="text-4xl font-extrabold text-foreground">{directCount}</div>
         </div>
 
-        <div className="card flex flex-col card-hover">
+        <div className="card card-hover flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <Network className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-2xl bg-muted border border-border flex items-center justify-center text-primary shadow-sm">
+              <Network className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Indirect Members</h3>
-          <div className="text-3xl font-bold text-foreground">{Math.max(0, (actualDownlineCount > 0 ? actualDownlineCount : (userData.totalDownlineCount || 0)) - directCount)}</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Indirect Members</h3>
+          <div className="text-4xl font-extrabold text-foreground">{Math.max(0, (actualDownlineCount > 0 ? actualDownlineCount : (userData.totalDownlineCount || 0)) - directCount)}</div>
         </div>
 
-        <div className="card flex flex-col card-hover">
+        <div className="card card-hover flex flex-col border-success/20 bg-success/5">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <UserCheck className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-2xl bg-card border border-success/20 flex items-center justify-center text-success shadow-sm">
+              <UserCheck className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Active Directs</h3>
-          <div className="text-3xl font-bold text-foreground">{directMembers.filter(m => m.activityState === 'active').length}</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-success mb-2">Active Directs</h3>
+          <div className="text-4xl font-extrabold text-foreground">{directMembers.filter(m => m.activityState === 'active').length}</div>
         </div>
 
-        <div className="card flex flex-col card-hover">
+        <div className="card card-hover flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-              <FolderTree className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-2xl bg-muted border border-border flex items-center justify-center text-muted-foreground shadow-sm">
+              <FolderTree className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Network Depth</h3>
-          <div className="text-3xl font-bold text-foreground">{'~'} <span className="text-lg font-medium text-muted-foreground">levels</span></div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Network Depth</h3>
+          <div className="text-4xl font-extrabold text-foreground">{'~'} <span className="text-base font-semibold text-muted-foreground tracking-wide">levels</span></div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* REFERRAL TREE VISUALIZATION */}
         <div className="lg:col-span-3 card flex flex-col overflow-hidden relative">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-6">
             <div>
-              <h2 className="text-xl font-semibold tracking-tight text-foreground">Genealogy Tree</h2>
-              <p className="text-xs text-muted-foreground">Interactive view of your network structure.</p>
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Genealogy Tree</h2>
+              <p className="text-sm font-medium text-muted-foreground">Interactive view of your network structure.</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button 
                 onClick={() => setExpandAll(true)}
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-foreground"
+                className="text-sm font-bold px-4 py-2 rounded-xl border border-border bg-card hover:bg-muted transition-colors text-foreground shadow-sm"
               >
                 Expand All
               </button>
               <button 
                 onClick={() => setExpandAll(false)}
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-foreground"
+                className="text-sm font-bold px-4 py-2 rounded-xl border border-border bg-card hover:bg-muted transition-colors text-foreground shadow-sm"
               >
                 Reset
               </button>
@@ -394,8 +394,8 @@ export default function NetworkTree() {
         </div>
 
         {/* TEAM RANK DISTRIBUTION */}
-        <div className="card flex flex-col h-full">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Team Rank Distribution</h2>
+        <div className="card flex flex-col h-full overflow-hidden">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">Team Rank Distribution</h2>
           <div className="w-full h-[200px] mb-6">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -432,8 +432,8 @@ export default function NetworkTree() {
         </div>
 
         {/* ACTIVITY OVERVIEW CHART */}
-        <div className="card flex flex-col h-full">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Activity Status</h2>
+        <div className="card flex flex-col h-full overflow-hidden">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">Activity Status</h2>
           <div className="w-full h-[200px] mb-6">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -477,9 +477,11 @@ export default function NetworkTree() {
 
         {/* TOP PERFORMERS SECTION */}
         <div className="card flex flex-col h-full">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">Top Recruiters</h2>
-            <Award className="w-5 h-5 text-primary" />
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Top Recruiters</h2>
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Award className="w-5 h-5 text-primary" />
+            </div>
           </div>
           <div className="flex flex-col gap-6">
             {topRecruiters.length > 0 ? topRecruiters.map((recruiter, idx) => (
@@ -507,10 +509,10 @@ export default function NetworkTree() {
 
       {/* TEAM GROWTH CHART */}
       <div className="card flex flex-col">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-6">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground">Network Growth (Last 6 Months)</h2>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-6">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Network Growth (Last 6 Months)</h2>
         </div>
-        <div className="w-full h-[300px]">
+        <div className="w-full h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={growthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
@@ -527,9 +529,9 @@ export default function NetworkTree() {
       </div>
 
       {/* NETWORK MEMBERS TABLE */}
-      <div className="card">
-        <div className="p-6 border-b border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground">Team Members</h2>
+      <div className="card p-0 overflow-hidden border border-border">
+        <div className="p-6 border-b border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-muted/20">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Team Members</h2>
           <div className="flex items-center gap-2 w-full sm:w-auto relative">
             <div className="relative flex-1 sm:flex-none">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />

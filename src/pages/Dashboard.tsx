@@ -222,21 +222,21 @@ export default function Dashboard() {
         <div className="col-span-1 md:col-span-2 card flex flex-col justify-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
           
-          <div className="flex items-start justify-between z-10">
+          <div className="flex items-start justify-between z-10 mb-6">
             <div>
-              <h2 className="text-xl font-bold text-foreground mb-1">Welcome back, {userData?.fullName?.split(' ')[0] || 'User'}!</h2>
-              <p className="text-sm text-muted-foreground mb-6">Here is what's happening with your network today.</p>
+              <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1">Welcome back, {userData?.fullName?.split(' ')[0] || 'User'}!</h2>
+              <p className="text-sm font-medium text-muted-foreground">Here is what's happening with your network today.</p>
             </div>
-            <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
+            <div className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-sm">
               {userData?.currentRank || 'Member'}
             </div>
           </div>
 
           <div>
-            <h3 className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mb-2">Your Referral Link & Code</h3>
+            <h3 className="text-xs uppercase tracking-widest font-bold text-muted-foreground mb-3">Your Referral Link & Code</h3>
             
-            <div className="flex items-center gap-3 mb-3 bg-muted px-4 py-2.5 rounded-xl border border-border shadow-inner">
-              <div className="flex-1 font-mono text-sm font-bold tracking-wide text-primary">
+            <div className="flex items-center gap-3 mb-4 bg-muted/80 backdrop-blur-sm px-4 py-3 rounded-xl border border-border shadow-inner">
+              <div className="flex-1 font-mono text-sm md:text-base font-bold tracking-wide text-foreground">
                 {displayReferralCode}
               </div>
               <button 
@@ -252,8 +252,8 @@ export default function Dashboard() {
               </button>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3 mb-4">
-              <div className="flex-1 bg-muted px-4 py-2.5 rounded-xl border border-border text-xs sm:text-sm font-medium text-foreground w-full break-all shadow-inner truncate">
+            <div className="flex flex-col sm:flex-row items-center gap-3 mb-6">
+              <div className="flex-1 bg-muted/80 backdrop-blur-sm px-4 py-3 rounded-xl border border-border text-xs md:text-sm font-medium text-muted-foreground w-full break-all shadow-inner truncate">
                 {referralLink}
               </div>
               <button 
@@ -265,18 +265,18 @@ export default function Dashboard() {
               </button>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-3">
                <a 
                  href={`https://wa.me/?text=Join%20my%20network%20on%20CECDE!%20Use%20my%20referral%20link:%20${encodeURIComponent(referralLink)}`}
                  target="_blank"
                  rel="noreferrer"
-                 className="flex-1 flex items-center justify-center gap-2 py-2 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors rounded-lg text-xs font-bold"
+                 className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-all rounded-xl text-sm font-bold shadow-sm"
                >
                  WhatsApp
                </a>
                <a 
                  href={`mailto:?subject=Join my CECDE Network&body=Hi!%0A%0AJoin%20my%20network%20using%20the%20link%20below:%0A${encodeURIComponent(referralLink)}%0A%0AOr%20use%20my%20code:%20${displayReferralCode}`}
-                 className="flex-1 flex items-center justify-center gap-2 py-2 bg-muted hover:bg-muted/80 transition-colors rounded-lg text-xs text-foreground font-bold"
+                 className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-muted hover:bg-muted/80 transition-all rounded-xl text-sm text-foreground font-bold shadow-sm border border-border"
                >
                  Email Share
                </a>
@@ -285,19 +285,19 @@ export default function Dashboard() {
         </div>
 
         <div className="card flex flex-col justify-center">
-           <h3 className="text-sm font-medium text-muted-foreground mb-3">Rank Progress</h3>
-           <div className="flex items-end gap-2 mb-2">
-             <div className="text-3xl font-bold text-foreground">{progressPercent}<span className="text-lg text-muted-foreground">%</span></div>
+           <h3 className="text-sm font-bold tracking-widest uppercase text-muted-foreground mb-4">Rank Progress</h3>
+           <div className="flex items-end gap-3 mb-3">
+             <div className="text-4xl font-extrabold tracking-tight text-foreground">{progressPercent}<span className="text-xl text-muted-foreground font-semibold">%</span></div>
              <div className="text-sm text-success font-medium mb-1">{nextRank === 'Max Rank' ? 'Maxed' : `to ${nextRank}`}</div>
            </div>
            
-           <div className="w-full bg-muted rounded-full h-2.5 mb-2 overflow-hidden">
-             <div className="bg-primary h-2.5 rounded-full" style={{ width: `${progressPercent}%` }}></div>
+           <div className="w-full bg-muted rounded-full h-3 mb-3 overflow-hidden shadow-inner">
+             <div className="bg-primary h-3 rounded-full transition-all duration-1000 ease-out" style={{ width: `${progressPercent}%` }}></div>
            </div>
            {nextRank !== 'Max Rank' ? (
-             <p className="text-xs text-muted-foreground">You need {remaining} more direct referrals to rank up.</p>
+             <p className="text-sm text-muted-foreground font-medium">You need <strong className="text-foreground">{remaining}</strong> more direct referrals to rank up.</p>
            ) : (
-             <p className="text-xs text-muted-foreground">You have reached the highest referral rank!</p>
+             <p className="text-sm text-muted-foreground font-medium">You have reached the highest referral rank!</p>
            )}
         </div>
       </div>
@@ -305,119 +305,119 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           title="Total Downline" 
-          value={actualDownlineCount > 0 ? actualDownlineCount : (networkStats?.totalDownlineCount || userData?.totalDownlineCount || 0)} 
+          value={actualDownlineCount > 0 ? actualDownlineCount.toLocaleString() : (networkStats?.totalDownlineCount || userData?.totalDownlineCount || 0).toLocaleString()} 
           icon={<Users className="w-5 h-5 text-primary" />} 
           trend=""
           trendUp={null}
         />
         <StatCard 
           title="Direct Referrals" 
-          value={directCount} 
-          icon={<UserPlus className="w-5 h-5 text-primary" />} 
+          value={directCount.toLocaleString()} 
+          icon={<UserPlus className="w-5 h-5 text-emerald-500" />} 
           trend=""
           trendUp={null}
         />
         <StatCard 
           title="Active Members" 
-          value={networkStats?.activeDownlineCount || 0} 
-          icon={<TrendingUp className="w-5 h-5 text-primary" />} 
+          value={(networkStats?.activeDownlineCount || 0).toLocaleString()} 
+          icon={<TrendingUp className="w-5 h-5 text-blue-500" />} 
           trend=""
           trendUp={null}
         />
         <StatCard 
           title="Wallet Balance" 
-          value={`$${userData?.walletBalance || 0}`} 
-          icon={<DollarSign className="w-5 h-5 text-primary" />} 
-          trend="Available to withdraw"
+          value={`$${(userData?.walletBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} 
+          icon={<DollarSign className="w-5 h-5 text-amber-500" />} 
+          trend="Available"
           trendUp={null}
         />
       </div>
 
       {(userData?.teamId || userData?.roleType === 'team_leader') && (
         <div className="mt-2">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground mb-4">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">
             {userData.roleType === 'team_leader' ? 'Your Team Performance' : `Team: ${teamData?.teamLeaderName || 'Loading...'}`}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl border border-primary/20 p-5 shadow-sm">
-               <p className="text-sm text-foreground/80 font-medium mb-1">Total Team Members</p>
-               <h3 className="text-3xl font-bold tracking-tight text-primary">{teamData?.calculatedTotalMembers || teamData?.totalMembers || 0}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="card border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors">
+               <p className="text-sm text-primary font-bold uppercase tracking-widest mb-2">Total Members</p>
+               <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{teamData?.calculatedTotalMembers?.toLocaleString() || teamData?.totalMembers?.toLocaleString() || 0}</h3>
             </div>
             {userData.roleType === 'team_leader' ? (
-              <div className="bg-gradient-to-br from-yellow-400/10 to-yellow-500/5 rounded-2xl border border-yellow-500/20 p-5 shadow-sm">
-                 <p className="text-sm text-foreground/80 font-medium mb-1">Global Team Rank</p>
-                 <h3 className="text-3xl font-bold tracking-tight text-yellow-600">#{globalRank || '-'}</h3>
-                 <p className="text-xs text-yellow-600/80 mt-1">{teamData?.leaderPerformanceScore || 0} pts</p>
+              <div className="card border-yellow-500/20 bg-yellow-500/5 hover:bg-yellow-500/10 transition-colors">
+                 <p className="text-sm text-yellow-600 font-bold uppercase tracking-widest mb-2">Global Team Rank</p>
+                 <h3 className="text-4xl font-extrabold tracking-tight text-foreground">#{globalRank || '-'}</h3>
+                 <p className="text-sm font-semibold text-yellow-600/80 mt-2">{teamData?.leaderPerformanceScore?.toLocaleString() || 0} pts</p>
               </div>
             ) : (
-              <div className="bg-gradient-to-br from-blue-400/10 to-blue-500/5 rounded-2xl border border-blue-500/20 p-5 shadow-sm">
-                 <p className="text-sm text-foreground/80 font-medium mb-1">My Rank in Team</p>
-                 <h3 className="text-3xl font-bold tracking-tight text-blue-600">#{teamRank || '-'}</h3>
+              <div className="card border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-colors">
+                 <p className="text-sm text-blue-600 font-bold uppercase tracking-widest mb-2">My Rank in Team</p>
+                 <h3 className="text-4xl font-extrabold tracking-tight text-foreground">#{teamRank || '-'}</h3>
               </div>
             )}
             
-            <div className="bg-gradient-to-br from-success/10 to-success/5 rounded-2xl border border-success/20 p-5 shadow-sm">
-               <p className="text-sm text-foreground/80 font-medium mb-1">Active Team Members</p>
-               <h3 className="text-3xl font-bold tracking-tight text-success">{teamData?.activeMembers || 0}</h3>
+            <div className="card border-success/20 bg-success/5 hover:bg-success/10 transition-colors">
+               <p className="text-sm text-success font-bold uppercase tracking-widest mb-2">Active Members</p>
+               <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{teamData?.activeMembers?.toLocaleString() || 0}</h3>
             </div>
             
-            <div className="card overflow-hidden relative">
-               <p className="text-sm text-muted-foreground font-medium mb-1">{userData.roleType === 'team_leader' ? 'Team Score' : 'Leader Name'}</p>
-               <h3 className="text-3xl font-bold tracking-tight text-foreground">
-                 {userData.roleType === 'team_leader' ? `${teamData?.leaderPerformanceScore || 0} pts` : teamData?.teamLeaderName || '-'}
+            <div className="card">
+               <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest mb-2">{userData.roleType === 'team_leader' ? 'Team Score' : 'Leader Name'}</p>
+               <h3 className="text-4xl font-extrabold tracking-tight text-foreground">
+                 {userData.roleType === 'team_leader' ? `${teamData?.leaderPerformanceScore?.toLocaleString() || 0} pts` : teamData?.teamLeaderName || '-'}
                </h3>
-               {userData.roleType !== 'team_leader' && <p className="text-xs text-muted-foreground mt-1">Leader ID: {teamData?.teamLeaderId || '-'}</p>}
+               {userData.roleType !== 'team_leader' && <p className="text-xs font-semibold text-muted-foreground mt-2">ID: {teamData?.teamLeaderId || '-'}</p>}
             </div>
           </div>
         </div>
       )}
 
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight text-foreground mb-4">Team Activity Status</h2>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">Team Activity Status</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="card border-success/20 p-5 flex flex-col relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-success/5 rounded-bl-full -z-10"></div>
-            <div className="flex items-center justify-between mb-2">
+          <div className="card border-success/20 flex flex-col relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-success/5 rounded-bl-full -z-10"></div>
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-success"></div>
-                <h3 className="text-sm font-medium text-muted-foreground">Active Members</h3>
+                <div className="w-3 h-3 rounded-full bg-success"></div>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Active Members</h3>
               </div>
-              <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center text-success">
-                <TrendingUp className="w-4 h-4" />
+              <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center text-success">
+                <TrendingUp className="w-5 h-5" />
               </div>
             </div>
-            <div className="flex items-baseline gap-3">
-              <span className="text-3xl font-bold text-foreground">{activeMembers}</span>
-              <span className="text-sm font-medium text-success">{actualDownlineCount > 0 ? Math.round((activeMembers / actualDownlineCount) * 100) : 0}% of team</span>
+            <div className="flex items-baseline gap-3 mb-2">
+              <span className="text-4xl font-extrabold tracking-tight text-foreground">{activeMembers?.toLocaleString()}</span>
+              <span className="text-sm font-bold text-success bg-success/10 px-2 py-0.5 rounded-md">{actualDownlineCount > 0 ? Math.round((activeMembers / actualDownlineCount) * 100) : 0}% of team</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Total active downlines</p>
+            <p className="text-sm font-medium text-muted-foreground">Total active downlines</p>
           </div>
-          <div className="card border-purple-500/20 p-5 flex flex-col relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-bl-full -z-10"></div>
-             <div className="flex items-center justify-between mb-2">
+          <div className="card border-destructive/20 flex flex-col relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-destructive/5 rounded-bl-full -z-10"></div>
+             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                <h3 className="text-sm font-medium text-muted-foreground">Dormant Members</h3>
+                <div className="w-3 h-3 rounded-full bg-destructive"></div>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Dormant Members</h3>
               </div>
-              <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">
-                <Users className="w-4 h-4" />
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+                <Users className="w-5 h-5" />
               </div>
             </div>
-            <div className="flex items-baseline gap-3">
-              <span className="text-3xl font-bold text-foreground">{dormantMembers}</span>
-              <span className="text-sm font-medium text-purple-500">{actualDownlineCount > 0 ? Math.round((dormantMembers / actualDownlineCount) * 100) : 0}% of team</span>
+            <div className="flex items-baseline gap-3 mb-2">
+              <span className="text-4xl font-extrabold tracking-tight text-foreground">{dormantMembers?.toLocaleString()}</span>
+              <span className="text-sm font-bold text-destructive bg-destructive/10 px-2 py-0.5 rounded-md">{actualDownlineCount > 0 ? Math.round((dormantMembers / actualDownlineCount) * 100) : 0}% of team</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Total dormant downlines</p>
+            <p className="text-sm font-medium text-muted-foreground">Total dormant downlines</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
         <div className="card flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">Referral Growth</h2>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Referral Growth</h2>
           </div>
-          <div className="h-[300px] w-full">
+          <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
@@ -440,24 +440,27 @@ export default function Dashboard() {
         </div>
 
         <div className="card flex flex-col">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Recent Activity</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">Recent Activity</h2>
           <div className="flex flex-col gap-6">
             {recentActivities.length > 0 ? recentActivities.map((act, i) => (
-               <div key={i} className="flex gap-6">
-                 <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
-                    <UserPlus className="w-4 h-4 text-secondary" />
+               <div key={i} className="flex gap-4 group">
+                 <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                    <UserPlus className="w-5 h-5 text-secondary" />
                  </div>
-                 <div>
-                   <p className="text-sm font-semibold text-foreground mb-0.5">New referral joined</p>
-                   <p className="text-xs text-muted-foreground mb-1.5">{act.fullName || 'A new user'} registered using your link.</p>
-                   <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/70">
-                     {new Date(act.timestamp).toLocaleDateString()}
+                 <div className="flex-1">
+                   <p className="text-sm font-bold text-foreground mb-1">New referral joined</p>
+                   <p className="text-sm font-medium text-muted-foreground mb-2">{act.fullName || 'A new user'} registered using your link.</p>
+                   <p className="text-xs uppercase font-bold tracking-wider text-muted-foreground/60">
+                     {new Date(act.timestamp).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric'})}
                    </p>
                  </div>
                </div>
             )) : (
-               <div className="flex flex-col items-center justify-center text-center p-4">
-                 <p className="text-sm text-muted-foreground">No recent activity.</p>
+               <div className="flex flex-col items-center justify-center gap-4 text-center p-8 border border-dashed border-border rounded-xl">
+                 <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+                   <Users className="w-5 h-5 text-muted-foreground" />
+                 </div>
+                 <p className="text-sm font-medium text-muted-foreground">No recent activity found. Share your link to grow your network!</p>
                </div>
             )}
           </div>
@@ -469,19 +472,19 @@ export default function Dashboard() {
 
 const StatCard = React.memo(({ title, value, icon, trend, trendUp }: any) => {
   return (
-    <div className="card flex flex-col card-hover">
+    <div className="card card-hover flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+        <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-primary shadow-sm border border-border">
           {icon}
         </div>
         {trend && (
-          <div className={cn("text-xs font-semibold px-2 py-1 rounded-full", trendUp === true ? "bg-success/10 text-success" : trendUp === false ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
+          <div className={cn("text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm", trendUp === true ? "bg-success/10 text-success" : trendUp === false ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
             {trend}
           </div>
         )}
       </div>
-      <h3 className="text-sm font-medium text-muted-foreground mb-1">{title}</h3>
-      <div className="text-3xl font-bold text-foreground">{value}</div>
+      <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">{title}</h3>
+      <div className="text-4xl font-extrabold tracking-tight text-foreground">{value}</div>
     </div>
   );
 });

@@ -275,10 +275,10 @@ export default function AdminNetwork() {
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6">
         
         {/* USERS TABLE */}
-        <div className="card overflow-hidden h-fit">
-           <div className="p-5 border-b border-border flex flex-col gap-6">
+        <div className="card h-fit p-0 overflow-hidden border border-border">
+           <div className="p-6 border-b border-border flex flex-col gap-6 bg-muted/20">
               <div className="flex items-center justify-between">
-                 <h2 className="text-xl font-semibold tracking-tight text-foreground">System Members</h2>
+                 <h2 className="text-2xl font-bold tracking-tight text-foreground">System Members</h2>
                  <button 
                   onClick={() => setShowFilters(!showFilters)}
                   className={cn("px-3 py-1.5 border rounded-lg flex items-center gap-2 text-sm font-medium hover:bg-muted transition-colors", showFilters ? "bg-primary/10 border-primary/20 text-primary" : "bg-card border-border text-foreground")}
@@ -407,9 +407,9 @@ export default function AdminNetwork() {
         {/* GENEALOGY TREE PREVIEW */}
         <div className="flex flex-col gap-6">
            {selectedUserForTree ? (
-             <div className="card flex flex-col overflow-hidden sticky top-6 max-h-[80vh]">
-               <div className="p-5 border-b border-border flex items-center justify-between">
-                  <h2 className="text-xl font-semibold tracking-tight text-foreground flex items-center gap-2">
+             <div className="card p-0 flex flex-col overflow-hidden sticky top-6 max-h-[80vh] border border-border">
+               <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
+                  <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
                     <FolderTree className="w-5 h-5 text-primary" />
                     Genealogy View
                   </h2>

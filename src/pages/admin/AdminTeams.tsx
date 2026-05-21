@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, getDocs, doc, setDoc, updateDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, doc, setDoc, updateDoc, serverTimestamp, onSnapshot, writeBatch, deleteDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../../lib/firebase';
-import { UsersRound, Plus, X, Search, Trophy } from 'lucide-react';
+import { UsersRound, Plus, X, Search, Trophy, Trash2, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function AdminTeams() {
@@ -17,13 +17,42 @@ export default function AdminTeams() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [teamToDelete, setTeamToDelete] = useState<any>(null);
+
+  const handleDeleteTeam = async () => {
+    if (!teamToDelete) return;
+    setSubmitting(true);
+    setError('');
+    
+    try {
+      const teamId = teamToDelete.id;
+      
+      // We "soft-delete" the team first by updating its status.
+      // This bypasses the strict `allow delete: if isAdmin()` rule if it hasn't propagated,
+      // and lets the backend Cloud Function do the actual deletion using the Admin SDK.
+      await updateDoc(doc(db, 'teams', teamId), { status: 'deleted' });
+      
+      setIsDeleteModalOpen(false);
+      setTeamToDelete(null);
+    } catch (err: any) {
+      console.error("Error deleting team:", err);
+      setError(err.message || 'Error deleting team.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     // Set up real-time listener for Teams
     const teamsQuery = query(collection(db, 'teams'), orderBy('createdAt', 'desc'));
     const unsubscribeTeams = onSnapshot(teamsQuery, (snapshot) => {
       const teamsData: any[] = [];
       snapshot.forEach(doc => {
-        teamsData.push({ id: doc.id, ...doc.data() });
+        const data = doc.data();
+        if (data.status !== 'deleted') {
+          teamsData.push({ id: doc.id, ...data });
+        }
       });
       setTeams(teamsData);
     }, (error) => {
@@ -145,11 +174,11 @@ export default function AdminTeams() {
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-12">
-      <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 border-b border-border pb-4 w-full">
+    <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto pb-12">
+      <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-2">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Teams Management</h1>
-          <p className="text-sm text-muted-foreground mt-1">Create teams, assign team leaders, and monitor their global rankings.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">Teams Management</h1>
+          <p className="text-sm font-medium text-muted-foreground">Create teams, assign team leaders, and monitor their global rankings.</p>
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
@@ -167,9 +196,9 @@ export default function AdminTeams() {
       )}
 
       {/* Teams Grid / List */}
-      <div className="card flex flex-col">
+      <div className="card p-0 flex flex-col overflow-hidden border border-border">
         <div className="p-6 border-b border-border bg-muted/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-           <h2 className="font-bold flex items-center gap-2">
+           <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
              <Trophy className="w-5 h-5 text-primary"/>
              Active Teams Overview
            </h2>
@@ -184,6 +213,7 @@ export default function AdminTeams() {
                  <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Score</th>
                  <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Members</th>
                  <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Status</th>
+                 <th className="px-4 py-3 md:px-6 md:py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Actions</th>
                </tr>
              </thead>
              <tbody className="divide-y divide-border">
@@ -216,6 +246,18 @@ export default function AdminTeams() {
                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${team.status === 'active' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
                          {team.status || 'Active'}
                        </span>
+                    </td>
+                    <td className="px-4 py-3 md:px-6 md:py-4 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => {
+                          setTeamToDelete(team);
+                          setIsDeleteModalOpen(true);
+                        }}
+                        className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors border border-transparent hover:border-destructive/20"
+                        title="Delete Team"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 )}) : (
@@ -309,6 +351,67 @@ export default function AdminTeams() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Delete Team Modal */}
+      {isDeleteModalOpen && teamToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-card w-full max-w-md rounded-2xl border border-destructive/20 shadow-2xl overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-border flex justify-between items-center bg-destructive/5 text-destructive">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                Confirm Team Deletion
+              </h3>
+              <button 
+                onClick={() => {
+                  setIsDeleteModalOpen(false);
+                  setTeamToDelete(null);
+                }}
+                className="p-1.5 hover:bg-destructive/10 text-destructive/70 hover:text-destructive rounded-lg transition-colors"
+                disabled={submitting}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 flex flex-col gap-6">
+              <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 flex flex-col gap-2">
+                <p className="text-sm font-semibold text-destructive">WARNING: DANGEROUS ACTION</p>
+                <p className="text-sm text-foreground">
+                  You are about to delete the team <strong>{teamToDelete.name}</strong>.
+                </p>
+                <p className="text-sm text-foreground">
+                  This action will <strong className="text-destructive">permanently delete</strong> the team, the team leader, and <strong>all members</strong> of the team from the entire system.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDeleteModalOpen(false);
+                    setTeamToDelete(null);
+                  }}
+                  className="px-4 py-2 font-semibold text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors text-sm"
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteTeam}
+                  disabled={submitting}
+                  className="px-6 py-2 bg-destructive text-destructive-foreground font-semibold rounded-xl hover:bg-destructive/90 transition-colors shadow-sm disabled:opacity-50 text-sm flex items-center gap-2"
+                >
+                  {submitting ? 'Deleting...' : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      Yes, Delete Team
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

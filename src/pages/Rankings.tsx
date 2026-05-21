@@ -104,22 +104,22 @@ export default function Rankings() {
       {activeTab === 'personal' && (
         <div className="flex flex-col gap-6 w-full">
           <div className="flex flex-col">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Rankings & Leaderboard</h1>
-            <p className="text-sm text-muted-foreground mt-1">Track your progress and see top performers.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">Rankings & Leaderboard</h1>
+            <p className="text-sm font-medium text-muted-foreground mt-1">Track your progress and see top performers.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1 card flex flex-col justify-center items-center text-center">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                 <Trophy className="w-10 h-10 text-primary" />
+            <div className="md:col-span-1 card flex flex-col justify-center items-center text-center p-8">
+              <div className="w-24 h-24 rounded-[2rem] bg-primary/10 flex items-center justify-center mb-6 shadow-sm border border-primary/20">
+                 <Trophy className="w-12 h-12 text-primary" />
               </div>
-              <h2 className="text-sm uppercase tracking-wider font-bold text-muted-foreground mb-1">Your Current Rank</h2>
-              <div className="text-3xl font-bold tracking-tight text-foreground mb-2">{userData?.currentRank || 'Member'}</div>
-              <p className="text-xs text-muted-foreground">Keep building your network to reach the next tier.</p>
+              <h2 className="text-sm uppercase tracking-widest font-bold text-muted-foreground mb-2">Your Current Rank</h2>
+              <div className="text-4xl font-extrabold tracking-tight text-foreground mb-3">{userData?.currentRank || 'Member'}</div>
+              <p className="text-sm font-medium text-muted-foreground">Keep building your network to reach the next tier.</p>
             </div>
 
-            <div className="md:col-span-2 card overflow-x-auto">
-              <h3 className="text-xl font-semibold tracking-tight text-foreground mb-4">Rank Requirements</h3>
+            <div className="md:col-span-2 card">
+              <h3 className="text-2xl font-bold tracking-tight text-foreground mb-6">Rank Requirements</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
                 {ranks.map(r => (
                   <div key={r.name} className="flex flex-col gap-2 p-4 rounded-xl border border-border card-hover">
@@ -136,9 +136,9 @@ export default function Rankings() {
             </div>
           </div>
           
-          <div className="card flex flex-col">
-              <div className="p-6 border-b border-border flex items-center justify-between">
-                 <h2 className="text-xl font-semibold tracking-tight text-foreground">Global Individual Leaderboard</h2>
+          <div className="card p-0 overflow-hidden border border-border mt-2">
+              <div className="p-6 border-b border-border bg-muted/20 flex items-center justify-between">
+                 <h2 className="text-2xl font-bold tracking-tight text-foreground">Global Individual Leaderboard</h2>
               </div>
               <div className="table-scroll-container">
                  <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">

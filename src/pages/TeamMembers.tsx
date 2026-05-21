@@ -97,11 +97,11 @@ export default function TeamMembers() {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-12">
-      <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 border-b border-border pb-4">
+    <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto pb-12">
+      <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-2">
         <div>
-          <h1 className="text-3xl font-[900] tracking-[-0.02em] text-foreground">Team Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage and view the performance of your assigned team members.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">Team Dashboard</h1>
+          <p className="text-sm font-medium text-muted-foreground">Manage and view the performance of your assigned team members.</p>
         </div>
       </div>
 
@@ -112,40 +112,40 @@ export default function TeamMembers() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="card flex items-center gap-6">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                <Users className="w-6 h-6" />
+            <div className="card card-hover flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm border border-primary/20">
+                  <Users className="w-6 h-6" />
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Team Members</p>
-                <h3 className="text-3xl font-bold tracking-tight text-foreground">{teamStats.totalMembers}</h3>
-              </div>
+              <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Total Team Members</p>
+              <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{teamStats.totalMembers?.toLocaleString()}</h3>
             </div>
             
-            <div className="card flex items-center gap-6">
-              <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center text-success">
-                <Award className="w-6 h-6" />
+            <div className="card card-hover flex flex-col border-success/20 bg-success/5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-card border border-success/20 flex items-center justify-center text-success shadow-sm">
+                  <Award className="w-6 h-6" />
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Active Members</p>
-                <h3 className="text-3xl font-bold tracking-tight text-foreground">{teamStats.activeMembers}</h3>
-              </div>
+              <p className="text-sm font-bold uppercase tracking-widest text-success mb-2">Active Members</p>
+              <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{teamStats.activeMembers?.toLocaleString()}</h3>
             </div>
 
-            <div className="card flex items-center gap-6">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
-                <TrendingUp className="w-6 h-6" />
+            <div className="card card-hover flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-muted border border-border flex items-center justify-center text-primary shadow-sm">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Network Growth</p>
-                <h3 className="text-3xl font-bold tracking-tight text-foreground">{teamStats.totalDownline}</h3>
-              </div>
+              <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Total Network Growth</p>
+              <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{teamStats.totalDownline?.toLocaleString()}</h3>
             </div>
           </div>
 
-          <div className="card overflow-hidden">
-            <div className="p-5 border-b border-border bg-muted/20">
-              <h2 className="font-bold text-lg flex items-center gap-2">
+          <div className="card p-0 overflow-hidden border border-border">
+            <div className="p-6 border-b border-border bg-muted/20">
+              <h2 className="font-bold text-2xl tracking-tight text-foreground flex items-center gap-3">
                 <User className="w-5 h-5 text-primary" />
                 Team Roster
               </h2>

@@ -125,10 +125,10 @@ export default function Reports() {
 
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-12">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-b border-border pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-2">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Analytics & Reports</h1>
-          <p className="text-sm text-muted-foreground mt-1">Detailed performance metrics, conversion rates, and network growth.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">Analytics & Reports</h1>
+          <p className="text-sm font-medium text-muted-foreground mt-1">Detailed performance metrics, conversion rates, and network growth.</p>
         </div>
         <div className="flex gap-3 w-full sm:w-auto">
           <button className="btn-secondary">
@@ -142,43 +142,43 @@ export default function Reports() {
 
       {/* METRICS SUMMARY */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card flex items-center gap-6 card-hover">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+        <div className="card flex flex-col card-hover border-primary/20 bg-primary/5">
+          <div className="w-12 h-12 rounded-2xl bg-card border border-primary/20 flex items-center justify-center text-primary shadow-sm mb-4">
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Total Referrals</p>
-            <h3 className="text-3xl font-bold tracking-tight text-foreground">{metrics.totalReferrals}</h3>
+            <p className="text-sm font-bold uppercase tracking-widest text-primary mb-2">Total Referrals</p>
+            <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{metrics.totalReferrals?.toLocaleString()}</h3>
           </div>
         </div>
         
-        <div className="card flex items-center gap-6 card-hover">
-          <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center text-success">
+        <div className="card flex flex-col card-hover border-success/20 bg-success/5">
+          <div className="w-12 h-12 rounded-2xl bg-card border border-success/20 flex items-center justify-center text-success shadow-sm mb-4">
             <Target className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Active Referrals</p>
-            <h3 className="text-3xl font-bold tracking-tight text-foreground">{metrics.activeReferrals}</h3>
+            <p className="text-sm font-bold uppercase tracking-widest text-success mb-2">Active Referrals</p>
+            <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{metrics.activeReferrals?.toLocaleString()}</h3>
           </div>
         </div>
 
-        <div className="card flex items-center gap-6 card-hover">
-          <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
+        <div className="card flex flex-col card-hover">
+          <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-purple-500 shadow-sm border border-border mb-4">
             <TrendingUp className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Conversion Rate</p>
-            <h3 className="text-3xl font-bold tracking-tight text-foreground">{metrics.conversionRate}%</h3>
+            <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Conversion Rate</p>
+            <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{metrics.conversionRate}%</h3>
           </div>
         </div>
 
-        <div className="card flex items-center gap-6 card-hover">
-          <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+        <div className="card flex flex-col card-hover">
+          <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-blue-500 shadow-sm border border-border mb-4">
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Recent Growth</p>
-            <h3 className="text-3xl font-bold tracking-tight text-foreground">+{metrics.recentGrowth} this week</h3>
+            <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Recent Growth</p>
+            <h3 className="text-4xl font-extrabold tracking-tight text-foreground">+{metrics.recentGrowth} <span className="text-lg font-medium text-muted-foreground lowercase">this week</span></h3>
           </div>
         </div>
       </div>
@@ -186,7 +186,7 @@ export default function Reports() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* NETWORK GROWTH OVER TIME (AREA CHART) */}
         <div className="xl:col-span-2 card flex flex-col">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Cumulative Network Growth (6 Months)</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">Cumulative Network Growth (6 Months)</h2>
           <div className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={areaData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -215,7 +215,7 @@ export default function Reports() {
 
         {/* RANK DISTRIBUTION PIE CHART */}
         <div className="card flex flex-col">
-          <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Directs Rank Distribution</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">Directs Rank Distribution</h2>
           <div className="w-full h-[220px] mb-4">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -254,7 +254,7 @@ export default function Reports() {
 
       {/* REFERRAL PERFORMANCE BARCHART */}
       <div className="card flex flex-col">
-        <h2 className="text-xl font-semibold tracking-tight text-foreground mb-6">Recent Referral Performance (Last 4 Weeks)</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">Recent Referral Performance (Last 4 Weeks)</h2>
         <div className="flex gap-6 mb-4 items-center">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                <span className="w-3 h-3 rounded-sm bg-primary block"></span>
