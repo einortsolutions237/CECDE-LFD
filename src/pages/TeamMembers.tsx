@@ -49,10 +49,15 @@ export default function TeamMembers() {
           members.sort((a, b) => ((b.directReferralsCount || b.directReferrals || 0) - (a.directReferralsCount || a.directReferrals || 0)));
 
           setTeamMembers(members);
+          
+          // Total Members = Team Leader (1) + Direct + Indirect (totalDownlineCount)
+          // To prevent visual bugs when DB is lagging, we ensure total downline >= members.length
+          const actualDownline = Math.max(userData.totalDownlineCount || 0, members.length);
+
           setTeamStats({
-            totalMembers: (userData.totalDownlineCount || 0) + 1, // Leader + downlines 
+            totalMembers: actualDownline + 1, 
             activeMembers: activeCount + (userData.accountStatus === 'active' ? 1 : 0),
-            totalDownline: userData.totalDownlineCount || 0
+            totalDownline: actualDownline
           });
           setLoading(false);
         }, (err) => {

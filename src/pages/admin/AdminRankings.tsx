@@ -12,7 +12,7 @@ export default function AdminRankings() {
   useEffect(() => {
     const fetchTeamLeaders = async () => {
       try {
-        const q = query(collection(db, 'teams'), orderBy('leaderPerformanceScore', 'desc'), limit(50));
+        const q = query(collection(db, 'teams'), orderBy('totalMembers', 'desc'), limit(50));
         const snapshot = await getDocs(q);
         
         const data: any[] = [];
@@ -93,7 +93,6 @@ export default function AdminRankings() {
                     <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Total Members</th>
                     <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Direct Referrals</th>
                     <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Indirect Referrals</th>
-                    <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-right whitespace-nowrap">Performance Score</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -116,24 +115,19 @@ export default function AdminRankings() {
                         </div>
                       </td>
                       <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
-                         {(leader.totalDownlineCount || 0) + 1}
+                         {leader.totalMembers || 0}
                       </td>
                       <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
-                         {leader.directReferralsCount || leader.directReferrals || 0}
+                         {leader.leaderDirectReferralsCount || 0}
                       </td>
                       <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
-                         {Math.max(0, (leader.totalDownlineCount || 0) - (leader.directReferralsCount || leader.directReferrals || 0))}
-                      </td>
-                      <td className="px-4 py-3 md:px-6 md:py-4 text-right whitespace-nowrap">
-                         <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-bold">
-                           {leader.leaderPerformanceScore || 0} pts
-                         </span>
+                         {Math.max(0, (leader.totalMembers || 0) - 1 - (leader.leaderDirectReferralsCount || 0))}
                       </td>
                     </tr>
                   ))}
                   {teamLeaders.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground whitespace-nowrap">
+                      <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground whitespace-nowrap">
                         No team leaders found.
                       </td>
                     </tr>

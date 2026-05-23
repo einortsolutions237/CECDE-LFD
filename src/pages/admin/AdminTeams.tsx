@@ -106,7 +106,6 @@ export default function AdminTeams() {
         activeMembers: 0,
         directReferrals: 0,
         indirectReferrals: 0,
-        leaderPerformanceScore: 0,
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
@@ -142,34 +141,9 @@ export default function AdminTeams() {
   const leaderCandidates = users.filter(u => u.roleType !== 'team_leader');
 
   const getLiveTeamStats = (team: any) => {
-    // A user is a team member if their explicitly assigned teamId matches, 
-    // or if they are a legacy downline (sponsorId == teamLeaderId).
-    // (We also include the team leader themselves to be thorough, but we might only want downlines).
-    // Let's filter to get members belonging to this team.
-    const members = users.filter(u => u.teamId === team.id || u.sponsorId === team.teamLeaderId);
-    
-    // We can also traverse deeply if needed, but direct sponsorId/teamId should catch most members locally.
-    // For large MLM structures, relying on teamId provides the exact group.
-    
-    // De-duplicate members in case of overlapping criteria
-    const uniqueMembers = Array.from(new Set(members.map(u => u.id)))
-      .map(id => members.find(u => u.id === id)!);
-      
-    let computedScore = 0;
-    uniqueMembers.forEach(u => {
-      // Internal informal score logic: (direct * 5) + ((downline - direct) * 2) + (active * 3)
-      // BUT for "global leader rank", the DB aggregates `leaderPerformanceScore`,
-      // we can simulate it closely or just use direct aggregation if the DB is unpopulated
-      const direct = u.directReferralsCount || 0;
-      const downline = u.totalDownlineCount || 0;
-      const active = u.activityState === 'active' ? 1 : 0;
-      const score = (direct * 5) + ((downline - direct) * 2) + (active * 3);
-      computedScore += score;
-    });
-
+    const leader = users.find(u => u.id === team.teamLeaderId);
     return {
-      totalMembers: team.totalMembers || 0,
-      score: team.leaderPerformanceScore || 0
+      totalMembers: leader ? (leader.totalDownlineCount || 0) + 1 : (team.totalMembers || 0)
     };
   };
 
@@ -210,7 +184,6 @@ export default function AdminTeams() {
                <tr>
                  <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Team Name</th>
                  <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Leader Name</th>
-                 <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Score</th>
                  <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Members</th>
                  <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Status</th>
                  <th className="px-4 py-3 md:px-6 md:py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Actions</th>
@@ -235,9 +208,6 @@ export default function AdminTeams() {
                            {users.find(u => u.id === team.teamLeaderId)?.currentRank || 'Member'}
                          </span>
                        </div>
-                    </td>
-                    <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold text-primary whitespace-nowrap">
-                       {liveStats.score}
                     </td>
                     <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
                        {liveStats.totalMembers}

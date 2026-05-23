@@ -118,8 +118,7 @@ export default function AdminReports() {
         totalUsers: usersInfo.length,
         totalTeams: teamsInfo.length,
         active: activeCnt,
-        suspended: suspendedCnt,
-        totalPoints: teamsInfo.reduce((acc, t) => acc + (t.leaderPerformanceScore || 0), 0)
+        suspended: suspendedCnt
       },
       rankData: rankArray,
       roleData: roleArray,
@@ -172,13 +171,6 @@ export default function AdminReports() {
            </div>
            <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Total Teams</p>
            <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{kpis.totalTeams?.toLocaleString()}</h3>
-        </div>
-        <div className="card card-hover flex flex-col">
-           <div className="w-12 h-12 rounded-2xl bg-muted border border-border flex items-center justify-center text-yellow-500 shadow-sm mb-4">
-             <TrendingUp className="w-6 h-6" />
-           </div>
-           <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Total Team Points</p>
-           <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{kpis.totalPoints?.toLocaleString()}</h3>
         </div>
       </div>
 

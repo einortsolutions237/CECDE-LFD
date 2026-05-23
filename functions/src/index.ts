@@ -176,8 +176,7 @@ export const processNewUserOnboarding = functions.firestore
           if (teamDoc.exists) {
              const teamUpdates: any = {
                totalMembers: admin.firestore.FieldValue.increment(1),
-               dormantMembers: admin.firestore.FieldValue.increment(1),
-               leaderPerformanceScore: admin.firestore.FieldValue.increment(isDirectForTeam ? 5 : 2)
+               dormantMembers: admin.firestore.FieldValue.increment(1)
              };
              if (isDirectForTeam) {
                teamUpdates.leaderDirectReferralsCount = admin.firestore.FieldValue.increment(1);
@@ -191,7 +190,6 @@ export const processNewUserOnboarding = functions.firestore
                totalMembers: 1, // Start with this new member
                activeMembers: 0,
                dormantMembers: 1,
-               leaderPerformanceScore: 5,
                createdAt: admin.firestore.FieldValue.serverTimestamp()
              });
           }
@@ -369,12 +367,9 @@ export const handleUserUpdates = functions.firestore
              }, { merge: true }).catch((e: any) => console.error("New Team update error", e));
           }
        } else if (activityStateChanged && newData.teamId && newData.teamId !== 'SYSTEM') {
-          const tScore = diffActive * 3;
-          
           const teamUpdates: any = {
             activeMembers: admin.firestore.FieldValue.increment(diffActive),
-            dormantMembers: admin.firestore.FieldValue.increment(diffDormant),
-            leaderPerformanceScore: admin.firestore.FieldValue.increment(tScore)
+            dormantMembers: admin.firestore.FieldValue.increment(diffDormant)
           };
           if (diffTotal !== 0) {
             teamUpdates.totalMembers = admin.firestore.FieldValue.increment(diffTotal);

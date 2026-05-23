@@ -13,7 +13,7 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const q = query(collection(db, 'teams'), orderBy('leaderPerformanceScore', 'desc'), limit(50));
+        const q = query(collection(db, 'teams'), orderBy('totalMembers', 'desc'), limit(50));
         const snapshot = await getDocs(q);
         
         const data: any[] = [];
@@ -88,18 +88,14 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
               <h3 className="font-bold text-lg text-foreground">{leader.teamLeaderName}'s Team</h3>
               <p className="text-sm text-muted-foreground mb-4">Team Leader</p>
               
-              <div className="flex items-center gap-2 mb-2 font-bold text-2xl text-foreground">
-                {leader.leaderPerformanceScore || 0} pts
-              </div>
-              
               <div className="grid grid-cols-2 gap-6 w-full mt-4 border-t border-border pt-4 text-sm">
                 <div className="flex flex-col items-center">
                   <span className="text-muted-foreground">Members</span>
-                  <span className="font-bold flex items-center gap-1"><Users className="w-3 h-3"/> {(leader.totalDownlineCount || 0) + 1}</span>
+                  <span className="font-bold flex items-center gap-1"><Users className="w-3 h-3"/> {leader.totalMembers || 0}</span>
                 </div>
                 <div className="flex flex-col items-center">
                   <span className="text-muted-foreground">Active</span>
-                  <span className="font-bold flex items-center gap-1 text-success"><TrendingUp className="w-3 h-3"/> {leader.activeDownlineCount || 0}</span>
+                  <span className="font-bold flex items-center gap-1 text-success"><TrendingUp className="w-3 h-3"/> {leader.activeMembers || 0}</span>
                 </div>
               </div>
             </div>
@@ -116,7 +112,6 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
                   <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Total Members</th>
                   <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Direct Referrals</th>
                   <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Indirect Referrals</th>
-                  <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-right whitespace-nowrap">Performance Score</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -139,18 +134,13 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
                       </div>
                     </td>
                     <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
-                       {(leader.totalDownlineCount || 0) + 1}
+                       {leader.totalMembers || 0}
                     </td>
                     <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
                        {leader.leaderDirectReferralsCount || leader.directReferralsCount || 0}
                     </td>
                     <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
-                       {Math.max(0, (leader.totalDownlineCount || 0) - (leader.leaderDirectReferralsCount || leader.directReferralsCount || 0))}
-                    </td>
-                    <td className="px-4 py-3 md:px-6 md:py-4 text-right whitespace-nowrap">
-                       <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-bold">
-                         {leader.leaderPerformanceScore || 0} pts
-                       </span>
+                       {Math.max(0, (leader.totalMembers || 0) - 1 - (leader.leaderDirectReferralsCount || leader.directReferralsCount || 0))}
                     </td>
                   </tr>
                 ))}
