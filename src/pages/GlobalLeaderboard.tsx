@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Trophy, Users, TrendingUp, Award, Medal } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 
 export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }) {
   const { userData } = useAuth();
+  const navigate = useNavigate();
   const [leaders, setLeaders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,8 +22,29 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
           data.push({ id: doc.id, ...doc.data() });
         });
 
-        // No recalculation needed, using precomputed fields directly
-        setLeaders(data);
+        const hydratedData = await Promise.all(data.map(async (team) => {
+          if (!team.teamLeaderId) return team;
+          try {
+            const uDoc = await getDoc(doc(db, 'users', team.teamLeaderId));
+            if (uDoc.exists()) {
+              const uData = uDoc.data();
+              return {
+                 ...team,
+                 totalMembers: (uData.totalDownlineCount || 0) + 1,
+                 activeMembers: uData.activeDownlineCount || team.activeMembers || 0,
+                 leaderDirectReferralsCount: uData.directReferralsCount || team.leaderDirectReferralsCount || 0
+              };
+            }
+          } catch (e) {
+             console.error(e);
+          }
+          return team;
+        }));
+        
+        // Re-sort based on updated totalMembers
+        hydratedData.sort((a, b) => (b.totalMembers || 0) - (a.totalMembers || 0));
+
+        setLeaders(hydratedData);
       } catch (err: any) {
         if (err.message && err.message.toLowerCase().includes('permission')) {
           setLeaders([{ id: 'error', isError: true, message: 'Missing permissions to fetch leaderboard. If you are using your own Firebase project, please update your firestore.rules to allow read access to the "teams" collection.' }]);
@@ -67,6 +89,23 @@ export default function GlobalLeaderboard({ inTab = false }: { inTab?: boolean }
   allow update: if isSignedIn();
 }`}
              </pre>
+           </div>
+        ) : leaders.length === 0 ? (
+           <div className="card flex flex-col items-center justify-center p-12 lg:p-24 text-center border-dashed border-2 border-border/60 bg-muted/10">
+             <div className="w-32 h-32 bg-primary/5 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm border border-primary/10">
+                <Trophy className="w-16 h-16 text-primary/40" />
+             </div>
+             <h2 className="text-3xl font-extrabold tracking-tight text-foreground mb-3">No Teams Ranked Yet</h2>
+             <p className="text-lg text-muted-foreground max-w-lg mx-auto mb-10 leading-relaxed">
+               There are currently no teams participating in the global rankings.
+               Team rankings will appear here once teams are established in the system.
+             </p>
+             {(userData?.role === 'admin' || userData?.role === 'super_admin') && (
+               <button onClick={() => navigate('/admin/teams')} className="btn btn-primary px-8 py-4 rounded-xl font-bold text-base shadow-sm shadow-primary/20 flex items-center gap-3 cursor-pointer hover:-translate-y-1 transition-transform">
+                 <Users className="w-5 h-5" />
+                 Create the First Team
+               </button>
+             )}
            </div>
         ) : (
           <>

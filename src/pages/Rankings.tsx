@@ -175,7 +175,13 @@ export default function Rankings() {
                         </tr>
                       )) : (
                         <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">No data available for leaderboard.</td>
+                          <td colSpan={5} className="px-6 py-16 text-center whitespace-nowrap">
+                            <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                               <Award className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                               <p className="text-lg font-bold text-foreground mb-1">No Rankings Available</p>
+                               <p className="text-sm text-muted-foreground">The individual leaderboard is currently empty.</p>
+                            </div>
+                          </td>
                         </tr>
                       )}
                    </tbody>

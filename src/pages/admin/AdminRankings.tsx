@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../../lib/firebase';
 import { Trophy, Users, TrendingUp } from 'lucide-react';
 
@@ -20,7 +20,29 @@ export default function AdminRankings() {
           data.push({ id: doc.id, ...doc.data() });
         });
 
-        setTeamLeaders(data);
+        const hydratedData = await Promise.all(data.map(async (team) => {
+          if (!team.teamLeaderId) return team;
+          try {
+            const uDoc = await getDoc(doc(db, 'users', team.teamLeaderId));
+            if (uDoc.exists()) {
+              const uData = uDoc.data();
+              return {
+                 ...team,
+                 totalMembers: (uData.totalDownlineCount || 0) + 1,
+                 activeMembers: uData.activeDownlineCount || team.activeMembers || 0,
+                 leaderDirectReferralsCount: uData.directReferralsCount || team.leaderDirectReferralsCount || 0
+              };
+            }
+          } catch (e) {
+             console.error(e);
+          }
+          return team;
+        }));
+        
+        // Re-sort based on updated totalMembers
+        hydratedData.sort((a, b) => (b.totalMembers || 0) - (a.totalMembers || 0));
+
+        setTeamLeaders(hydratedData);
       } catch (err: any) {
         if (err.message && err.message.toLowerCase().includes('permission')) {
           setTeamLeaders([{ id: 'error', isError: true, message: 'Missing permissions to fetch teams.' }]);
@@ -127,8 +149,12 @@ export default function AdminRankings() {
                   ))}
                   {teamLeaders.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground whitespace-nowrap">
-                        No team leaders found.
+                      <td colSpan={5} className="px-6 py-16 text-center whitespace-nowrap">
+                        <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                           <Trophy className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                           <p className="text-lg font-bold text-foreground mb-1">No Team Leaders Found</p>
+                           <p className="text-sm text-muted-foreground">Teams must be created from the Team Management page to appear in rankings.</p>
+                        </div>
                       </td>
                     </tr>
                   )}

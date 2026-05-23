@@ -349,22 +349,26 @@ export const handleUserUpdates = functions.firestore
              const oldActive = oldState === 'active' ? -1 : 0;
              const oldDorm = oldState === 'dormant' ? -1 : 0;
              const oldTot = oldState === 'suspended' ? 0 : -1;
-             await db.collection('teams').doc(oldData.teamId).set({
+             await db.collection('teams').doc(oldData.teamId).update({
                totalMembers: admin.firestore.FieldValue.increment(oldTot),
                activeMembers: admin.firestore.FieldValue.increment(oldActive),
                dormantMembers: admin.firestore.FieldValue.increment(oldDorm)
-             }, { merge: true }).catch((e: any) => console.error("Old Team update error", e));
+             }).catch((e: any) => {
+                 if (e.code !== 5 && e.code !== 'not-found') console.error("Old Team update error", e);
+             });
           }
           // Add to new team
           if (newData.teamId && newData.teamId !== 'SYSTEM') {
              const newActive = nextState === 'active' ? 1 : 0;
              const newDorm = nextState === 'dormant' ? 1 : 0;
              const newTot = nextState === 'suspended' ? 0 : 1;
-             await db.collection('teams').doc(newData.teamId).set({
+             await db.collection('teams').doc(newData.teamId).update({
                totalMembers: admin.firestore.FieldValue.increment(newTot),
                activeMembers: admin.firestore.FieldValue.increment(newActive),
                dormantMembers: admin.firestore.FieldValue.increment(newDorm)
-             }, { merge: true }).catch((e: any) => console.error("New Team update error", e));
+             }).catch((e: any) => {
+                 if (e.code !== 5 && e.code !== 'not-found') console.error("New Team update error", e);
+             });
           }
        } else if (activityStateChanged && newData.teamId && newData.teamId !== 'SYSTEM') {
           const teamUpdates: any = {
@@ -374,7 +378,9 @@ export const handleUserUpdates = functions.firestore
           if (diffTotal !== 0) {
             teamUpdates.totalMembers = admin.firestore.FieldValue.increment(diffTotal);
           }
-          await db.collection('teams').doc(newData.teamId).set(teamUpdates, { merge: true }).catch((e: any) => console.error("Team update error", e));
+          await db.collection('teams').doc(newData.teamId).update(teamUpdates).catch((e: any) => {
+              if (e.code !== 5 && e.code !== 'not-found') console.error("Team update error", e);
+          });
        }
 
        // Handle Sponsor Changes
@@ -459,43 +465,39 @@ export const handleUserUpdates = functions.firestore
 
 export const onTeamDeleted = functions.firestore
   .document('teams/{teamId}')
-  .onUpdate(async (change: any, context: any) => {
+  .onDelete(async (snap: any, context: any) => {
     const teamId = context.params.teamId;
-    const newData = change.after.data();
-    const oldData = change.before.data();
+    const oldData = snap.data();
     
-    // Enterprise Soft Deletion Trigger
-    if (newData.status === 'deleted' && oldData.status !== 'deleted') {
-      try {
-        const usersQuery = await db.collection('users').where('teamId', '==', teamId).get();
-        const userIdsToSuspend = new Set<string>();
-        usersQuery.forEach((doc: any) => userIdsToSuspend.add(doc.id));
-        if (newData.teamLeaderId) userIdsToSuspend.add(newData.teamLeaderId);
+    try {
+      // Find all users belonging to this team
+      const usersQuery = await db.collection('users').where('teamId', '==', teamId).get();
+      const userIdsToUpdate = new Set<string>();
+      usersQuery.forEach((doc: any) => userIdsToUpdate.add(doc.id));
+      if (oldData.teamLeaderId) userIdsToUpdate.add(oldData.teamLeaderId);
+      
+      const batchSize = 250;
+      const idsArray = Array.from(userIdsToUpdate);
+      
+      for (let i = 0; i < idsArray.length; i += batchSize) {
+        const chunk = idsArray.slice(i, i + batchSize);
+        const batch = db.batch();
         
-        const batchSize = 250;
-        const idsArray = Array.from(userIdsToSuspend);
-        
-        for (let i = 0; i < idsArray.length; i += batchSize) {
-          const chunk = idsArray.slice(i, i + batchSize);
-          const batch = db.batch();
-          
-          for (const id of chunk) {
-            batch.update(db.collection('users').doc(id), { 
-              status: 'archived', 
-              activityState: 'suspended' 
-            });
-            // Disable Auth account instead of deleting
-            admin.auth().updateUser(id, { disabled: true }).catch((e: any) => {
-                if (e.code !== 'auth/user-not-found') console.error(`Failed to disable auth for ${id}`, e);
-            });
+        for (const id of chunk) {
+          const updates: any = {
+            teamId: 'SYSTEM'
+          };
+          if (id === oldData.teamLeaderId) {
+             updates.roleType = 'team_member'; 
           }
-          await batch.commit();
+          batch.update(db.collection('users').doc(id), updates);
         }
-        
-        console.log(`Soft deleted ${idsArray.length} users for team ${teamId}.`);
-      } catch (e) {
-        console.error(`Error soft deleting team ${teamId}`, e);
+        await batch.commit();
       }
+      
+      console.log(`Cleaned up references for ${idsArray.length} users for deleted team ${teamId}.`);
+    } catch (e) {
+      console.error(`Error cleaning up after deleting team ${teamId}`, e);
     }
     return null;
   });

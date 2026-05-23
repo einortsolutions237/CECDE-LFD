@@ -28,10 +28,9 @@ export default function AdminTeams() {
     try {
       const teamId = teamToDelete.id;
       
-      // We "soft-delete" the team first by updating its status.
-      // This bypasses the strict `allow delete: if isAdmin()` rule if it hasn't propagated,
-      // and lets the backend Cloud Function do the actual deletion using the Admin SDK.
-      await updateDoc(doc(db, 'teams', teamId), { status: 'deleted' });
+      // Delete the team document directly. The backend Cloud Function
+      // will handle cleaning up team leader and member references.
+      await deleteDoc(doc(db, 'teams', teamId));
       
       setIsDeleteModalOpen(false);
       setTeamToDelete(null);
@@ -352,7 +351,7 @@ export default function AdminTeams() {
                   You are about to delete the team <strong>{teamToDelete.name}</strong>.
                 </p>
                 <p className="text-sm text-foreground">
-                  This action will <strong className="text-destructive">permanently delete</strong> the team, the team leader, and <strong>all members</strong> of the team from the entire system.
+                  This action will <strong className="text-destructive">permanently delete</strong> the team. The team leader will be demoted, and <strong>all members</strong> will have their team affiliation reset to SYSTEM. They will not be deleted from the system entirely.
                 </p>
               </div>
 

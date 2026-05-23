@@ -141,8 +141,12 @@ export default function TeamRankings({ inTab = false }: { inTab?: boolean }) {
               ))}
               {members.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground whitespace-nowrap">
-                    You are not part of any team.
+                  <td colSpan={6} className="px-6 py-16 text-center whitespace-nowrap">
+                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                       <Users className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                       <p className="text-lg font-bold text-foreground mb-1">No Team Members Found</p>
+                       <p className="text-sm text-muted-foreground">You currently have no members in your network.</p>
+                    </div>
                   </td>
                 </tr>
               )}

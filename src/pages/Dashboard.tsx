@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { doc, getDoc, collection, query, where, getDocs, updateDoc, orderBy } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, orderBy, limit } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Users, UserPlus, Award, DollarSign, TrendingUp, Copy, Check } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -84,14 +84,30 @@ export default function Dashboard() {
          setTeamRank(internalRankIndex !== -1 ? internalRankIndex + 1 : null);
 
          if (userData?.roleType === 'team_leader') {
-            const globalQ = query(collection(db, 'teams'), orderBy('totalMembers', 'desc'));
+            const globalQ = query(collection(db, 'teams'), limit(200)); // Fetch all teams (or high limit) for client-side sorting since we hydrate
             const gSnap = await getDocs(globalQ);
+            const teamDataList = await Promise.all(gSnap.docs.map(async gDoc => {
+               const data = gDoc.data();
+               let hydratedTotal = data.totalMembers || 0;
+               if (data.teamLeaderId) {
+                  try {
+                     const uDoc = await getDoc(doc(db, 'users', data.teamLeaderId));
+                     if (uDoc.exists()) {
+                        hydratedTotal = (uDoc.data().totalDownlineCount || 0) + 1;
+                     }
+                  } catch(e) {}
+               }
+               return { id: gDoc.id, teamLeaderId: data.teamLeaderId, totalMembers: hydratedTotal };
+            }));
+            
+            teamDataList.sort((a, b) => b.totalMembers - a.totalMembers);
+            
             let gRank = 1;
             let found = false;
-            gSnap.forEach(gDoc => {
-               if (gDoc.data().teamLeaderId === userData?.uid) found = true;
+            for (const t of teamDataList) {
+               if (t.teamLeaderId === userData?.uid) found = true;
                if (!found) gRank++;
-            });
+            }
             if (found) setGlobalRank(gRank);
          }
        } catch (e) {
