@@ -166,7 +166,7 @@ export default function AdminUsers() {
     } catch (err: any) {
       console.error(err);
       setUpdateStatus(`Error updating code: ${err.message}`);
-      alert(`Error updating code: ${err.message}`);
+      toast.error(`Error updating code: ${err.message}`);
     }
   };
 
@@ -206,14 +206,14 @@ export default function AdminUsers() {
        return;
     }
 
-    if (!window.confirm(`Are you absolutely sure you want to PERMANENTLY delete the user ${userEmail}? This action cannot be undone.`)) {
+    if (!window.confirm(`Are you absolutely sure you want to suspend and archive the user ${userEmail}? This will disable their account logs.`)) {
        return;
     }
 
     try {
-       setUpdateStatus(`Deleting user ${userEmail}...`);
-       await deleteDoc(doc(db, 'users', userId));
-       setUpdateStatus(`User ${userEmail} deleted successfully.`);
+       setUpdateStatus(`Archiving user ${userEmail}...`);
+       await updateDoc(doc(db, 'users', userId), { status: 'archived', activityState: 'suspended' });
+       setUpdateStatus(`User ${userEmail} archived completely.`);
        
        fetchUsers();
     } catch (err: any) {

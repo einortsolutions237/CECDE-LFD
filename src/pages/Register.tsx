@@ -106,36 +106,10 @@ export default function Register() {
       
       // If the sponsor is explicitly a Team Leader, inherit their team.
       // Exceptions: If sponsor is not a Team Leader, we don't associate the new user with their team.
-      let newTeamId = null;
-      let createdTeamRef = null;
-      let createdTeamData = null;
-
-      if (fullSponsorData.roleType === 'team_leader') {
-        if (fullSponsorData.teamId) {
-          newTeamId = fullSponsorData.teamId;
-        } else {
-          // Provision a team for this leader on the fly
-          createdTeamRef = doc(collection(db, 'teams'));
-          newTeamId = createdTeamRef.id;
-          createdTeamData = {
-            name: `${fullSponsorData.fullName || 'Leader'}'s Team`,
-            description: 'Automatically provisioned team',
-            teamLeaderId: sponsorData.uid,
-            teamLeaderName: fullSponsorData.fullName || sponsorData.uid,
-            status: 'active',
-            totalMembers: 0, // Will be incremented below
-            activeMembers: 0,
-            directReferrals: 0,
-            indirectReferrals: 0,
-            leaderPerformanceScore: 0,
-            createdAt: Date.now(),
-            updatedAt: Date.now()
-          };
-        }
+      let newTeamId = 'SYSTEM';
+      if (fullSponsorData.teamId) {
+        newTeamId = fullSponsorData.teamId;
       }
-      
-      // Removed the automatic promotion of sponsor to team_leader on 1st referral
-      // since Team Leaders are now properly managed by Admin Teams.
 
       // Create auth user
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
@@ -158,7 +132,7 @@ export default function Register() {
         roleType: 'team_member',
         directReferralsCount: 0,
         totalDownlineCount: 0,
-        currentRank: 'Bronze',
+        currentRank: 'Member',
         walletBalance: 0,
         role: 'member',
         accountStatus: 'active',
@@ -175,90 +149,7 @@ export default function Register() {
         levelDepth: 1
       });
 
-      if (createdTeamRef && createdTeamData) {
-        batch.set(createdTeamRef, createdTeamData);
-        // Also update the sponsor to have this teamId
-        batch.update(sponsorDocRef, { teamId: newTeamId });
-      }
-
       await batch.commit();
-
-      // Attempt to update sponsor stats up the tree (might fail if rules aren't updated yet)
-      try {
-        let currentSponsorId = sponsorData.uid;
-        let isDirectSponsor = true;
-        let levels = 0;
-        const maxLevels = 50; 
-        const ancestorBatch = writeBatch(db);
-        
-        while (currentSponsorId && levels < maxLevels) {
-          const uRef = doc(db, 'users', currentSponsorId);
-          const nRef = doc(db, 'network', currentSponsorId);
-          
-          const uDoc = await getDoc(uRef);
-          if (!uDoc.exists()) break;
-
-          if (isDirectSponsor) {
-            const currentDirects = (uDoc.data().directReferralsCount || 0) + 1;
-            const newActivityState = currentDirects >= 3 ? 'active' : (uDoc.data().activityState || 'dormant');
-            
-            ancestorBatch.update(uRef, {
-              directReferralsCount: increment(1),
-              totalDownlineCount: increment(1),
-              activityState: newActivityState
-            });
-            ancestorBatch.set(nRef, {
-              directReferrals: arrayUnion(user.uid),
-              totalDownlineCount: increment(1)
-            }, { merge: true });
-
-            if (uDoc.data().teamId) {
-              const teamRef = doc(db, 'teams', uDoc.data().teamId);
-              ancestorBatch.set(teamRef, {
-                totalMembers: increment(1),
-                activeMembers: increment(1),
-                directReferrals: increment(1),
-                leaderPerformanceScore: increment(5)
-              }, { merge: true });
-            }
-
-          } else {
-            ancestorBatch.update(uRef, {
-              totalDownlineCount: increment(1)
-            });
-            ancestorBatch.set(nRef, {
-              totalDownlineCount: increment(1)
-            }, { merge: true });
-
-            if (uDoc.data().teamId) {
-              const teamRef = doc(db, 'teams', uDoc.data().teamId);
-              ancestorBatch.set(teamRef, {
-                 totalMembers: increment(1),
-                 indirectReferrals: increment(1),
-                 leaderPerformanceScore: increment(2)
-              }, { merge: true });
-            }
-          }
-          
-          if (uDoc.data().sponsorId) {
-             currentSponsorId = uDoc.data().sponsorId;
-          } else {
-             break;
-          }
-          
-          isDirectSponsor = false;
-          levels++;
-        }
-        
-        if (levels > 0) {
-           await ancestorBatch.commit();
-        }
-      } catch (sponsorErr: any) {
-        console.warn("Failed to update sponsor stats:", sponsorErr);
-        if (sponsorErr.message && sponsorErr.message.toLowerCase().includes('permission')) {
-           alert("Account created successfully! Admin notice: Please copy the new `firestore.rules` and deploy them to your Firebase Console to fix sponsor stat updates.");
-        }
-      }
 
       navigate('/dashboard');
     } catch (err: any) {

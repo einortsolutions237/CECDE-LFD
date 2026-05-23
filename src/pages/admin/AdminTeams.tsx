@@ -168,7 +168,7 @@ export default function AdminTeams() {
     });
 
     return {
-      totalMembers: (team.totalDownlineCount || 0) + 1,
+      totalMembers: team.totalMembers || 0,
       score: team.leaderPerformanceScore || 0
     };
   };
