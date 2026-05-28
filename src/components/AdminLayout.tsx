@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, Users, Network, Award, BarChart3, 
   CreditCard, Settings, FileText, Menu, X, LogOut, Bell,
-  UsersRound
+  UsersRound, ShieldAlert
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -12,6 +12,7 @@ export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { userData, logout } = useAuth();
+  const isSuperAdmin = userData?.role === 'super_admin';
 
   const menuItems = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -22,6 +23,8 @@ export function AdminLayout() {
     { name: 'Reports', path: '/admin/reports', icon: BarChart3 },
     { name: 'Settings', path: '/admin/settings', icon: Settings },
   ];
+  
+  // System Reset functionality removed
 
   return (
     <div className="h-[100dvh] w-full bg-background flex flex-col md:flex-row overflow-hidden">

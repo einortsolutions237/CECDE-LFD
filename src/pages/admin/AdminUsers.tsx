@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Search, Filter, MoreHorizontal, ShieldAlert, CheckCircle, XCircle, Trash2, KeyRound, Plus, X } from 'lucide-react';
 import { collection, query, where, getDocs, updateDoc, doc, setDoc, deleteDoc, orderBy, limit, startAfter } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
@@ -20,6 +21,7 @@ export default function AdminUsers() {
   // Add User Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<{id: string, email: string} | null>(null);
   const [newUser, setNewUser] = useState({
     fullName: '',
     email: '',
@@ -206,20 +208,24 @@ export default function AdminUsers() {
        return;
     }
 
-    if (!window.confirm(`Are you absolutely sure you want to suspend and archive the user ${userEmail}? This will disable their account logs.`)) {
-       return;
-    }
+    setUserToDelete({ id: userId, email: userEmail });
+  };
 
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
     try {
-       setUpdateStatus(`Archiving user ${userEmail}...`);
-       await updateDoc(doc(db, 'users', userId), { status: 'archived', activityState: 'suspended' });
-       setUpdateStatus(`User ${userEmail} archived completely.`);
+       setUpdateStatus(`Deleting user ${userToDelete.email}...`);
+       await deleteDoc(doc(db, 'users', userToDelete.id));
+       setUpdateStatus(`User ${userToDelete.email} deleted completely.`);
+       toast.success(`User ${userToDelete.email} has been permanently deleted.`);
        
        fetchUsers();
     } catch (err: any) {
        console.error("Failed to delete user:", err);
        setUpdateStatus(`Error deleting user: ${err.message}`);
        toast.error(`Error deleting user: ${err.message}`);
+    } finally {
+       setUserToDelete(null);
     }
   };
 
@@ -403,11 +409,19 @@ export default function AdminUsers() {
                 <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-border relative">
               {loading ? (
                  <tr><td colSpan={8} className="px-6 py-8 text-center text-muted-foreground whitespace-nowrap">Loading users...</td></tr>
-              ) : users.filter(u => u.email.includes(searchTerm.toLowerCase()) || u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || (u.referralCode || '').toLowerCase().includes(searchTerm.toLowerCase())).map(user => (
-                <tr key={user.id} className="hover:bg-muted/50 transition-colors">
+              ) : (
+                <AnimatePresence>
+                  {users.filter(u => u.email.includes(searchTerm.toLowerCase()) || u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || (u.referralCode || '').toLowerCase().includes(searchTerm.toLowerCase())).map(user => (
+                    <motion.tr 
+                      key={user.id} 
+                      className="hover:bg-muted/50 transition-colors"
+                      initial={{ opacity: 1 }}
+                      exit={{ opacity: 0, x: -20, backgroundColor: 'var(--destructive)' }}
+                      transition={{ duration: 0.3, ease: 'easeOut' }}
+                    >
                   <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase">
@@ -492,14 +506,16 @@ export default function AdminUsers() {
                         </button>
                       )}
                       {isSuperAdmin && user.id !== userData?.uid && (
-                        <button onClick={() => handleDeleteUser(user.id, user.email)} className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors" title="Delete User">
+                        <button id="delete-user-button" onClick={() => handleDeleteUser(user.id, user.email)} className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors" title="Delete User">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
+                </AnimatePresence>
+              )}
             </tbody>
           </table>
         </div>
@@ -514,6 +530,34 @@ export default function AdminUsers() {
           </button>
         </div>
       </div>
+      {/* Delete User Confirmation Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+          <div className="bg-card w-full max-w-lg rounded-2xl border border-border shadow-2xl p-6">
+            <h2 className="text-xl font-bold text-foreground mb-4">Confirm Deletion</h2>
+            <p className="text-muted-foreground mb-6">
+              Are you absolutely sure you want to PERMANENTLY delete the user <strong>{userToDelete.email}</strong> from the system? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end mt-6">
+              <button
+                type="button"
+                onClick={() => setUserToDelete(null)}
+                className="px-4 py-2 text-foreground font-semibold hover:bg-muted rounded-xl transition-colors text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteUser}
+                className="px-4 py-2 bg-destructive text-destructive-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity text-sm"
+              >
+                Permanently Delete User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

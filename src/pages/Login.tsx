@@ -3,18 +3,36 @@ import { Link, useNavigate } from 'react-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const validateEmail = (val: string) => {
+    setEmail(val);
+    if (!val) {
+      setEmailError('');
+      return;
+    }
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    setEmailError(isValid ? '' : 'Please enter a valid email address');
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    if (emailError) {
+      setError('Please fix the errors in the form before submitting.');
+      return;
+    }
+
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
@@ -58,10 +76,22 @@ export default function Login() {
             <input 
               type="email" 
               required
-              className="input-field"
+              className={`input-field ${emailError ? 'border-destructive focus:ring-destructive' : ''}`}
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={e => validateEmail(e.target.value)}
             />
+            <AnimatePresence>
+              {emailError && (
+                <motion.p
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-xs text-destructive mt-1 font-medium"
+                >
+                  {emailError}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-semibold text-foreground">Password</label>
@@ -84,7 +114,7 @@ export default function Login() {
           </div>
           
           <div className="flex justify-end items-center">
-            <a href="#" className="text-sm text-primary hover:underline font-medium">Forgot password?</a>
+            <Link to="/forgot-password" className="text-sm text-primary hover:underline font-medium">Forgot password?</Link>
           </div>
 
           <button 

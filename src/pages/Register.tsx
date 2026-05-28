@@ -3,7 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDocs, getDoc, query, collection, where, writeBatch, arrayUnion, increment, serverTimestamp } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { UserPlus, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, Check, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 import toast from 'react-hot-toast';
 
@@ -15,6 +16,46 @@ export default function Register() {
     fullName: '', email: '', phoneNumber: '', password: '', referralCode: refCode
   });
   
+  const [emailError, setEmailError] = useState('');
+  
+  const validateEmail = (val: string) => {
+    setFormData({...formData, email: val});
+    if (!val) {
+      setEmailError('');
+      return;
+    }
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    setEmailError(isValid ? '' : 'Please enter a valid email address');
+  };
+
+  const calculatePasswordStrength = (pass: string) => {
+    if (!pass) return 0;
+    let score = 0;
+    if (pass.length >= 8) score += 1;
+    if (/[A-Z]/.test(pass)) score += 1;
+    if (/[0-9]/.test(pass)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+    return score;
+  };
+  
+  const passwordStrength = calculatePasswordStrength(formData.password);
+  
+  const getPasswordStrengthColor = () => {
+    if (formData.password.length === 0) return 'bg-border';
+    if (passwordStrength <= 1) return 'bg-destructive';
+    if (passwordStrength === 2) return 'bg-orange-500';
+    if (passwordStrength === 3) return 'bg-blue-500';
+    return 'bg-success';
+  };
+  
+  const getPasswordStrengthLabel = () => {
+    if (formData.password.length === 0) return '';
+    if (passwordStrength <= 1) return 'Weak';
+    if (passwordStrength === 2) return 'Fair';
+    if (passwordStrength === 3) return 'Good';
+    return 'Strong';
+  };
+
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -89,6 +130,16 @@ export default function Register() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (emailError) {
+      setError('Please provide a valid email structure before submitting.');
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
 
     if (!sponsorData) {
       setError('A valid referral code is required to create an account.');
@@ -202,10 +253,22 @@ export default function Register() {
             <label className="block text-sm font-semibold text-foreground">Email Address</label>
             <input 
               type="email" required
-              className="input-field"
+              className={`input-field ${emailError ? 'border-destructive focus:ring-destructive' : ''}`}
               value={formData.email}
-              onChange={e => setFormData({...formData, email: e.target.value})}
+              onChange={e => validateEmail(e.target.value)}
             />
+            <AnimatePresence>
+              {emailError && (
+                <motion.p
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-xs text-destructive mt-1 font-medium"
+                >
+                  {emailError}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="space-y-1.5">
@@ -222,7 +285,7 @@ export default function Register() {
             <label className="block text-sm font-semibold text-foreground">Password</label>
             <div className="relative">
               <input 
-                type={showPassword ? "text" : "password"} required minLength={6}
+                type={showPassword ? "text" : "password"} required minLength={8}
                 className="input-field pl-4 pr-10"
                 value={formData.password}
                 onChange={e => setFormData({...formData, password: e.target.value})}
@@ -235,6 +298,54 @@ export default function Register() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            
+            <AnimatePresence>
+              {formData.password.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-2 space-y-2 overflow-hidden"
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-muted-foreground">Password strength</span>
+                    <span className={`font-bold ${
+                      passwordStrength <= 1 ? 'text-destructive' :
+                      passwordStrength === 2 ? 'text-orange-500' :
+                      passwordStrength === 3 ? 'text-blue-500' : 'text-success'
+                    }`}>{getPasswordStrengthLabel()}</span>
+                  </div>
+                  <div className="flex gap-1 h-1.5 w-full">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div 
+                        key={i} 
+                        className={`h-full flex-1 rounded-full transition-colors duration-300 ${
+                           i <= passwordStrength ? getPasswordStrengthColor() : 'bg-muted'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 mt-1 text-[10px] sm:text-xs">
+                    <div className={`flex items-center gap-1 ${formData.password.length >= 8 ? 'text-success' : 'text-muted-foreground'}`}>
+                      {formData.password.length >= 8 ? <Check className="w-3 h-3"/> : <X className="w-3 h-3" />}
+                      8+ characters
+                    </div>
+                    <div className={`flex items-center gap-1 ${/[A-Z]/.test(formData.password) ? 'text-success' : 'text-muted-foreground'}`}>
+                      {/[A-Z]/.test(formData.password) ? <Check className="w-3 h-3"/> : <X className="w-3 h-3" />}
+                      Uppercase
+                    </div>
+                    <div className={`flex items-center gap-1 ${/[0-9]/.test(formData.password) ? 'text-success' : 'text-muted-foreground'}`}>
+                      {/[0-9]/.test(formData.password) ? <Check className="w-3 h-3"/> : <X className="w-3 h-3" />}
+                      Number
+                    </div>
+                    <div className={`flex items-center gap-1 ${/[^A-Za-z0-9]/.test(formData.password) ? 'text-success' : 'text-muted-foreground'}`}>
+                      {/[^A-Za-z0-9]/.test(formData.password) ? <Check className="w-3 h-3"/> : <X className="w-3 h-3" />}
+                      Special char
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="space-y-1.5 p-4 bg-muted/30 border border-border rounded-xl">

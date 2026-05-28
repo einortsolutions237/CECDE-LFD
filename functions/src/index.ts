@@ -128,9 +128,9 @@ export const processNewUserOnboarding = functions.firestore
         // Sponsor updates
         transaction.update(sponsorRef, {
           directReferralsCount: newDirectsCount,
+          dormantReferralsCount: admin.firestore.FieldValue.increment(1),
           roleType: newSponsorRoleType,
-          teamId: newSponsorRoleType === 'team_leader' ? sponsorId : (sponsorData.teamId || 'SYSTEM'),
-          dormantDownlineCount: admin.firestore.FieldValue.increment(1) // new user is dormant initially
+          teamId: newSponsorRoleType === 'team_leader' ? sponsorId : (sponsorData.teamId || 'SYSTEM')
         });
 
         // Initialize user
@@ -142,9 +142,12 @@ export const processNewUserOnboarding = functions.firestore
           currentRank: 'Member',
           directReferralsCount: 0,
           activeReferralsCount: 0,
+          dormantReferralsCount: 0,
+          suspendedReferralsCount: 0,
           totalDownlineCount: 0,
           activeDownlineCount: 0,
           dormantDownlineCount: 0,
+          suspendedDownlineCount: 0,
           walletBalance: 0,
         });
 
@@ -153,17 +156,13 @@ export const processNewUserOnboarding = functions.firestore
         const sponsorNetworkDoc = await transaction.get(sponsorNetworkRef);
         if (sponsorNetworkDoc.exists) {
           transaction.update(sponsorNetworkRef, {
-            directReferrals: admin.firestore.FieldValue.arrayUnion(userId),
-            totalDownlineCount: admin.firestore.FieldValue.increment(1),
-            dormantDownlineCount: admin.firestore.FieldValue.increment(1)
+            directReferrals: admin.firestore.FieldValue.arrayUnion(userId)
           });
         } else {
           transaction.set(sponsorNetworkRef, {
             uid: sponsorId,
-            directReferrals: [userId],
-            totalDownlineCount: 1,
-            activeDownlineCount: 0,
-            dormantDownlineCount: 1
+            directReferrals: [userId]
+            // downline counts will be set by propagateAncestryUpdatesSafely
           });
         }
 
@@ -190,6 +189,7 @@ export const processNewUserOnboarding = functions.firestore
                totalMembers: 1, // Start with this new member
                activeMembers: 0,
                dormantMembers: 1,
+               suspendedMembers: 0,
                createdAt: admin.firestore.FieldValue.serverTimestamp()
              });
           }
@@ -228,12 +228,14 @@ async function propagateAncestryUpdatesSafely(
   sponsorId: string, 
   totalDiff: number, 
   activeDiff: number, 
-  dormantDiff: number
+  dormantDiff: number,
+  suspendedDiff: number = 0
 ) {
   let currentId = sponsorId;
   const sponsorPaths: string[] = [];
   const maxLevels = 50;
   
+  // Track ancestry to prevent circular loops
   for (let i = 0; i < maxLevels; i++) {
     if (!currentId || currentId === 'SYSTEM') break;
     if (sponsorPaths.includes(currentId)) {
@@ -249,6 +251,7 @@ async function propagateAncestryUpdatesSafely(
 
   if (sponsorPaths.length === 0) return;
   
+  // Batch aggregate updates for scalability
   const batchSize = 100;
   for (let i = 0; i < sponsorPaths.length; i += batchSize) {
     const batch = db.batch();
@@ -262,6 +265,7 @@ async function propagateAncestryUpdatesSafely(
       if (totalDiff !== 0) updates.totalDownlineCount = admin.firestore.FieldValue.increment(totalDiff);
       if (activeDiff !== 0) updates.activeDownlineCount = admin.firestore.FieldValue.increment(activeDiff);
       if (dormantDiff !== 0) updates.dormantDownlineCount = admin.firestore.FieldValue.increment(dormantDiff);
+      if (suspendedDiff !== 0) updates.suspendedDownlineCount = admin.firestore.FieldValue.increment(suspendedDiff);
       
       if (Object.keys(updates).length > 0) {
         batch.update(uRef, updates);
@@ -271,7 +275,7 @@ async function propagateAncestryUpdatesSafely(
     await batch.commit();
   }
 
-  // After all counts are physically updated, reassess ranks safely without transactions colliding.
+  // Rank Check for hierarchy changes
   for (const sId of sponsorPaths) {
      const docSnap = await db.collection('users').doc(sId).get();
      if(docSnap.exists) {
@@ -281,7 +285,7 @@ async function propagateAncestryUpdatesSafely(
 }
 
 // ----------------------------------------------------------------------------
-// 5. UNIFIED ACTIVITY STATE MANAGER
+// 5. UNIFIED ACTIVITY STATE MANAGER & METRIC NORMALIZATION
 // ----------------------------------------------------------------------------
 export const handleUserUpdates = functions.firestore
   .document('users/{userId}')
@@ -289,24 +293,28 @@ export const handleUserUpdates = functions.firestore
     const newData = change.after.data();
     const oldData = change.before.data();
     
-    // Determine activity state correctly, accounting for soft deletes taking precedence
+    // NORMALIZE STATUS: If the account is archived, activity state MUST be suspended
+    if (newData.status === 'archived') {
+      newData.activityState = 'suspended';
+    }
+
     let newCalculatedState = newData.activityState;
     let activityStateChanged = false;
 
-    // Only calculate state dynamically if not suspended/archived manually
+    // Calculate dynamic state if neither suspended nor archived
     if (newData.status !== 'archived' && newData.activityState !== 'suspended') {
        const directRefs = newData.directReferralsCount || 0;
        newCalculatedState = directRefs >= 3 ? 'active' : 'dormant';
     } else {
-       newCalculatedState = 'suspended'; // Ensure terminal state
+       newCalculatedState = 'suspended'; // Ensure terminal state matches
     }
 
+    // Force update if the state organically changed
     if (newData.activityState !== newCalculatedState) {
        await change.after.ref.update({ activityState: newCalculatedState });
-       newData.activityState = newCalculatedState; // Mutate local obj for next check
+       newData.activityState = newCalculatedState; 
     }
 
-    // Now check if there was an actual change from oldData
     if (newData.activityState !== oldData.activityState) {
        activityStateChanged = true;
     }
@@ -320,7 +328,7 @@ export const handleUserUpdates = functions.firestore
 
        const statsRef = db.collection('system_stats').doc('global');
        
-       let diffActive = 0, diffDormant = 0, diffTotal = 0;
+       let diffActive = 0, diffDormant = 0, diffSuspended = 0, diffTotal = 0;
        
        if (activityStateChanged) {
          if (nextState === 'active') diffActive = 1;
@@ -329,67 +337,73 @@ export const handleUserUpdates = functions.firestore
          if (nextState === 'dormant') diffDormant = 1;
          else if (oldState === 'dormant') diffDormant = -1;
          
-         if (nextState === 'suspended') diffTotal = -1;
-         else if (oldState === 'suspended') diffTotal = 1;
+         if (nextState === 'suspended') diffSuspended = 1;
+         else if (oldState === 'suspended') diffSuspended = -1;
 
+         // totalUsers remains unaffected by suspend per Enterprise logic
+       }
+       
+       // Handle System Stats
+       if (activityStateChanged) {
          const systemUpdates: any = {
            activeUsers: admin.firestore.FieldValue.increment(diffActive),
-           dormantUsers: admin.firestore.FieldValue.increment(diffDormant)
+           dormantUsers: admin.firestore.FieldValue.increment(diffDormant),
+           suspendedUsers: admin.firestore.FieldValue.increment(diffSuspended)
          };
-         if (diffTotal !== 0) {
-           systemUpdates.totalUsers = admin.firestore.FieldValue.increment(diffTotal);
-         }
+         if (diffTotal !== 0) systemUpdates.totalUsers = admin.firestore.FieldValue.increment(diffTotal);
          await statsRef.set(systemUpdates, { merge: true });
        }
        
-       // Handle Team Changes (including state changes impacting team stats)
+       // -------------------------------------------------------------------
+       // TEAM PROPAGATION
+       // -------------------------------------------------------------------
        if (teamChanged) {
-          // Remove from old team
+          // Remove from old team safely
           if (oldData.teamId && oldData.teamId !== 'SYSTEM') {
              const oldActive = oldState === 'active' ? -1 : 0;
              const oldDorm = oldState === 'dormant' ? -1 : 0;
-             const oldTot = oldState === 'suspended' ? 0 : -1;
+             const oldSusp = oldState === 'suspended' ? -1 : 0;
+             const oldTot = -1; // They left the team completely
              await db.collection('teams').doc(oldData.teamId).update({
                totalMembers: admin.firestore.FieldValue.increment(oldTot),
                activeMembers: admin.firestore.FieldValue.increment(oldActive),
-               dormantMembers: admin.firestore.FieldValue.increment(oldDorm)
-             }).catch((e: any) => {
-                 if (e.code !== 5 && e.code !== 'not-found') console.error("Old Team update error", e);
-             });
+               dormantMembers: admin.firestore.FieldValue.increment(oldDorm),
+               suspendedMembers: admin.firestore.FieldValue.increment(oldSusp)
+             }).catch((e: any) => { if (e.code !== 5 && e.code !== 'not-found') console.error("Old Team update error", e); });
           }
           // Add to new team
           if (newData.teamId && newData.teamId !== 'SYSTEM') {
              const newActive = nextState === 'active' ? 1 : 0;
              const newDorm = nextState === 'dormant' ? 1 : 0;
-             const newTot = nextState === 'suspended' ? 0 : 1;
+             const newSusp = nextState === 'suspended' ? 1 : 0;
+             const newTot = 1; 
              await db.collection('teams').doc(newData.teamId).update({
                totalMembers: admin.firestore.FieldValue.increment(newTot),
                activeMembers: admin.firestore.FieldValue.increment(newActive),
-               dormantMembers: admin.firestore.FieldValue.increment(newDorm)
-             }).catch((e: any) => {
-                 if (e.code !== 5 && e.code !== 'not-found') console.error("New Team update error", e);
-             });
+               dormantMembers: admin.firestore.FieldValue.increment(newDorm),
+               suspendedMembers: admin.firestore.FieldValue.increment(newSusp)
+             }).catch((e: any) => { if (e.code !== 5 && e.code !== 'not-found') console.error("New Team update error", e); });
           }
        } else if (activityStateChanged && newData.teamId && newData.teamId !== 'SYSTEM') {
-          const teamUpdates: any = {
+          // Only State changed within same team
+          await db.collection('teams').doc(newData.teamId).update({
             activeMembers: admin.firestore.FieldValue.increment(diffActive),
-            dormantMembers: admin.firestore.FieldValue.increment(diffDormant)
-          };
-          if (diffTotal !== 0) {
-            teamUpdates.totalMembers = admin.firestore.FieldValue.increment(diffTotal);
-          }
-          await db.collection('teams').doc(newData.teamId).update(teamUpdates).catch((e: any) => {
-              if (e.code !== 5 && e.code !== 'not-found') console.error("Team update error", e);
-          });
+            dormantMembers: admin.firestore.FieldValue.increment(diffDormant),
+            suspendedMembers: admin.firestore.FieldValue.increment(diffSuspended)
+          }).catch((e: any) => { if (e.code !== 5 && e.code !== 'not-found') console.error("Team update error", e); });
        }
 
-       // Handle Sponsor Changes
+       // -------------------------------------------------------------------
+       // SPONSOR AND UPLINE (NETWORK) PROPAGATION
+       // -------------------------------------------------------------------
        if (sponsorChanged) {
            if (oldData.sponsorId && oldData.sponsorId !== 'SYSTEM') {
                const oldSpRef = db.collection('users').doc(oldData.sponsorId);
                await oldSpRef.update({
-                 directReferralsCount: admin.firestore.FieldValue.increment(oldState === 'suspended' ? 0 : -1),
-                 activeReferralsCount: admin.firestore.FieldValue.increment(oldState === 'active' ? -1 : 0)
+                 directReferralsCount: admin.firestore.FieldValue.increment(-1), // total changes only on sponsor change
+                 activeReferralsCount: admin.firestore.FieldValue.increment(oldState === 'active' ? -1 : 0),
+                 dormantReferralsCount: admin.firestore.FieldValue.increment(oldState === 'dormant' ? -1 : 0),
+                 suspendedReferralsCount: admin.firestore.FieldValue.increment(oldState === 'suspended' ? -1 : 0),
                });
                
                const netRef = db.collection('network').doc(oldData.sponsorId);
@@ -399,16 +413,19 @@ export const handleUserUpdates = functions.firestore
 
                await propagateAncestryUpdatesSafely(
                   oldData.sponsorId, 
-                  oldState === 'suspended' ? 0 : -1, 
-                  oldState === 'active' ? -1 : 0, 
-                  oldState === 'dormant' ? -1 : 0
+                  -1 - (oldData.totalDownlineCount || 0), // total downline leaves
+                  (oldState === 'active' ? -1 : 0) - (oldData.activeDownlineCount || 0), 
+                  (oldState === 'dormant' ? -1 : 0) - (oldData.dormantDownlineCount || 0),
+                  (oldState === 'suspended' ? -1 : 0) - (oldData.suspendedDownlineCount || 0)
                );
            }
            if (newData.sponsorId && newData.sponsorId !== 'SYSTEM') {
                const newSpRef = db.collection('users').doc(newData.sponsorId);
                await newSpRef.update({
-                 directReferralsCount: admin.firestore.FieldValue.increment(nextState === 'suspended' ? 0 : 1),
-                 activeReferralsCount: admin.firestore.FieldValue.increment(nextState === 'active' ? 1 : 0)
+                 directReferralsCount: admin.firestore.FieldValue.increment(1),
+                 activeReferralsCount: admin.firestore.FieldValue.increment(nextState === 'active' ? 1 : 0),
+                 dormantReferralsCount: admin.firestore.FieldValue.increment(nextState === 'dormant' ? 1 : 0),
+                 suspendedReferralsCount: admin.firestore.FieldValue.increment(nextState === 'suspended' ? 1 : 0),
                });
                
                const netRef = db.collection('network').doc(newData.sponsorId);
@@ -418,21 +435,21 @@ export const handleUserUpdates = functions.firestore
 
                await propagateAncestryUpdatesSafely(
                   newData.sponsorId, 
-                  nextState === 'suspended' ? 0 : 1, 
-                  nextState === 'active' ? 1 : 0, 
-                  nextState === 'dormant' ? 1 : 0
+                  1 + (newData.totalDownlineCount || 0), 
+                  (nextState === 'active' ? 1 : 0) + (newData.activeDownlineCount || 0), 
+                  (nextState === 'dormant' ? 1 : 0) + (newData.dormantDownlineCount || 0),
+                  (nextState === 'suspended' ? 1 : 0) + (newData.suspendedDownlineCount || 0)
                );
            }
        } else if (activityStateChanged && newData.sponsorId && newData.sponsorId !== 'SYSTEM') {
            const spRef = db.collection('users').doc(newData.sponsorId);
-           const spUpdates: any = {
-             activeReferralsCount: admin.firestore.FieldValue.increment(diffActive)
-           };
-           if (diffTotal !== 0) spUpdates.directReferralsCount = admin.firestore.FieldValue.increment(diffTotal);
+           await spRef.update({
+             activeReferralsCount: admin.firestore.FieldValue.increment(diffActive),
+             dormantReferralsCount: admin.firestore.FieldValue.increment(diffDormant),
+             suspendedReferralsCount: admin.firestore.FieldValue.increment(diffSuspended)
+           });
            
-           await spRef.update(spUpdates);
-           
-           await propagateAncestryUpdatesSafely(newData.sponsorId, diffTotal, diffActive, diffDormant);
+           await propagateAncestryUpdatesSafely(newData.sponsorId, 0, diffActive, diffDormant, diffSuspended);
        }
        
        if (activityStateChanged && nextState === 'active' && oldState !== 'active') {
@@ -463,11 +480,17 @@ export const handleUserUpdates = functions.firestore
 // 6. ENTERPRISE SOFT DELETION
 // ----------------------------------------------------------------------------
 
-export const onTeamDeleted = functions.firestore
+export const processTeamDeletion = functions.firestore
   .document('teams/{teamId}')
-  .onDelete(async (snap: any, context: any) => {
+  .onUpdate(async (change: any, context: any) => {
     const teamId = context.params.teamId;
-    const oldData = snap.data();
+    const newData = change.after.data();
+    const oldData = change.before.data();
+    
+    // Only process if status changed to 'deleted'
+    if (newData.status !== 'deleted' || oldData.status === 'deleted') {
+      return null;
+    }
     
     try {
       // Find all users belonging to this team
@@ -496,6 +519,10 @@ export const onTeamDeleted = functions.firestore
       }
       
       console.log(`Cleaned up references for ${idsArray.length} users for deleted team ${teamId}.`);
+      
+      // Finally, hard delete the team document itself to clean up
+      await db.collection('teams').doc(teamId).delete();
+      console.log(`Successfully hard-deleted team document ${teamId}.`);
     } catch (e) {
       console.error(`Error cleaning up after deleting team ${teamId}`, e);
     }
@@ -505,15 +532,23 @@ export const onTeamDeleted = functions.firestore
 export const onUserDeleted = functions.firestore
   .document('users/{userId}')
   .onDelete(async (snap: any, context: any) => {
-     // Strictly speaking, we should block actual doc deletions via rules and just soft delete.
-     // But if a hard delete slips through, handle auth safely.
+     // A hard delete from Super Admin should delete the Firebase Auth user entirely.
+    const userId = context.params.userId;
     try {
-      await admin.auth().updateUser(context.params.userId, { disabled: true });
-      console.log(`Disabled auth user ${context.params.userId} after hard document deletion.`);
+      await admin.auth().deleteUser(userId);
+      console.log(`Successfully deleted auth user ${userId} after hard document deletion.`);
     } catch (e: any) {
       if (e.code !== 'auth/user-not-found') {
-        console.error("Error handling auth status for deleted user doc", context.params.userId, e);
+        console.error("Error deleting auth user", userId, e);
       }
+    }
+    
+    // Cleanup associated network document
+    try {
+      await db.collection('network').doc(userId).delete();
+      console.log(`Successfully cleaned up network doc for ${userId}`);
+    } catch (e: any) {
+      console.error("Error deleting network doc", userId, e);
     }
     return null;
   });
@@ -523,7 +558,11 @@ export const onUserDeleted = functions.firestore
 // ----------------------------------------------------------------------------
 
 export const reconcileHierarchyCounts = functions.https.onCall(async (data: any, context: any) => {
-  if (!context.auth || !context.auth.token.admin) {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('permission-denied', 'Must be authenticated');
+  }
+  const adminDoc = await db.collection('users').doc(context.auth.uid).get();
+  if (!adminDoc.exists || (adminDoc.data()?.role !== 'admin' && adminDoc.data()?.role !== 'super_admin')) {
     throw new functions.https.HttpsError('permission-denied', 'Only admins can run reconciliation.');
   }
 
@@ -531,7 +570,7 @@ export const reconcileHierarchyCounts = functions.https.onCall(async (data: any,
   return { success: true, message: "Reconciliation complete" };
 });
 
-export const scheduledReconciliation = functions.pubsub.schedule('every 24 hours').onRun(async (context) => {
+export const scheduledReconciliation = functions.pubsub.schedule('every 24 hours').onRun(async (context: any) => {
   await runReconciliation();
   console.log("Nightly metric reconciliation completed.");
   return null;
@@ -543,13 +582,19 @@ async function runReconciliation() {
   const usersRef = db.collection('users');
   const snapshot = await usersRef.get();
   
+  const usersMap = new Map();
+  for (const doc of snapshot.docs) {
+    usersMap.set(doc.id, doc.data());
+  }
+
   const actualCounts = new Map<string, any>();
   
   // 1. Calculate ground truth from actual hierarchy
   for (const doc of snapshot.docs) {
     const userData = doc.data();
-    const isDormant = userData.activityState === 'dormant';
-    const isActive = userData.activityState === 'active';
+    const isSuspended = userData.activityState === 'suspended' || userData.status === 'archived';
+    const isDormant = userData.activityState === 'dormant' && !isSuspended;
+    const isActive = userData.activityState === 'active' && !isSuspended;
     
     // Direct Referral logic
     if (userData.sponsorId && userData.sponsorId !== 'SYSTEM') {
@@ -559,6 +604,8 @@ async function runReconciliation() {
       const spCounts = actualCounts.get(userData.sponsorId);
       spCounts.directReferrals++;
       if (isActive) spCounts.activeReferrals++;
+      if (isDormant) spCounts.dormantReferrals++;
+      if (isSuspended) spCounts.suspendedReferrals++;
       
       // Propagate downline stats up
       let currentId = userData.sponsorId;
@@ -577,11 +624,12 @@ async function runReconciliation() {
         upCounts.totalDownline++;
         if (isActive) upCounts.activeDownline++;
         if (isDormant) upCounts.dormantDownline++;
+        if (isSuspended) upCounts.suspendedDownline++;
         
-        // fetch parent
-        const parentDoc = snapshot.docs.find((d: any) => d.id === currentId);
-        if (!parentDoc) break;
-        currentId = parentDoc.data()?.sponsorId;
+        // fetch parent via map instead of find
+        const parentData = usersMap.get(currentId);
+        if (!parentData) break;
+        currentId = parentData.sponsorId;
         maxDepth--;
       }
     }
@@ -589,6 +637,12 @@ async function runReconciliation() {
 
   // 2. Apply corrections if there are discrepancies
   const batchSize = 100;
+  // Ensure every user is checked, not just those with downlines
+  for (const doc of snapshot.docs) {
+    if (!actualCounts.has(doc.id)) {
+      initCounts(actualCounts, doc.id);
+    }
+  }
   const updates = Array.from(actualCounts.entries());
   
   for (let i = 0; i < updates.length; i += batchSize) {
@@ -612,6 +666,14 @@ async function runReconciliation() {
           needsUpdate = true;
           updateObj.activeReferralsCount = counts.activeReferrals;
         }
+        if (uData.dormantReferralsCount !== counts.dormantReferrals) {
+          needsUpdate = true;
+          updateObj.dormantReferralsCount = counts.dormantReferrals;
+        }
+        if (uData.suspendedReferralsCount !== counts.suspendedReferrals) {
+          needsUpdate = true;
+          updateObj.suspendedReferralsCount = counts.suspendedReferrals;
+        }
         if (uData.totalDownlineCount !== counts.totalDownline) {
           needsUpdate = true;
           updateObj.totalDownlineCount = counts.totalDownline;
@@ -623,6 +685,10 @@ async function runReconciliation() {
         if (uData.dormantDownlineCount !== counts.dormantDownline) {
           needsUpdate = true;
           updateObj.dormantDownlineCount = counts.dormantDownline;
+        }
+        if (uData.suspendedDownlineCount !== counts.suspendedDownline) {
+          needsUpdate = true;
+          updateObj.suspendedDownlineCount = counts.suspendedDownline;
         }
         
         if (needsUpdate) {
@@ -651,28 +717,36 @@ async function runReconciliation() {
       let totalMembers = 0;
       let activeMembers = 0;
       let dormantMembers = 0;
+      let suspendedMembers = 0;
       
       for (const u of teamUsers) {
         const uState = u.data().activityState;
         const uStatus = u.data().status;
-        if (uState === 'suspended' || uStatus === 'archived') continue;
+        const isSuspended = uState === 'suspended' || uStatus === 'archived';
         
         totalMembers++;
-        if (uState === 'active') activeMembers++;
-        if (uState === 'dormant') dormantMembers++;
+        if (isSuspended) {
+          suspendedMembers++;
+        } else if (uState === 'active') {
+          activeMembers++;
+        } else if (uState === 'dormant') {
+          dormantMembers++;
+        }
       }
       
       const currentTeamData = teamDoc.data();
       const needsUpdate = 
         currentTeamData.totalMembers !== totalMembers ||
         currentTeamData.activeMembers !== activeMembers ||
-        currentTeamData.dormantMembers !== dormantMembers;
+        currentTeamData.dormantMembers !== dormantMembers ||
+        currentTeamData.suspendedMembers !== suspendedMembers;
         
       if (needsUpdate) {
         batch.update(teamsRef.doc(teamId), {
           totalMembers,
           activeMembers,
-          dormantMembers
+          dormantMembers,
+          suspendedMembers
         });
       }
     }
@@ -686,8 +760,13 @@ function initCounts(map: Map<string, any>, userId: string) {
   map.set(userId, {
     directReferrals: 0,
     activeReferrals: 0,
+    dormantReferrals: 0,
+    suspendedReferrals: 0,
     totalDownline: 0,
     activeDownline: 0,
-    dormantDownline: 0
+    dormantDownline: 0,
+    suspendedDownline: 0
   });
 }
+
+

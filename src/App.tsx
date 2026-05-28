@@ -17,6 +17,8 @@ import { Toaster } from 'react-hot-toast';
 // Lazy loaded pages to optimize bundle size
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const NetworkTree = lazy(() => import('./pages/NetworkTree'));
@@ -47,6 +49,8 @@ export default function App() {
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 
                 {/* Member Layout */}
                 <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>

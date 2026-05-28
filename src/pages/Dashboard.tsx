@@ -5,6 +5,7 @@ import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Users, UserPlus, Award, DollarSign, TrendingUp, Copy, Check } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '../lib/utils';
+import { handleProductionError } from '../lib/errorUtils';
 
 export default function Dashboard() {
   const { userData } = useAuth();
@@ -30,52 +31,69 @@ export default function Dashboard() {
        try {
          let members: any[] = [];
          
-         if (userData?.teamId) {
+        if (userData?.teamId) {
            const tDoc = await getDoc(doc(db, 'teams', userData.teamId));
-           let leaderDownlineCount = 0;
-           let queriedDownlineCount = 0;
+           let exactComputedMembers = 1; // Team leader
+           
            const teamMembersRef = collection(db, 'users');
            const q = query(teamMembersRef, where('teamId', '==', userData.teamId));
            const snap = await getDocs(q);
+           
            snap.forEach(d => {
               const u = d.data();
               const downlineCount = u.totalDownlineCount || 0;
               members.push({ id: d.id, downlineCount: downlineCount });
-              if (d.id !== userData.uid) queriedDownlineCount++;
+              
+              if (tDoc.exists() && d.id !== tDoc.data().teamLeaderId) {
+                 // Direct Member (1) + their indirect referrals (downlineCount)
+                 exactComputedMembers += (1 + downlineCount);
+              }
            });
            
            if (tDoc.exists()) {
              const data = tDoc.data();
-             if (data.teamLeaderId) {
-               if (data.teamLeaderId === userData.uid) {
-                  leaderDownlineCount = userData.totalDownlineCount || 0;
-               } else {
-                  const lDoc = await getDoc(doc(db, 'users', data.teamLeaderId));
-                  if (lDoc.exists()) {
-                     leaderDownlineCount = lDoc.data().totalDownlineCount || 0;
-                  }
-               }
+             
+             // Fallback to leader downline count if no members explicitly in team yet
+             if (members.length === 0 || (members.length === 1 && members[0].id === data.teamLeaderId)) {
+                 if (data.teamLeaderId) {
+                   if (data.teamLeaderId === userData.uid) {
+                      exactComputedMembers = (userData.totalDownlineCount || 0) + 1;
+                   } else {
+                      const lDoc = await getDoc(doc(db, 'users', data.teamLeaderId));
+                      if (lDoc.exists()) {
+                         exactComputedMembers = (lDoc.data().totalDownlineCount || 0) + 1;
+                      }
+                   }
+                 }
              }
-             data.calculatedTotalMembers = Math.max(leaderDownlineCount, queriedDownlineCount) + (data.teamLeaderId ? 1 : 0);
+             
+             data.calculatedTotalMembers = exactComputedMembers;
              setTeamData(data);
            }
          } else if (userData?.roleType === 'team_leader') {
            const teamMembersRef = collection(db, 'users');
            const q = query(teamMembersRef, where('sponsorId', '==', userData.uid));
            const snap = await getDocs(q);
-           let queriedDownlineCount = 0;
+           
+           let exactComputedMembers = 1; // Team leader
            snap.forEach(d => {
               const u = d.data();
               const downlineCount = u.totalDownlineCount || 0;
               members.push({ id: d.id, downlineCount: downlineCount });
-               if (d.id !== userData.uid) queriedDownlineCount++;
+              if (d.id !== userData.uid) {
+                  exactComputedMembers += (1 + downlineCount);
+              }
            });
+           
+           if (members.length === 0) {
+               exactComputedMembers = (userData.totalDownlineCount || 0) + 1;
+           }
            
            // Fallback for legacy team leaders without a teamId
            setTeamData({
              teamLeaderName: userData.fullName || 'You',
              teamLeaderId: userData.uid,
-             calculatedTotalMembers: Math.max(userData.totalDownlineCount || 0, queriedDownlineCount) + 1
+             calculatedTotalMembers: exactComputedMembers
            });
          }
          
@@ -84,16 +102,31 @@ export default function Dashboard() {
          setTeamRank(internalRankIndex !== -1 ? internalRankIndex + 1 : null);
 
          if (userData?.roleType === 'team_leader') {
-            const globalQ = query(collection(db, 'teams'), limit(200)); // Fetch all teams (or high limit) for client-side sorting since we hydrate
+            const globalQ = query(collection(db, 'teams'), limit(200)); 
             const gSnap = await getDocs(globalQ);
             const teamDataList = await Promise.all(gSnap.docs.map(async gDoc => {
                const data = gDoc.data();
                let hydratedTotal = data.totalMembers || 0;
                if (data.teamLeaderId) {
                   try {
-                     const uDoc = await getDoc(doc(db, 'users', data.teamLeaderId));
-                     if (uDoc.exists()) {
-                        hydratedTotal = (uDoc.data().totalDownlineCount || 0) + 1;
+                     let computedTotal = 1;
+                     const mQ = query(collection(db, 'users'), where('teamId', '==', gDoc.id));
+                     const mSnap = await getDocs(mQ);
+                     let mCount = 0;
+                     mSnap.forEach(md => {
+                         if (md.id !== data.teamLeaderId) {
+                             computedTotal += 1 + (md.data().totalDownlineCount || 0);
+                             mCount++;
+                         }
+                     });
+                     
+                     if (mCount === 0) {
+                         const uDoc = await getDoc(doc(db, 'users', data.teamLeaderId));
+                         if (uDoc.exists()) {
+                            hydratedTotal = (uDoc.data().totalDownlineCount || 0) + 1;
+                         }
+                     } else {
+                         hydratedTotal = computedTotal;
                      }
                   } catch(e) {}
                }
@@ -196,14 +229,8 @@ export default function Dashboard() {
 
           }
         } catch (error: any) {
-          console.error("Error fetching network data:", error);
-          if (error.message && error.message.toLowerCase().includes('permission')) {
-             setNetworkStats({ 
-               error: 'Missing permissions to fetch network. If you are using your own Firebase project, please update your firestore.rules to allow read access.' 
-             });
-          } else {
-             handleFirestoreError(error, OperationType.GET, `network/${userData.uid}`);
-          }
+          handleProductionError(error, "Error fetching network data", "Failed to load network statistics.");
+          setNetworkStats(prev => prev || { error: 'Failed to access detailed network statistics.' });
         }
       }
     };

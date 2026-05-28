@@ -78,16 +78,7 @@ export const Layout = () => {
         </div>
         
         <div className="mt-auto p-5 border-t border-border bg-foreground/[0.02]">
-          <div className="text-xs font-semibold text-muted-foreground mb-2">SYSTEM STATUS</div>
-          <div className="flex items-center gap-2 text-xs text-foreground mb-4">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-success"></span>
-            </span>
-            AI Engine Active
-          </div>
-          
-          <div className="flex items-center gap-3 mb-4 mt-4 pt-4 border-t border-border">
+          <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0 border border-primary/20">
               {userData?.fullName?.charAt(0) || 'U'}
             </div>

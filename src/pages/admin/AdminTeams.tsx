@@ -30,7 +30,7 @@ export default function AdminTeams() {
       
       // Delete the team document directly. The backend Cloud Function
       // will handle cleaning up team leader and member references.
-      await deleteDoc(doc(db, 'teams', teamId));
+      await updateDoc(doc(db, 'teams', teamId), { status: 'deleted' });
       
       setIsDeleteModalOpen(false);
       setTeamToDelete(null);
@@ -132,6 +132,56 @@ export default function AdminTeams() {
     }
   };
 
+  const handlePurgeAllTeams = async () => {
+    if (!window.confirm("WARNING: This will permanently delete ALL teams and reset all users who are team leaders back to members with no team affiliation. Are you absolutely sure?")) return;
+    setSubmitting(true);
+    setError('');
+    
+    try {
+      let batch = writeBatch(db);
+      let ops = 0;
+      let count = 0;
+      let numTeams = 0;
+      
+      const commitSync = async () => {
+         if (ops > 0) {
+            await batch.commit();
+            batch = writeBatch(db);
+            ops = 0;
+         }
+      };
+
+      // 1. Delete all teams
+      const teamsSnap = await getDocs(query(collection(db, 'teams')));
+      for (const docSnap of teamsSnap.docs) {
+         batch.update(docSnap.ref, { status: 'deleted', totalMembers: 0, activeMembers: 0, leaderDirectReferralsCount: 0 });
+         ops++;
+         numTeams++;
+         if (ops >= 450) await commitSync();
+      }
+      
+      // 2. Clear out team leaders
+      const usersSnap = await getDocs(query(collection(db, 'users')));
+      for (const docSnap of usersSnap.docs) {
+         const uData = docSnap.data();
+         if (uData.roleType === 'team_leader' || uData.teamId) {
+             batch.update(docSnap.ref, { roleType: 'member', teamId: null });
+             count++;
+             ops++;
+             if (ops >= 450) await commitSync();
+         }
+      }
+      
+      await commitSync();
+      alert(`Purge successful. Deleted ${numTeams} teams and reset ${count} members.`);
+    } catch (err: any) {
+      console.error("Error purging teams:", err);
+      setError(err.message || 'Error purging teams.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return <div className="flex justify-center py-10"><div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>;
   }
@@ -140,9 +190,27 @@ export default function AdminTeams() {
   const leaderCandidates = users.filter(u => u.roleType !== 'team_leader');
 
   const getLiveTeamStats = (team: any) => {
-    const leader = users.find(u => u.id === team.teamLeaderId);
+    let calculatedTotal = 1; // Team leader
+    // Find all users in this team
+    const teamMembers = users.filter(u => u.teamId === team.id);
+    let memberCount = 0;
+    
+    for (const member of teamMembers) {
+       // if member is the leader, skip (already counted)
+       if (member.id === team.teamLeaderId) continue;
+       // Add member themselves (1) + their indirect downline
+       calculatedTotal += 1 + (member.totalDownlineCount || 0);
+       memberCount++;
+    }
+    
+    // Fallback if no explicit members assigned by teamId yet, use leader's entire downline tracking
+    if (memberCount === 0) {
+        const leader = users.find(u => u.id === team.teamLeaderId);
+        calculatedTotal = (leader ? (leader.totalDownlineCount || 0) : 0) + (leader ? 1 : 0);
+    }
+
     return {
-      totalMembers: leader ? (leader.totalDownlineCount || 0) + 1 : (team.totalMembers || 0)
+      totalMembers: calculatedTotal
     };
   };
 
@@ -151,15 +219,25 @@ export default function AdminTeams() {
       <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-2">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">Teams Management</h1>
-          <p className="text-sm font-medium text-muted-foreground">Create teams, assign team leaders, and monitor their global rankings.</p>
+          <p className="text-sm font-medium text-muted-foreground">Create teams and assign team leaders.</p>
         </div>
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-sm"
-        >
-          <Plus className="w-5 h-5" />
-          Create Team
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handlePurgeAllTeams}
+            disabled={submitting}
+            className="flex items-center gap-2 bg-destructive/10 text-destructive border border-destructive/20 px-4 py-2 rounded-xl font-bold hover:bg-destructive hover:text-white transition-all shadow-sm disabled:opacity-50"
+          >
+            <AlertTriangle className="w-5 h-5" />
+            {submitting ? 'Purging...' : 'Purge All Teams'}
+          </button>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-sm"
+          >
+            <Plus className="w-5 h-5" />
+            Create Team
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -183,7 +261,7 @@ export default function AdminTeams() {
                <tr>
                  <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Team Name</th>
                  <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Leader Name</th>
-                 <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Members</th>
+                 <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Total Team Members</th>
                  <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Status</th>
                  <th className="px-4 py-3 md:px-6 md:py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Actions</th>
                </tr>

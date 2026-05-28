@@ -33,12 +33,17 @@ export default function TeamMembers() {
         unsubscribe = onSnapshot(usersQuery, (snapshot) => {
           let members: any[] = [];
           let activeCount = 0;
+          let calculatedTotal = 1; // Team leader (1)
           
           snapshot.forEach(doc => {
              const data = doc.data();
              // Prevent the leader themselves showing up as a member
              if (doc.id !== userData.uid) {
                members.push({ id: doc.id, ...data });
+               
+               // Direct member (1) + their indirect downline
+               calculatedTotal += 1 + (data.totalDownlineCount || 0);
+
                if (data.accountStatus === 'active') {
                   activeCount++;
                }
@@ -51,11 +56,14 @@ export default function TeamMembers() {
           setTeamMembers(members);
           
           // Total Members = Team Leader (1) + Direct + Indirect (totalDownlineCount)
-          // To prevent visual bugs when DB is lagging, we ensure total downline >= members.length
-          const actualDownline = Math.max(userData.totalDownlineCount || 0, members.length);
+          const actualDownline = userData.totalDownlineCount || 0;
+          
+          if (members.length === 0) {
+             calculatedTotal = actualDownline + 1;
+          }
 
           setTeamStats({
-            totalMembers: actualDownline + 1, 
+            totalMembers: calculatedTotal, 
             activeMembers: activeCount + (userData.accountStatus === 'active' ? 1 : 0),
             totalDownline: actualDownline
           });
