@@ -17,6 +17,10 @@ interface UserData {
   walletBalance: number;
   totalDownlineCount?: number;
   directReferralsCount?: number;
+  indirectReferralCount?: number;
+  activeIndirectReferralCount?: number;
+  dormantIndirectReferralCount?: number;
+  leaderboardScore?: number;
   phone?: string;
   country?: string;
   activityState?: 'active' | 'dormant';

@@ -26,6 +26,7 @@ const Rankings = lazy(() => import('./pages/Rankings'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Settings = lazy(() => import('./pages/Settings'));
 const TeamMembers = lazy(() => import('./pages/TeamMembers'));
+const MyWallet = lazy(() => import('./pages/MyWallet'));
 
 // Lazy loaded Admin Pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -37,6 +38,7 @@ const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
 const AdminTransactions = lazy(() => import('./pages/admin/AdminTransactions'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminLogs = lazy(() => import('./pages/admin/AdminLogs'));
+const AdminKYC = lazy(() => import('./pages/admin/AdminKYC'));
 
 export default function App() {
   return (
@@ -57,6 +59,7 @@ export default function App() {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/network" element={<NetworkTree />} />
                   <Route path="/team-members" element={<TeamMembers />} />
+                  <Route path="/wallet" element={<MyWallet />} />
                   <Route path="/rankings" element={<Rankings />} />
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/settings" element={<Settings />} />
@@ -76,6 +79,7 @@ export default function App() {
                   <Route path="rankings" element={<AdminRankings />} />
                   <Route path="reports" element={<AdminReports />} />
                   <Route path="transactions" element={<AdminTransactions />} />
+                  <Route path="kyc" element={<AdminKYC />} />
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="logs" element={<AdminLogs />} />
                 </Route>

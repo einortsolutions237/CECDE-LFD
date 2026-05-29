@@ -42,41 +42,36 @@ export default function AdminTeams() {
     }
   };
 
-  useEffect(() => {
-    // Set up real-time listener for Teams
-    const teamsQuery = query(collection(db, 'teams'), orderBy('createdAt', 'desc'));
-    const unsubscribeTeams = onSnapshot(teamsQuery, (snapshot) => {
+  const fetchTeamsAndUsers = async () => {
+    try {
+      setLoading(true);
+      const teamsSnap = await getDocs(query(collection(db, 'teams'), orderBy('createdAt', 'desc')));
+      const usersSnap = await getDocs(query(collection(db, 'users')));
+
       const teamsData: any[] = [];
-      snapshot.forEach(doc => {
+      teamsSnap.forEach(doc => {
         const data = doc.data();
         if (data.status !== 'deleted') {
           teamsData.push({ id: doc.id, ...data });
         }
       });
       setTeams(teamsData);
-    }, (error) => {
-      console.error("Error listening to teams:", error);
-      handleFirestoreError(error, OperationType.LIST, 'teams');
-    });
 
-    // Set up real-time listener for Users
-    const usersQuery = query(collection(db, 'users'));
-    const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
       const usersData: any[] = [];
-      snapshot.forEach(doc => {
+      usersSnap.forEach(doc => {
         usersData.push({ id: doc.id, ...doc.data() });
       });
       setUsers(usersData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      handleFirestoreError(error, OperationType.LIST, 'teams_and_users');
+    } finally {
       setLoading(false);
-    }, (error) => {
-      console.error("Error listening to users:", error);
-      setLoading(false);
-    });
+    }
+  };
 
-    return () => {
-      unsubscribeTeams();
-      unsubscribeUsers();
-    };
+  useEffect(() => {
+    fetchTeamsAndUsers();
   }, []);
 
   const handleCreateTeam = async (e: React.FormEvent) => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, doc, writeBatch, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../../lib/firebase';
 import { useTheme } from '../../components/ThemeProvider';
-import { RefreshCw, Save, Settings, Shield, Bell, Palette, Database, CheckCircle, AlertTriangle, Monitor, Moon, Sun } from 'lucide-react';
+import { RefreshCw, Save, Settings, Shield, Bell, Palette, Database, CheckCircle, AlertTriangle, Monitor, Moon, Sun, DollarSign } from 'lucide-react';
 
 export default function AdminSettings() {
   const { theme, setTheme } = useTheme();
@@ -17,10 +17,29 @@ export default function AdminSettings() {
     contactEmail: 'admin@example.com',
     allowRegistrations: true,
     maintenanceMode: false,
+    
+    // Commission Structure Defaults
+    directBonusPercentage: 10,
+    indirectBonusPercentageLevel2: 5,
+    indirectBonusPercentageLevel3: 2,
+    binaryPairingBonusPercentage: 8,
+    maxDailyPairingCap: 1000,
+    
+    // Legacy ranking settings
     pointsPerDirectRef: 5,
     pointsPerIndirectRef: 2,
     pointsPerActiveMember: 3,
     minWithdrawalAmount: 50,
+    
+    // Payment Integrations
+    activePaymentGateway: 'stripe', // 'stripe' | 'flutterwave' | 'paystack'
+    currencyText: 'USD',
+    currencySymbol: '$',
+    
+    // Security & Compliance
+    requireKYCForWithdrawal: true,
+    autoApproveWithdrawalsUnder: 0, // 0 means manual only
+    maxLoginAttempts: 5,
   });
 
   const [loading, setLoading] = useState(true);
@@ -228,6 +247,45 @@ export default function AdminSettings() {
            </div>
         </div>
 
+        {/* Commission Engine Configuration */}
+        <div className="card p-0 overflow-hidden flex flex-col border border-border">
+           <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
+              <DollarSign className="w-6 h-6 text-green-500" />
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Commission Engine</h2>
+           </div>
+           <div className="p-6 flex flex-col gap-6 flex-1">
+              <div>
+                 <label className="block text-sm font-medium text-muted-foreground mb-1">Direct Bonus (%)</label>
+                 <input 
+                   type="number" 
+                   value={settings.directBonusPercentage}
+                   onChange={(e) => handleSettingChange('directBonusPercentage', parseInt(e.target.value) || 0)}
+                   className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold"
+                 />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">Level 2 Bonus (%)</label>
+                    <input 
+                      type="number" 
+                      value={settings.indirectBonusPercentageLevel2}
+                      onChange={(e) => handleSettingChange('indirectBonusPercentageLevel2', parseInt(e.target.value) || 0)}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold"
+                    />
+                 </div>
+                 <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">Level 3 Bonus (%)</label>
+                    <input 
+                      type="number" 
+                      value={settings.indirectBonusPercentageLevel3}
+                      onChange={(e) => handleSettingChange('indirectBonusPercentageLevel3', parseInt(e.target.value) || 0)}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold"
+                    />
+                 </div>
+              </div>
+           </div>
+        </div>
+
         {/* Security & Access */}
         <div className="card p-0 overflow-hidden flex flex-col border border-border">
            <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
@@ -256,6 +314,49 @@ export default function AdminSettings() {
                     <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-destructive"></div>
                  </div>
               </label>
+           </div>
+        </div>
+
+        {/* Payment & Localization Settings */}
+        <div className="card p-0 overflow-hidden flex flex-col border border-border">
+           <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
+              <Shield className="w-6 h-6 text-indigo-500" />
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Payments & Regions</h2>
+           </div>
+           <div className="p-6 flex flex-col gap-6 flex-1">
+              <div>
+                 <label className="block text-sm font-medium text-muted-foreground mb-1">Active Payment Gateway</label>
+                 <select 
+                   value={settings.activePaymentGateway}
+                   onChange={(e) => handleSettingChange('activePaymentGateway', e.target.value)}
+                   className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-medium"
+                 >
+                    <option value="stripe">Stripe</option>
+                    <option value="flutterwave">Flutterwave</option>
+                    <option value="paystack">Paystack</option>
+                    <option value="manual">Manual / Bank Transfer</option>
+                 </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">Currency Code</label>
+                    <input 
+                      type="text" 
+                      value={settings.currencyText}
+                      onChange={(e) => handleSettingChange('currencyText', e.target.value)}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold"
+                    />
+                 </div>
+                 <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-1">Currency Symbol</label>
+                    <input 
+                      type="text" 
+                      value={settings.currencySymbol}
+                      onChange={(e) => handleSettingChange('currencySymbol', e.target.value)}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold"
+                    />
+                 </div>
+              </div>
            </div>
         </div>
 

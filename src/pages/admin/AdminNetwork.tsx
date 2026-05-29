@@ -364,7 +364,7 @@ export default function AdminNetwork() {
                           {user.directReferralsCount || 0}
                         </td>
                         <td className="px-5 py-3 text-center font-semibold text-sm whitespace-nowrap">
-                          {user.totalDownlineCount || 0}
+                          {Math.max(0, (user.totalDownlineCount || 0) - (user.directReferralsCount || 0))}
                         </td>
                         <td className="px-5 py-3 whitespace-nowrap">
                           <span className={cn(

@@ -3,12 +3,14 @@ import { collection, query, where, getDocs, orderBy, onSnapshot, or } from 'fire
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { Users, Award, Shield, User, TrendingUp } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 export default function TeamMembers() {
   const { userData } = useAuth();
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [memberTypeFilter, setMemberTypeFilter] = useState<'all' | 'direct' | 'indirect'>('all');
   const [teamStats, setTeamStats] = useState({ totalMembers: 0, activeMembers: 0, totalDownline: 0 });
 
   useEffect(() => {
@@ -30,49 +32,62 @@ export default function TeamMembers() {
         
         const usersQuery = query(collection(db, 'users'), or(...conditions));
         
-        unsubscribe = onSnapshot(usersQuery, (snapshot) => {
-          let members: any[] = [];
-          let activeCount = 0;
-          let calculatedTotal = 1; // Team leader (1)
-          
-          snapshot.forEach(doc => {
-             const data = doc.data();
-             // Prevent the leader themselves showing up as a member
-             if (doc.id !== userData.uid) {
-               members.push({ id: doc.id, ...data });
-               
-               // Direct member (1) + their indirect downline
-               calculatedTotal += 1 + (data.totalDownlineCount || 0);
-
-               if (data.accountStatus === 'active') {
-                  activeCount++;
+        const fetchMembersData = async () => {
+          try {
+            const snapshot = await getDocs(usersQuery);
+            let members: any[] = [];
+            let activeCount = 0;
+            let calculatedTotal = 1; // Team leader (1)
+            
+            snapshot.forEach(doc => {
+               const data = doc.data();
+               // Prevent the leader themselves showing up as a member
+               if (doc.id !== userData.uid) {
+                 members.push({ id: doc.id, ...data });
+                 
+                 // Direct member (1) + their indirect downline
+                 calculatedTotal += 1 + (data.totalDownlineCount || 0);
+  
+                 if (data.accountStatus === 'active') {
+                    activeCount++;
+                 }
                }
-             }
-          });
-
-          // Sort by computed referrals desc
-          members.sort((a, b) => ((b.directReferralsCount || b.directReferrals || 0) - (a.directReferralsCount || a.directReferrals || 0)));
-
-          setTeamMembers(members);
-          
-          // Total Members = Team Leader (1) + Direct + Indirect (totalDownlineCount)
-          const actualDownline = userData.totalDownlineCount || 0;
-          
-          if (members.length === 0) {
-             calculatedTotal = actualDownline + 1;
+            });
+  
+            // Sort by computed referrals desc
+            members.sort((a, b) => ((b.directReferralsCount || b.directReferrals || 0) - (a.directReferralsCount || a.directReferrals || 0)));
+  
+            setTeamMembers(members);
+            
+            // Total Members = Team Leader (1) + Direct + Indirect (totalDownlineCount)
+            const actualDownline = userData.totalDownlineCount || 0;
+            
+            if (members.length === 0) {
+               calculatedTotal = actualDownline + 1;
+            }
+  
+            let indirectCount = 0;
+            members.forEach((m: any) => {
+               const isDirect = m.sponsorId === userData?.uid || m.sponsorId === userData?.referralCode || m.sponsorReferralCode === userData?.referralCode;
+               if (!isDirect) {
+                 indirectCount++;
+               }
+            });
+  
+            setTeamStats({
+              totalMembers: calculatedTotal, 
+              activeMembers: activeCount + (userData.accountStatus === 'active' ? 1 : 0),
+              totalDownline: indirectCount
+            });
+          } catch (err) {
+            console.error("Error fetching team members:", err);
+            setError("Failed to load team members.");
+          } finally {
+            setLoading(false);
           }
+        };
 
-          setTeamStats({
-            totalMembers: calculatedTotal, 
-            activeMembers: activeCount + (userData.accountStatus === 'active' ? 1 : 0),
-            totalDownline: actualDownline
-          });
-          setLoading(false);
-        }, (err) => {
-          console.error("Error fetching team members:", err);
-          setError("Failed to load team members.");
-          setLoading(false);
-        });
+        fetchMembersData();
       } catch (err: any) {
         console.error("Setup error:", err);
         setError("Failed to setup team members listener.");
@@ -151,21 +166,46 @@ export default function TeamMembers() {
                   <TrendingUp className="w-6 h-6" />
                 </div>
               </div>
-              <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Total Network Growth</p>
+              <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Indirect Referrals</p>
               <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{teamStats.totalDownline?.toLocaleString()}</h3>
             </div>
           </div>
 
           <div className="card p-0 overflow-hidden border border-border">
-            <div className="p-6 border-b border-border bg-muted/20">
+            <div className="p-6 border-b border-border bg-muted/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="font-bold text-2xl tracking-tight text-foreground flex items-center gap-3">
                 <User className="w-5 h-5 text-primary" />
-                Team Roster
+                Team Members
               </h2>
+              <div className="flex bg-muted p-1 rounded-xl border border-border text-xs font-semibold">
+                <button
+                  onClick={() => setMemberTypeFilter('all')}
+                  className={cn("px-3 py-1.5 rounded-lg transition-all", memberTypeFilter === 'all' ? "bg-card text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground")}
+                >
+                  All Team
+                </button>
+                <button
+                  onClick={() => setMemberTypeFilter('direct')}
+                  className={cn("px-3 py-1.5 rounded-lg transition-all", memberTypeFilter === 'direct' ? "bg-card text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground")}
+                >
+                  Direct Referrals
+                </button>
+                <button
+                  onClick={() => setMemberTypeFilter('indirect')}
+                  className={cn("px-3 py-1.5 rounded-lg transition-all", memberTypeFilter === 'indirect' ? "bg-card text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground")}
+                >
+                  Indirect Referrals
+                </button>
+              </div>
             </div>
             
             <div className="table-scroll-container">
-              {teamMembers.length > 0 ? (
+              {teamMembers.filter(m => {
+                 const isDirect = m.sponsorId === userData?.uid || m.sponsorId === userData?.referralCode || m.sponsorReferralCode === userData?.referralCode;
+                 if (memberTypeFilter === 'direct') return isDirect;
+                 if (memberTypeFilter === 'indirect') return !isDirect;
+                 return true;
+               }).length > 0 ? (
                 <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
                   <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border tracking-wider whitespace-nowrap">
                     <tr>
@@ -176,7 +216,12 @@ export default function TeamMembers() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {teamMembers.map(member => (
+                    {teamMembers.filter(m => {
+                      const isDirect = m.sponsorId === userData?.uid || m.sponsorId === userData?.referralCode || m.sponsorReferralCode === userData?.referralCode;
+                      if (memberTypeFilter === 'direct') return isDirect;
+                      if (memberTypeFilter === 'indirect') return !isDirect;
+                      return true;
+                    }).map(member => (
                       <tr key={member.id} className="hover:bg-muted/50 transition-colors">
                         <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                           <div className="font-bold text-foreground">{member.fullName || 'Unknown'}</div>

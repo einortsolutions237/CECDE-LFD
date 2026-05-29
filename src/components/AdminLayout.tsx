@@ -21,6 +21,9 @@ export function AdminLayout() {
     { name: 'Network Management', path: '/admin/network', icon: Network },
     { name: 'Rankings', path: '/admin/rankings', icon: Award },
     { name: 'Reports', path: '/admin/reports', icon: BarChart3 },
+    { name: 'Finances', path: '/admin/transactions', icon: CreditCard },
+    { name: 'KYC & Compliance', path: '/admin/kyc', icon: ShieldAlert },
+    { name: 'System Logs', path: '/admin/logs', icon: FileText },
     { name: 'Settings', path: '/admin/settings', icon: Settings },
   ];
   

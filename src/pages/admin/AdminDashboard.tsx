@@ -44,7 +44,7 @@ export default function AdminDashboard() {
     let dormantUsers = 0;
     let accountActive = 0;
     let suspended = 0;
-    let totalDownlines = 0;
+    let totalIndirects = 0;
     
     const rDist: Record<string, number> = {};
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -64,7 +64,7 @@ export default function AdminDashboard() {
       if (u.activityState === 'active') activeUsers++;
       else dormantUsers++;
 
-      totalDownlines += (u.totalDownlineCount || 0);
+      totalIndirects += (u.indirectReferralCount || 0);
 
       const rank = u.currentRank || 'Member';
       rDist[rank] = (rDist[rank] || 0) + 1;
@@ -83,7 +83,7 @@ export default function AdminDashboard() {
     const recent = [...usersInfo].sort((a,b) => b.timestamp - a.timestamp).slice(0, 5);
 
     return {
-      stats: { totalUsers, activeUsers, dormantUsers, accountActive, suspended, totalDownlines },
+      stats: { totalUsers, activeUsers, dormantUsers, accountActive, suspended, totalIndirects },
       growthData: gData,
       rankDistribution: rankArray,
       recentActivities: recent
@@ -91,11 +91,20 @@ export default function AdminDashboard() {
   }, [usersInfo]);
 
   if (loading) {
-     return <div className="p-8 text-center text-muted-foreground">Loading admin stats...</div>;
+     return <div className="p-8 text-center text-muted-foreground flex items-center justify-center min-h-[50vh]">Loading enterprise insights...</div>;
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
+    <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto pb-12">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
+             <Network className="w-8 h-8 text-primary" /> Executive Command Center
+          </h1>
+          <p className="text-sm font-medium text-muted-foreground mt-2">Enterprise-grade network analytics, genealogy monitoring, and compliance oversight.</p>
+        </div>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         <div className="card card-hover flex flex-col border-primary/20 bg-primary/5">
@@ -154,8 +163,8 @@ export default function AdminDashboard() {
               <GitMerge className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Total Downlines</h3>
-          <div className="text-4xl font-extrabold tracking-tight text-foreground">{stats.totalDownlines?.toLocaleString()}</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Total Indirects</h3>
+          <div className="text-4xl font-extrabold tracking-tight text-foreground">{stats.totalIndirects?.toLocaleString()}</div>
         </div>
       </div>
 

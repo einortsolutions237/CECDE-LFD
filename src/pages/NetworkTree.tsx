@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, or } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { 
@@ -39,6 +39,7 @@ export default function NetworkTree() {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [activityFilter, setActivityFilter] = useState<'all' | 'active' | 'dormant'>('all');
+  const [memberTypeFilter, setMemberTypeFilter] = useState<'all' | 'direct' | 'indirect'>('all');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   useEffect(() => {
@@ -56,35 +57,56 @@ export default function NetworkTree() {
       };
 
       try {
-        // Query direct referrals (by uid or referralCode)
-        const q = query(collection(db, 'users'), where('sponsorId', 'in', [userData.uid, userData.referralCode]));
+        // Query both direct referrals and team members of the team
+        const conditions = [where('sponsorId', '==', userData.uid)];
+        if (userData.referralCode) {
+          conditions.push(where('sponsorId', '==', userData.referralCode));
+        }
+        if (userData.teamId) {
+          conditions.push(where('teamId', '==', userData.teamId));
+        }
+        
+        const q = query(collection(db, 'users'), or(...conditions));
         const querySnapshot = await getDocs(q);
+        
         const children: TreeNode[] = [];
         const loadedMembers: any[] = [];
+        let directCountLocal = 0;
+        let indirectCountLocal = 0;
         
         querySnapshot.forEach((doc) => {
+          if (doc.id === userData.uid) return;
           const data = doc.data();
-          loadedMembers.push({
+          const memberObj = {
             id: doc.id,
             ...data,
             timestamp: data.createdAt?.toMillis() || Date.now()
-          });
-          children.push({
-            uid: doc.id,
-            fullName: data.fullName,
-            currentRank: data.currentRank || 'Member',
-            sponsorId: data.sponsorId,
-            referralCode: data.referralCode || '',
-            isOpen: false,
-            children: []
-          });
+          };
+          loadedMembers.push(memberObj);
+          
+          // Check if sponsor matches the team leader
+          const isDirect = data.sponsorId === userData.uid || data.sponsorId === userData.referralCode || data.sponsorReferralCode === userData.referralCode;
+          if (isDirect) {
+            directCountLocal++;
+            children.push({
+              uid: doc.id,
+              fullName: data.fullName,
+              currentRank: data.currentRank || 'Member',
+              sponsorId: data.sponsorId,
+              referralCode: data.referralCode || '',
+              isOpen: false,
+              children: []
+            });
+          } else {
+            indirectCountLocal++;
+          }
         });
         
         setDirectMembers(loadedMembers);
         rootNode.children = children;
         setTreeData(rootNode);
 
-        // Use precomputed values on the user instead of computing full adj list
+        // Calculate count of active and dormant members
         let activeCount = 0;
         let dormantCount = 0;
         loadedMembers.forEach(m => {
@@ -92,7 +114,12 @@ export default function NetworkTree() {
           else dormantCount++;
         });
 
-        setActualDownlineCount(userData?.totalDownlineCount || 0);
+        // "Every team member on the team member list whose sponsor is not the 'Team leader' Sponsor code is put under the 'Indirect Referal' list and should be displayed on the INDIRECT REFERALS card"
+        if (userData.roleType === 'team_leader') {
+          setActualDownlineCount(indirectCountLocal);
+        } else {
+          setActualDownlineCount(userData.indirectReferralCount || 0);
+        }
         setActiveM(activeCount);
         setDormantM(dormantCount);
 
@@ -337,8 +364,8 @@ export default function NetworkTree() {
               <Network className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Indirect Members</h3>
-          <div className="text-4xl font-extrabold text-foreground">{Math.max(0, (actualDownlineCount > 0 ? actualDownlineCount : (userData.totalDownlineCount || 0)) - directCount)}</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Indirect Referrals</h3>
+          <div className="text-4xl font-extrabold text-foreground">{actualDownlineCount.toLocaleString()}</div>
         </div>
 
         <div className="card card-hover flex flex-col border-success/20 bg-success/5">
@@ -530,9 +557,31 @@ export default function NetworkTree() {
 
       {/* NETWORK MEMBERS TABLE */}
       <div className="card p-0 overflow-hidden border border-border">
-        <div className="p-6 border-b border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-muted/20">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Team Members</h2>
-          <div className="flex items-center gap-2 w-full sm:w-auto relative">
+        <div className="p-6 border-b border-border flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-muted/20">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground whitespace-nowrap">Team Members</h2>
+            <div className="flex bg-muted p-1 rounded-xl border border-border text-xs font-semibold">
+              <button
+                onClick={() => setMemberTypeFilter('all')}
+                className={cn("px-3 py-1.5 rounded-lg transition-all", memberTypeFilter === 'all' ? "bg-card text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground")}
+              >
+                All Team
+              </button>
+              <button
+                onClick={() => setMemberTypeFilter('direct')}
+                className={cn("px-3 py-1.5 rounded-lg transition-all", memberTypeFilter === 'direct' ? "bg-card text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground")}
+              >
+                Direct Referrals
+              </button>
+              <button
+                onClick={() => setMemberTypeFilter('indirect')}
+                className={cn("px-3 py-1.5 rounded-lg transition-all", memberTypeFilter === 'indirect' ? "bg-card text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground")}
+              >
+                Indirect Referrals
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 w-full lg:w-auto relative">
             <div className="relative flex-1 sm:flex-none">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input 
@@ -567,7 +616,7 @@ export default function NetworkTree() {
                 <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Sponsor Code</th>
                 <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Direct Referrals</th>
                 <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Activity State</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Total Downline</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Indirect Referrals</th>
                 <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Status</th>
                 <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Join Date</th>
                 <th className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap"></th>
@@ -575,6 +624,12 @@ export default function NetworkTree() {
             </thead>
             <tbody className="divide-y divide-border">
               {directMembers
+                .filter(m => {
+                  const isDirect = m.sponsorId === userData.uid || m.sponsorId === userData.referralCode || m.sponsorReferralCode === userData.referralCode;
+                  if (memberTypeFilter === 'direct') return isDirect;
+                  if (memberTypeFilter === 'indirect') return !isDirect;
+                  return true;
+                })
                 .filter(m => activityFilter === 'all' || (m.activityState || 'dormant') === activityFilter)
                 .filter(m => (m.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) || (m.referralCode || '').toLowerCase().includes(searchQuery.toLowerCase()))
                 .map(member => (
@@ -605,7 +660,9 @@ export default function NetworkTree() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 md:px-6 md:py-4 text-center font-semibold whitespace-nowrap">{member.totalDownlineCount || 0}</td>
+                  <td className="px-4 py-3 md:px-6 md:py-4 text-center font-semibold whitespace-nowrap">
+                     {member.indirectReferralCount || 0}
+                  </td>
                   <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     {member.accountStatus === 'active' ? (
                       <span className="text-success font-medium flex items-center gap-1.5">
@@ -629,10 +686,18 @@ export default function NetworkTree() {
                   </td>
                 </tr>
               ))}
-              {directMembers.length === 0 && (
+              {directMembers
+                .filter(m => {
+                  const isDirect = m.sponsorId === userData.uid || m.sponsorId === userData.referralCode || m.sponsorReferralCode === userData.referralCode;
+                  if (memberTypeFilter === 'direct') return isDirect;
+                  if (memberTypeFilter === 'indirect') return !isDirect;
+                  return true;
+                })
+                .filter(m => activityFilter === 'all' || (m.activityState || 'dormant') === activityFilter)
+                .filter(m => (m.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) || (m.referralCode || '').toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
                 <tr>
-                   <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">
-                      No direct members found.
+                   <td colSpan={9} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">
+                      No members matching the criteria found.
                    </td>
                 </tr>
               )}

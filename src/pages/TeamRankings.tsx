@@ -29,30 +29,35 @@ export default function TeamRankings({ inTab = false }: { inTab?: boolean }) {
           q = query(collection(db, 'users'), where('sponsorId', '==', userData.uid));
         }
 
-        unsubscribe = onSnapshot(q, (snapshot) => {
-          const data: any[] = [];
-          snapshot.forEach(doc => {
-            const u = doc.data();
+        const fetchRankingsData = async () => {
+          try {
+            const snapshot = await getDocs(q);
+            const data: any[] = [];
+            snapshot.forEach(doc => {
+              const u = doc.data() as any;
+              
+              if (u.roleType === 'team_leader') return; // exclude team leaders
+              
+              // calculate informal points for internal ranking
+              const direct = u.directReferralsCount || 0;
+              const downline = u.totalDownlineCount || 0;
+              const active = u.activityState === 'active' ? 1 : 0;
+              
+              const contributionScore = (direct * 5) + ((downline - direct) * 2) + (active * 3);
+              
+              data.push({ id: doc.id, ...u, contributionScore });
+            });
             
-            if (u.roleType === 'team_leader') return; // exclude team leaders
-            
-            // calculate informal points for internal ranking
-            const direct = u.directReferralsCount || 0;
-            const downline = u.totalDownlineCount || 0;
-            const active = u.activityState === 'active' ? 1 : 0;
-            
-            const contributionScore = (direct * 5) + ((downline - direct) * 2) + (active * 3);
-            
-            data.push({ id: doc.id, ...u, contributionScore });
-          });
-          
-          data.sort((a, b) => b.contributionScore - a.contributionScore);
-          setMembers(data);
-          setLoading(false);
-        }, (err) => {
-          console.error("Error listening to internal rankings", err);
-          setLoading(false);
-        });
+            data.sort((a, b) => b.contributionScore - a.contributionScore);
+            setMembers(data);
+            setLoading(false);
+          } catch (err) {
+            console.error("Error listening to internal rankings", err);
+            setLoading(false);
+          }
+        };
+        
+        fetchRankingsData();
         
       } catch (err) {
         console.error("Error setting up internal rankings listener", err);

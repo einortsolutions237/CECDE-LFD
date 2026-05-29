@@ -1,7 +1,9 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { initializeFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';
+
 export const firebaseConfig = {
   apiKey: "AIzaSyDe_GNsxXM5EdAluXwhlgC67eJ3a5CM6AA",
   authDomain: "lfd-mlm.firebaseapp.com",
@@ -12,9 +14,12 @@ export const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true
+});
 export const auth = getAuth(app);
 export const storage = getStorage(app);
+export const functions = getFunctions(app, 'us-central1');
 
 // Attempt to set local persistence
 setPersistence(auth, browserLocalPersistence)

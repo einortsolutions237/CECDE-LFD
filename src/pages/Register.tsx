@@ -175,18 +175,21 @@ export default function Register() {
       batch.set(userRef, {
         fullName: formData.fullName,
         email: formData.email,
-        phoneNumber: formData.phoneNumber,
+        phone: formData.phoneNumber, // Allowed key is 'phone'
         referralCode: newRefCode,
         sponsorId: sponsorData.uid,
         sponsorReferralCode: formData.referralCode,
-        teamId: newTeamId,
         roleType: 'team_member',
         directReferralsCount: 0,
         totalDownlineCount: 0,
+        activeDownlineCount: 0,
+        dormantDownlineCount: 0,
+        suspendedDownlineCount: 0,
         currentRank: 'Member',
         walletBalance: 0,
+        rankingScore: 0, // Required by rules `get('rankingScore', 0) == 0`
         role: 'member',
-        accountStatus: 'active',
+        status: 'active', // Allowed key is 'status' instead of 'accountStatus'
         activityState: 'dormant',
         createdAt: serverTimestamp()
       });
