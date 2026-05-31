@@ -3,7 +3,7 @@
  * Core Domain Interfaces: Users & Roles
  */
 
-export type RolePath = 'super_admin' | 'admin' | 'moderator' | 'team_leader' | 'member';
+export type RolePath = 'super_admin' | 'admin' | 'team_leader' | 'moderator' | 'member';
 export type ActivityState = 'active' | 'dormant' | 'suspended';
 export type AccountStatus = 'active' | 'suspended' | 'archived';
 

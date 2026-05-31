@@ -63,7 +63,7 @@ export default function AdminLogs() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
              <Shield className="w-8 h-8 text-primary" /> Security & Audit Logs
           </h1>
-          <p className="text-sm font-medium text-muted-foreground mt-2">Monitor system activity, access history, and team changes.</p>
+          <p className="text-sm font-medium text-muted-foreground mt-2">Monitor system activity and access history.</p>
         </div>
         <div className="flex bg-background border border-border rounded-xl px-3 py-2 items-center flex-1 max-w-sm">
            <Search className="w-5 h-5 text-muted-foreground mr-2" />

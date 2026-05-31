@@ -138,7 +138,7 @@ export default function AdminRankings() {
       for (const docSnap of usersSnap.docs) {
          const uData = docSnap.data();
          if (uData.roleType === 'team_leader' || uData.teamId) {
-             batch.update(docSnap.ref, { roleType: 'member' });
+             batch.update(docSnap.ref, { roleType: 'member', teamId: null });
              operationsCount++;
              numUsers++;
              if (operationsCount >= 450) await commitBatch();

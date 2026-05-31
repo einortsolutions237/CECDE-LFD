@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, doc, writeBatch, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../../lib/firebase';
 import { useTheme } from '../../components/ThemeProvider';
-import { RefreshCw, Save, Settings, Shield, Bell, Palette, Database, CheckCircle, AlertTriangle, Monitor, Moon, Sun, Trophy } from 'lucide-react';
+import { RefreshCw, Save, Settings, Shield, Bell, Palette, Database, CheckCircle, AlertTriangle, Monitor, Moon, Sun, DollarSign, Award } from 'lucide-react';
 
 export default function AdminSettings() {
   const { theme, setTheme } = useTheme();
@@ -27,16 +27,16 @@ export default function AdminSettings() {
     maxLoginAttempts: 5,
   });
 
-  const [ranks, setRanks] = useState<Record<string, any>>({
-    'Crown Ambassador': { minDirect: 20, minTeamSize: 1000, minActiveDirect: 0, minActiveTeam: 100 },
-    'Diamond': { minDirect: 15, minTeamSize: 500, minActiveDirect: 0, minActiveTeam: 50 },
-    'Platinum': { minDirect: 10, minTeamSize: 100, minActiveDirect: 0, minActiveTeam: 25 },
-    'Gold': { minDirect: 8, minTeamSize: 50, minActiveDirect: 0, minActiveTeam: 15 },
-    'Silver': { minDirect: 5, minTeamSize: 20, minActiveDirect: 5, minActiveTeam: 0 },
-    'Bronze': { minDirect: 3, minTeamSize: 5, minActiveDirect: 2, minActiveTeam: 0 }
-  });
-
   const [loading, setLoading] = useState(true);
+  const [ranks, setRanks] = useState<any[]>([
+    { name: 'Crown Ambassador', directs: 20, downline: 1000, activeDownline: 100 },
+    { name: 'Diamond', directs: 15, downline: 500, activeDownline: 50 },
+    { name: 'Team Leader', directs: 20, downline: 50, activeDownline: 0 },
+    { name: 'Platinum', directs: 10, downline: 100, activeDownline: 25 },
+    { name: 'Gold', directs: 8, downline: 50, activeDownline: 15 },
+    { name: 'Silver', directs: 5, downline: 20, activeDownline: 5 },
+    { name: 'Bronze', directs: 3, downline: 5, activeDownline: 2 }
+  ]);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -46,11 +46,11 @@ export default function AdminSettings() {
         if (snap.exists()) {
           setSettings(prev => ({ ...prev, ...snap.data() }));
         }
-        
+
         const rankRef = doc(db, 'system_settings', 'ranks');
         const rankSnap = await getDoc(rankRef);
-        if (rankSnap.exists() && Object.keys(rankSnap.data()).length > 0) {
-           setRanks(rankSnap.data());
+        if (rankSnap.exists() && rankSnap.data().ranks) {
+          setRanks(rankSnap.data().ranks);
         }
       } catch (err: any) {
         console.error("Failed to load settings:", err);
@@ -65,11 +65,10 @@ export default function AdminSettings() {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleRankChange = (rankName: string, key: string, value: any) => {
-    setRanks(prev => ({
-       ...prev,
-       [rankName]: { ...prev[rankName], [key]: parseInt(value) || 0 }
-    }));
+  const handleRankChange = (index: number, key: string, value: number) => {
+    const newRanks = [...ranks];
+    newRanks[index] = { ...newRanks[index], [key]: value };
+    setRanks(newRanks);
   };
 
   const handleSaveSettings = async () => {
@@ -78,9 +77,9 @@ export default function AdminSettings() {
     try {
       const docRef = doc(db, 'system_settings', 'global');
       await setDoc(docRef, settings, { merge: true });
-      
+
       const rankRef = doc(db, 'system_settings', 'ranks');
-      await setDoc(rankRef, ranks);
+      await setDoc(rankRef, { ranks }, { merge: true });
 
       setConfigMessage({ type: 'success', text: 'System settings updated successfully.' });
       setTimeout(() => setConfigMessage(null), 3000);
@@ -90,6 +89,68 @@ export default function AdminSettings() {
       handleFirestoreError(err, OperationType.WRITE, 'system_settings');
     } finally {
       setSavingConfig(false);
+    }
+  };
+
+  const handleSyncDownlines = async () => {
+    setSyncing(true);
+    setSyncResult('Fetching users...');
+    try {
+      const q = collection(db, 'users');
+      const snap = await getDocs(q);
+      const users: Record<string, any> = {};
+      const downlineCounts: Record<string, number> = {};
+      
+      snap.forEach(d => {
+        users[d.id] = d.data();
+        downlineCounts[d.id] = 0;
+      });
+
+      setSyncResult('Calculating exact downlines...');
+      
+      // Calculate true downlines for everyone
+      Object.keys(users).forEach(uid => {
+         let currentSponsor = users[uid].sponsorId;
+         let levels = 0;
+         while (currentSponsor && users[currentSponsor] && levels < 100) {
+            downlineCounts[currentSponsor] += 1;
+            currentSponsor = users[currentSponsor].sponsorId;
+            levels++;
+         }
+      });
+
+      setSyncResult('Updating database...');
+      
+      // Batch update
+      let batch = writeBatch(db);
+      let count = 0;
+      let totalUpdated = 0;
+
+      for (const uid of Object.keys(users)) {
+         const uRef = doc(db, 'users', uid);
+         const nRef = doc(db, 'network', uid);
+         batch.update(uRef, { totalDownlineCount: downlineCounts[uid] });
+         batch.update(nRef, { totalDownlineCount: downlineCounts[uid] });
+         count++;
+         totalUpdated++;
+         
+         if (count === 200) {
+            await batch.commit();
+            batch = writeBatch(db);
+            count = 0;
+         }
+      }
+      if (count > 0) {
+         await batch.commit();
+      }
+      setSyncResult(`Success! Synchronized downline counts for ${totalUpdated} users.`);
+
+    } catch (err: any) {
+      console.error(err);
+      setSyncResult('Error: ' + err.message);
+      handleFirestoreError(err, OperationType.WRITE, 'users');
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -227,6 +288,54 @@ export default function AdminSettings() {
            </div>
         </div>
 
+        <div className="card p-0 overflow-hidden flex flex-col border border-border">
+           <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
+              <Award className="w-6 h-6 text-purple-500" />
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Rank Configuration Center</h2>
+           </div>
+           <div className="p-6 flex flex-col gap-6 flex-1">
+              <p className="text-sm text-muted-foreground mb-2">Configure requirements for progression ranks. Users achieving these ranks automatically receive email notifications and UI badges.</p>
+              
+              <div className="space-y-4">
+                 {ranks.map((rank, idx) => (
+                   <div key={rank.name} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-muted/30 p-3 rounded-lg border border-border">
+                      <div className="font-bold flex items-center gap-2">
+                        <span>{rank.name}</span>
+                        {rank.name === 'Team Leader' && <span className="text-[10px] uppercase font-bold tracking-wider bg-purple-500/10 text-purple-600 px-2 py-1 rounded">Email Enabled</span>}
+                      </div>
+                      <div>
+                         <label className="block text-xs font-medium text-muted-foreground mb-1">Min Directs</label>
+                         <input 
+                           type="number" 
+                           value={rank.directs} 
+                           onChange={(e) => handleRankChange(idx, 'directs', parseInt(e.target.value) || 0)}
+                           className="w-full bg-background border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm" 
+                         />
+                      </div>
+                      <div>
+                         <label className="block text-xs font-medium text-muted-foreground mb-1">Min Total Downline</label>
+                         <input 
+                           type="number" 
+                           value={rank.downline} 
+                           onChange={(e) => handleRankChange(idx, 'downline', parseInt(e.target.value) || 0)}
+                           className="w-full bg-background border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm" 
+                         />
+                      </div>
+                      <div>
+                         <label className="block text-xs font-medium text-muted-foreground mb-1">Min Active Downline</label>
+                         <input 
+                           type="number" 
+                           value={rank.activeDownline} 
+                           onChange={(e) => handleRankChange(idx, 'activeDownline', parseInt(e.target.value) || 0)}
+                           className="w-full bg-background border border-border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm" 
+                         />
+                      </div>
+                   </div>
+                 ))}
+              </div>
+           </div>
+        </div>
+
         {/* Gamification & Points */}
         <div className="card p-0 overflow-hidden flex flex-col lg:col-span-2 border border-border">
            <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
@@ -252,7 +361,7 @@ export default function AdminSettings() {
                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold text-lg"
                  />
               </div>
-              <div>
+               <div>
                  <label className="block text-sm font-medium text-muted-foreground mb-1">Pts per Active Member</label>
                  <input 
                    type="number" 
@@ -264,62 +373,6 @@ export default function AdminSettings() {
            </div>
         </div>
 
-        {/* Rank Configuration Center */}
-        <div className="card p-0 overflow-hidden flex flex-col lg:col-span-2 border border-border">
-           <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
-              <Trophy className="w-6 h-6 text-orange-500" />
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">Rank Configuration Center</h2>
-           </div>
-           <div className="p-6">
-               <p className="text-sm text-foreground mb-6">Dynamically configure the minimum requirements for each rank. The ranking engine uses these values.</p>
-               <div className="flex flex-col gap-6">
-                   {Object.keys(ranks).map(rank => (
-                       <div key={rank} className="bg-background border border-border p-5 rounded-xl">
-                           <h3 className="font-bold text-lg mb-4 text-foreground">{rank} Requirements</h3>
-                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                               <div>
-                                   <label className="block text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Min Directs</label>
-                                   <input 
-                                      type="number" 
-                                      value={ranks[rank].minDirect}
-                                      onChange={(e) => handleRankChange(rank, 'minDirect', e.target.value)}
-                                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                   />
-                               </div>
-                               <div>
-                                   <label className="block text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Min Team Size</label>
-                                   <input 
-                                      type="number" 
-                                      value={ranks[rank].minTeamSize}
-                                      onChange={(e) => handleRankChange(rank, 'minTeamSize', e.target.value)}
-                                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                   />
-                               </div>
-                               <div>
-                                   <label className="block text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Min Active Directs</label>
-                                   <input 
-                                      type="number" 
-                                      value={ranks[rank].minActiveDirect}
-                                      onChange={(e) => handleRankChange(rank, 'minActiveDirect', e.target.value)}
-                                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                   />
-                               </div>
-                               <div>
-                                   <label className="block text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Min Active Team</label>
-                                   <input 
-                                      type="number" 
-                                      value={ranks[rank].minActiveTeam}
-                                      onChange={(e) => handleRankChange(rank, 'minActiveTeam', e.target.value)}
-                                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                                   />
-                               </div>
-                           </div>
-                       </div>
-                   ))}
-               </div>
-           </div>
-        </div>
-
         {/* Database & Sync Tools */}
         <div className="card p-0 overflow-hidden flex flex-col lg:col-span-2 border border-border">
            <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
@@ -328,31 +381,17 @@ export default function AdminSettings() {
            </div>
            <div className="p-6 flex flex-col sm:flex-row sm:items-start gap-6">
               <div className="flex-1">
-                 <h3 className="font-bold text-foreground mb-1">Trigger System Integrity Repair</h3>
+                 <h3 className="font-bold text-foreground mb-1">Sync Network Downline Counts</h3>
                  <p className="text-sm text-muted-foreground mb-4">
-                   This pushes all users into a smart repair queue which recalculates total downline sizes and directs. It runs asynchronously in the backend and performs tree reconstruction.
+                   This heavy operation traverses the entire user tree and recalculates the exact <code>totalDownlineCount</code> for all users. Do not run this frequently. Use this only if the numbers become structurally out of sync due to missing transactions.
                  </p>
                  <button
-                   onClick={async () => {
-                       try {
-                          setSyncing(true);
-                          setSyncResult('Dispatching system integrity repair job...');
-                          const { httpsCallable } = await import('firebase/functions');
-                          const { functions } = await import('../../lib/firebase');
-                          const validator = httpsCallable(functions, 'validateSystemIntegrity');
-                          const res: any = await validator();
-                          setSyncResult(res.data.message);
-                       } catch(e: any) {
-                          setSyncResult('Error: ' + e.message);
-                       } finally {
-                          setSyncing(false);
-                       }
-                   }}
+                   onClick={handleSyncDownlines}
                    disabled={syncing}
                    className="flex items-center gap-2 bg-blue-500/10 text-blue-600 border border-blue-500/20 px-5 py-2.5 rounded-xl hover:bg-blue-500/20 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                  >
                    <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-                   {syncing ? 'Dispatching...' : 'Run Integrity Validator Queue'}
+                   {syncing ? 'Re-calculating Tree Data...' : 'Run Tree Recalculation Task'}
                  </button>
                  {syncResult && (
                     <div className="mt-4 p-4 rounded-xl bg-muted text-xs font-mono border border-border max-h-[150px] overflow-y-auto">

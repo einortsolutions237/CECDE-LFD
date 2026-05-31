@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Menu, X, Home, Users, Trello, Award, FileText, Settings, LogOut, ShieldAlert
+  Menu, X, Home, Users, Trello, Award, FileText, Settings, LogOut, ShieldAlert, CreditCard
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 

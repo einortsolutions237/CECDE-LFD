@@ -20,10 +20,6 @@ service cloud.firestore {
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin');
     }
 
-    // Role checks
-    function isFinanceAdmin() { return isAdmin() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roleType == 'finance'; }
-    function isSupportAdmin() { return isAdmin() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roleType == 'support'; }
-
     // Whitelisted user fields for regular members
     function allowedUserUpdateFields() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
@@ -33,15 +29,14 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if true;
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       // Strict whitelist on creation
       allow create: if isSignedIn() && (
         (request.auth.uid == userId && 
-         request.resource.data.keys().hasOnly(['role', 'roleType', 'currentRank', 'walletBalance', 'leaderboardScore', 'rankingScore', 'email', 'fullName', 'createdAt', 'updatedAt', 'phone', 'phoneNumber', 'country', 'status', 'accountStatus', 'activityState', 'sponsorId', 'referralCode', 'sponsorReferralCode', 'directReferralsCount', 'totalDownlineCount', 'activeDownlineCount', 'dormantDownlineCount', 'suspendedDownlineCount', 'searchKeywords', 'teamId']) &&
+         request.resource.data.keys().hasOnly(['role', 'roleType', 'currentRank', 'leaderboardScore', 'rankingScore', 'email', 'fullName', 'createdAt', 'updatedAt', 'phone', 'phoneNumber', 'country', 'status', 'accountStatus', 'activityState', 'sponsorId', 'referralCode', 'sponsorReferralCode', 'directReferralsCount', 'totalDownlineCount', 'activeDownlineCount', 'dormantDownlineCount', 'suspendedDownlineCount', 'searchKeywords', 'teamId']) &&
          request.resource.data.get('role', 'member') == 'member' &&
          request.resource.data.get('roleType', 'team_member') == 'team_member' &&
-         request.resource.data.get('currentRank', 'Member') == 'Member' &&
-         request.resource.data.get('walletBalance', 0) == 0
+         request.resource.data.get('currentRank', 'Member') == 'Member'
         ) || isAdmin()
       );
       // Strict whitelist on updates
@@ -52,7 +47,7 @@ service cloud.firestore {
     }
 
     match /network/{userId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin() || exists(/databases/$(database)/documents/users/$(request.auth.uid)));
       allow create: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       // Users can only update specific downline tracking fields
       allow update: if isSignedIn() && (
@@ -81,30 +76,6 @@ service cloud.firestore {
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
     }
 
-    // New Immutable Modules
-
-    match /wallets/{walletId} {
-      allow read: if isSignedIn() && (request.auth.uid == walletId || isAdmin());
-      allow write: if false; // Only Cloud Functions
-    }
-
-    match /transactions/{txId} {
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow write: if false; // Only Cloud Functions
-    }
-
-    match /commissions/{commId} {
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow write: if false; // Only Cloud Functions
-    }
-
-    match /withdrawals/{reqId} {
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId && request.resource.data.status == 'pending' && request.resource.data.keys().hasOnly(['userId', 'amount', 'method', 'status', 'createdAt']);
-      allow update: if isAdmin(); // Only admins can approve/reject
-      allow delete: if false;
-    }
-    
     match /audit_logs/{logId} {
       allow read: if isSuperAdmin();
       allow write: if false;

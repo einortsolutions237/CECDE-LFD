@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, Users, Network, Award, BarChart3, 
-  Settings, FileText, Menu, X, LogOut, Bell,
+  CreditCard, Settings, FileText, Menu, X, LogOut, Bell,
   UsersRound, ShieldAlert
 } from 'lucide-react';
 import { cn } from '../lib/utils';

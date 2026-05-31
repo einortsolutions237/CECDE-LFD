@@ -110,7 +110,9 @@ export default function AdminTeams() {
       // Update the user to be a team leader and assign teamId
       const userRef = doc(db, 'users', leader.id);
       await updateDoc(userRef, {
-        roleType: 'team_leader' });
+        roleType: 'team_leader',
+        teamId: teamId
+      });
 
       // Reset form & Refresh
       setNewTeamName('');
@@ -158,7 +160,7 @@ export default function AdminTeams() {
       for (const docSnap of usersSnap.docs) {
          const uData = docSnap.data();
          if (uData.roleType === 'team_leader' || uData.teamId) {
-             batch.update(docSnap.ref, { roleType: 'member' });
+             batch.update(docSnap.ref, { roleType: 'member', teamId: null });
              count++;
              ops++;
              if (ops >= 450) await commitSync();

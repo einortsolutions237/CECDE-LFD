@@ -2,5 +2,5 @@
   "name": "CECDE community",
   "description": "A comprehensive Multi-Level Marketing (MLM) platform with referral tracking, automated rank progression, user dashboards, and admin controls.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }

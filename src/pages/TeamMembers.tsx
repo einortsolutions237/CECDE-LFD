@@ -24,8 +24,13 @@ export default function TeamMembers() {
 
       try {
         setLoading(true);
-        // Fetch all members recursively who have this Team Leader in their upline
-        const usersQuery = query(collection(db, 'users'), where('uplineIds', 'array-contains', userData.uid));
+        // Fetch only the direct members or team members
+        const conditions = [where('sponsorId', '==', userData.uid)];
+        if (userData.teamId) {
+           conditions.push(where('teamId', '==', userData.teamId));
+        }
+        
+        const usersQuery = query(collection(db, 'users'), or(...conditions));
         
         const fetchMembersData = async () => {
           try {
