@@ -3,7 +3,7 @@
  * Core Domain Interfaces: Users & Roles
  */
 
-export type RolePath = 'super_admin' | 'admin' | 'finance_admin' | 'support_admin' | 'moderator' | 'member';
+export type RolePath = 'super_admin' | 'admin' | 'moderator' | 'team_leader' | 'member';
 export type ActivityState = 'active' | 'dormant' | 'suspended';
 export type AccountStatus = 'active' | 'suspended' | 'archived';
 
@@ -30,9 +30,6 @@ export interface MLMUser {
   // MLM Activity
   activityState: ActivityState;
   accountStatus: AccountStatus;
-
-  // Wallets - NO LONGER UPDATABLE DIRECTLY
-  walletBalance: number; // Deprecated - replaced by wallets collection but kept for backward compatibility
 
   // Metrics
   directReferralsCount: number;

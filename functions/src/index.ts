@@ -10,12 +10,29 @@ const db = admin.firestore();
 // ----------------------------------------------------------------------------
 // 1. CENTRALIZED RANKING ENGINE
 // ----------------------------------------------------------------------------
-export function calculateRank(userData: any): string {
+export function calculateRank(userData: any, rankSettings: any = null): string {
   const directs = userData.directReferralsCount || 0;
   const downline = userData.totalDownlineCount || 0;
   const activeReferrals = userData.activeReferralsCount || 0; 
   const activeDownline = userData.activeDownlineCount || 0;
 
+  if (rankSettings) {
+    // Sort ranks by some criteria (e.g., highest requirement first)
+    // Assume rankSettings is an array or object configured by admin
+    // For safety, fallback to hardcoded if not present or correctly formatted
+    const ranks = Object.keys(rankSettings).sort((a,b) => (rankSettings[b].minDirect || 0) - (rankSettings[a].minDirect || 0));
+    for (const rank of ranks) {
+      const criteria = rankSettings[rank];
+      if (directs >= (criteria.minDirect || 0) &&
+          downline >= (criteria.minTeamSize || 0) &&
+          activeReferrals >= (criteria.minActiveDirect || 0) &&
+          activeDownline >= (criteria.minActiveTeam || 0)) {
+        return rank;
+      }
+    }
+  }
+
+  // Fallback backward compatible
   if (directs >= 20 && downline >= 1000 && activeDownline >= 100) return 'Crown Ambassador';
   if (directs >= 15 && downline >= 500 && activeDownline >= 50) return 'Diamond';
   if (directs >= 10 && downline >= 100 && activeDownline >= 25) return 'Platinum';
@@ -26,8 +43,8 @@ export function calculateRank(userData: any): string {
   return 'Member';
 }
 
-async function updateRankSafely(userId: string, currentData: any, transaction?: admin.firestore.Transaction) {
-  const calculatedRank = calculateRank(currentData);
+async function updateRankSafely(userId: string, currentData: any, transaction?: admin.firestore.Transaction, rankSettings?: any) {
+  const calculatedRank = calculateRank(currentData, rankSettings);
   if (currentData.currentRank !== calculatedRank) {
     const uRef = db.collection('users').doc(userId);
     if (transaction) {
@@ -49,6 +66,7 @@ async function updateRankSafely(userId: string, currentData: any, transaction?: 
     });
   }
 }
+
 
 // ----------------------------------------------------------------------------
 // 2. TRUE HIERARCHY / ANCESTRY LOGIC
@@ -74,6 +92,17 @@ async function getAncestorPath(sponsorId: string | null): Promise<string[]> {
   return paths;
 }
 
+// Helper to determine teamId explicitly during one-off writes
+async function getEffectiveTeamId(ancestors: string[]): Promise<string> {
+   for (const ancId of ancestors) {
+      const doc = await db.collection('users').doc(ancId).get();
+      if (doc.exists && doc.data()?.roleType === 'team_leader') {
+         return ancId;
+      }
+   }
+   return 'SYSTEM';
+}
+
 // ----------------------------------------------------------------------------
 // 3. CENTRALIZED ONBOARDING ORCHESTRATOR
 // ----------------------------------------------------------------------------
@@ -92,6 +121,7 @@ export const processNewUserOnboarding = functions.firestore
 
     try {
       const ancestors = await getAncestorPath(sponsorId);
+      const effectiveTeamId = await getEffectiveTeamId(ancestors);
       
       await db.runTransaction(async (transaction: any) => {
         const uRef = db.collection('users').doc(userId);
@@ -105,23 +135,18 @@ export const processNewUserOnboarding = functions.firestore
           throw new Error('Sponsor is suspended or inactive.');
         }
 
-        let newTeamId = sponsorId;
         let newSponsorRoleType = sponsorData.roleType;
         const currentDirects = sponsorData.directReferralsCount || 0;
         const newDirectsCount = currentDirects + 1;
 
         if (newDirectsCount >= 5 && sponsorData.roleType !== 'team_leader' && sponsorData.roleType !== 'admin') {
           newSponsorRoleType = 'team_leader';
-          newTeamId = sponsorId;
-        } else if (sponsorData.teamId) {
-          newTeamId = sponsorData.teamId;
-        } else {
-          newTeamId = 'SYSTEM';
         }
+
+        const actualTeamId = (newSponsorRoleType === 'team_leader' && sponsorId === effectiveTeamId) ? sponsorId : effectiveTeamId;
 
         // Initialize user
         transaction.update(uRef, {
-          teamId: newTeamId,
           roleType: newUser.roleType === 'admin' ? 'admin' : 'team_member',
           activityState: 'dormant',
           status: 'active',
@@ -137,16 +162,19 @@ export const processNewUserOnboarding = functions.firestore
           activeDownlineCount: 0,
           dormantDownlineCount: 0,
           suspendedDownlineCount: 0,
-          walletBalance: 0,
-          leaderboardScore: 0,
-          uplineIds: ancestors
+                    leaderboardScore: 0,
+          uplineIds: ancestors,
+          networkDepth: ancestors.length,
+          
+          migrationStatus: 'idle'
         });
 
         const netRef = db.collection('network').doc(userId);
         transaction.set(netRef, {
            uid: userId, 
            directReferrals: [],
-           uplineIds: ancestors
+           uplineIds: ancestors,
+           teamId: actualTeamId
         });
 
         // Update immediately sponsor (Direct)
@@ -156,8 +184,7 @@ export const processNewUserOnboarding = functions.firestore
           totalDownlineCount: admin.firestore.FieldValue.increment(1),
           dormantDownlineCount: admin.firestore.FieldValue.increment(1),
           leaderboardScore: admin.firestore.FieldValue.increment(10),
-          roleType: newSponsorRoleType,
-          teamId: newSponsorRoleType === 'team_leader' ? sponsorId : (sponsorData.teamId || 'SYSTEM')
+          roleType: newSponsorRoleType
         });
 
         const sponsorNetworkRef = db.collection('network').doc(sponsorId);
@@ -173,33 +200,6 @@ export const processNewUserOnboarding = functions.firestore
               dormantDownlineCount: admin.firestore.FieldValue.increment(1),
               leaderboardScore: admin.firestore.FieldValue.increment(3), // 3 points per indirect
            });
-        }
-
-        // Team Metrics Update
-        if (newTeamId && newTeamId !== 'SYSTEM') {
-          const teamRef = db.collection('teams').doc(newTeamId);
-          const teamDoc = await transaction.get(teamRef);
-          const isDirectForTeam = (newTeamId === sponsorId);
-
-          if (teamDoc.exists) {
-             const teamUpdates: any = {
-               totalMembers: admin.firestore.FieldValue.increment(1),
-               dormantMembers: admin.firestore.FieldValue.increment(1)
-             };
-             if (isDirectForTeam) teamUpdates.leaderDirectReferralsCount = admin.firestore.FieldValue.increment(1);
-             transaction.update(teamRef, teamUpdates);
-          } else if (newSponsorRoleType === 'team_leader' && newTeamId === sponsorId) {
-             transaction.set(teamRef, {
-               teamLeaderId: sponsorId,
-               teamLeaderName: sponsorData.fullName || 'Team Leader',
-               status: 'active',
-               totalMembers: 1, 
-               activeMembers: 0,
-               dormantMembers: 1,
-               suspendedMembers: 0,
-               createdAt: admin.firestore.FieldValue.serverTimestamp()
-             });
-          }
         }
 
         const statsRef = db.collection('system_stats').doc('global');
@@ -218,10 +218,15 @@ export const processNewUserOnboarding = functions.firestore
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
+      const settingsDoc = await db.collection('system_settings').doc('ranks').get();
+      const rankSettings = settingsDoc.exists ? settingsDoc.data() : null;
+
       for(const anc of ancestors) {
          const d = await db.collection('users').doc(anc).get();
-         if(d.exists) await updateRankSafely(anc, d.data()!);
+         if(d.exists) await updateRankSafely(anc, d.data()!, undefined, rankSettings);
       }
+
+      await recalculateTeamMetrics();
 
     } catch (e) {
       console.error(`Error in processNewUserOnboarding for ${userId}:`, e);
@@ -230,7 +235,68 @@ export const processNewUserOnboarding = functions.firestore
   });
 
 // ----------------------------------------------------------------------------
-// 4. DATA CONSISTENCY ENGINE (DEEP VALIDATOR & REPAIR)
+// 4. ATOMIC SPONSOR MIGRATION ENGINE
+// ----------------------------------------------------------------------------
+export const migrateSponsorAtomic = functions.https.onCall(async (data: any, context: any) => {
+  if (!context.auth) throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
+  const adminDoc = await db.collection('users').doc(context.auth.uid).get();
+  if (!adminDoc.exists || (adminDoc.data()?.role !== 'admin' && adminDoc.data()?.role !== 'super_admin')) {
+    throw new functions.https.HttpsError('permission-denied', 'Only admins can migrate sponsors.');
+  }
+
+  const { uid, newSponsorId } = data;
+  if (!uid || !newSponsorId) throw new functions.https.HttpsError('invalid-argument', 'Missing parameters');
+
+  const uRef = db.collection('users').doc(uid);
+  
+  await db.runTransaction(async (t) => {
+    const userDoc = await t.get(uRef);
+    if (!userDoc.exists) throw new functions.https.HttpsError('not-found', 'User not found');
+    const uData = userDoc.data()!;
+    if (uData.migrationStatus === 'processing') {
+      throw new functions.https.HttpsError('failed-precondition', 'Migration already in progress');
+    }
+    t.update(uRef, { migrationStatus: 'processing' });
+  });
+
+  try {
+    const newAncestors = await getAncestorPath(newSponsorId);
+    if (newAncestors.includes(uid)) {
+       throw new Error("Cannot migrate sponsor: circular hierarchy detected (new sponsor is within the downline)");
+    }
+    const 
+    
+    await uRef.update({ 
+       sponsorId: newSponsorId,
+       uplineIds: newAncestors,
+       networkDepth: newAncestors.length,
+       
+       updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    const descSnapshot = await db.collection('users').where('uplineIds', 'array-contains', uid).get();
+    const batch = db.batch();
+    descSnapshot.docs.forEach((doc) => {
+       batch.update(doc.ref, { migrationStatus: 'processing_descendant' });
+    });
+    await batch.commit();
+
+    await repairChangedUsers(); 
+
+    await uRef.update({ migrationStatus: 'idle' });
+
+    await recalculateTeamMetrics();
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Migration failed, rolling back...", error);
+    await uRef.update({ migrationStatus: 'idle' });
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+// ----------------------------------------------------------------------------
+// 5. DATA CONSISTENCY ENGINE (SMART RECONCILIATION)
 // ----------------------------------------------------------------------------
 export const runDeepDataConsistencyRepair = functions.https.onCall(async (data: any, context: any) => {
   if (!context.auth) throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
@@ -239,18 +305,105 @@ export const runDeepDataConsistencyRepair = functions.https.onCall(async (data: 
     throw new functions.https.HttpsError('permission-denied', 'Only admins can run repair.');
   }
 
-  await performNightlyReconciliation();
+  const mode = data.mode || 'smart'; // 'smart' or 'full'
+  if (mode === 'full') {
+     await performNightlyReconciliation(true);
+  } else {
+     await repairChangedUsers();
+  }
+  
   return { success: true, message: "Repair complete" };
 });
 
 export const scheduledNightlyReconciliation = functions.pubsub.schedule('every 24 hours').onRun(async (context: any) => {
-  await performNightlyReconciliation();
+  const day = new Date().getDay();
+  if (day === 0) {
+    await performNightlyReconciliation(true);
+  } else {
+    await repairChangedUsers();
+  }
   console.log("Nightly metric reconciliation completed.");
   return null;
 });
 
-async function performNightlyReconciliation() {
-  console.log("Starting Deep Data Consistency & Rebuilding Trees...");
+async function repairChangedUsers() {
+  const queueSnap = await db.collection('changedUsersQueue').limit(1000).get();
+  if (queueSnap.empty) return;
+  
+  const affectedUsers = new Set<string>();
+  const deleteBatch = db.batch();
+  
+  for (const doc of queueSnap.docs) {
+    const data = doc.data();
+    if (data.userId) affectedUsers.add(data.userId);
+    if (data.uplineIds && Array.isArray(data.uplineIds)) {
+       data.uplineIds.forEach((id: string) => affectedUsers.add(id));
+    }
+    deleteBatch.delete(doc.ref);
+  }
+  
+  const settingsDoc = await db.collection('system_settings').doc('ranks').get();
+  const rankSettings = settingsDoc.exists ? settingsDoc.data() : null;
+  
+  const usersToUpdate = Array.from(affectedUsers);
+  
+  // Chunking
+  const chunkSize = 10;
+  for(let i=0; i < usersToUpdate.length; i += chunkSize) {
+     const chunk = usersToUpdate.slice(i, i + chunkSize);
+     await Promise.all(chunk.map(async (uId) => {
+        const directsSnap = await db.collection('users').where('sponsorId', '==', uId).get();
+        const downlineSnap = await db.collection('users').where('uplineIds', 'array-contains', uId).get();
+        
+        let directReferrals = 0, activeReferrals = 0, dormantReferrals = 0, suspendedReferrals = 0;
+        directsSnap.forEach(d => {
+           directReferrals++;
+           const state = d.data().activityState;
+           if (state === 'active') activeReferrals++;
+           if (state === 'dormant') dormantReferrals++;
+           if (state === 'suspended' || d.data().status === 'archived') suspendedReferrals++;
+        });
+        
+        let totalDownline = 0, activeDownline = 0, dormantDownline = 0, suspendedDownline = 0;
+        downlineSnap.forEach(d => {
+           totalDownline++;
+           const state = d.data().activityState;
+           if (state === 'active') activeDownline++;
+           if (state === 'dormant') dormantDownline++;
+           if (state === 'suspended' || d.data().status === 'archived') suspendedDownline++;
+        });
+        
+        const indirectReferrals = totalDownline - directReferrals;
+        // activeIndirectReferrals etc can be calculated easily
+        
+        const updateObj = {
+           directReferralsCount: directReferrals,
+           activeReferralsCount: activeReferrals,
+           dormantReferralsCount: dormantReferrals,
+           suspendedReferralsCount: suspendedReferrals,
+           totalDownlineCount: totalDownline,
+           activeDownlineCount: activeDownline,
+           dormantDownlineCount: dormantDownline,
+           suspendedDownlineCount: suspendedDownline,
+           indirectReferralCount: indirectReferrals,
+           leaderboardScore: (directReferrals * 10) + (indirectReferrals * 3)
+        };
+        
+        const uRef = db.collection('users').doc(uId);
+        await uRef.update(updateObj);
+        
+        const uDoc = await uRef.get();
+        if (uDoc.exists) {
+           await updateRankSafely(uId, uDoc.data()!, undefined, rankSettings);
+        }
+     }));
+  }
+  
+  await deleteBatch.commit();
+}
+
+async function performNightlyReconciliation(fullRebuild: boolean = true) {
+  console.log("Starting Enterprise Rebuild...");
   
   const usersRef = db.collection('users');
   const snapshot = await usersRef.get();
@@ -261,13 +414,10 @@ async function performNightlyReconciliation() {
   }
 
   const actualCounts = new Map<string, any>();
-  
-  // 1. Initial State Initialization
   for (const doc of snapshot.docs) {
     initCounts(actualCounts, doc.id);
   }
 
-  // 2. Rebuild True Genealogy Logic using bottom-up traversal
   for (const doc of snapshot.docs) {
     const userData = doc.data();
     const userId = doc.id;
@@ -282,46 +432,51 @@ async function performNightlyReconciliation() {
       let maxDepth = 1000;
       let depthCounter = 0;
       
+      
       while (currentId && currentId !== 'SYSTEM' && maxDepth > 0) {
-        if (paths.has(currentId)) break; // Prevent circular
+        if (paths.has(currentId)) break; 
         paths.add(currentId);
         ancestorsArray.push(currentId);
         
-        const upCounts = actualCounts.get(currentId)!;
-        
-        upCounts.totalDownline++;
-        if (isActive) upCounts.activeDownline++;
-        if (isDormant) upCounts.dormantDownline++;
-        if (isSuspended) upCounts.suspendedDownline++;
+        const upCounts = actualCounts.get(currentId);
+        if (upCounts) {
+           upCounts.totalDownline++;
+           if (isActive) upCounts.activeDownline++;
+           if (isDormant) upCounts.dormantDownline++;
+           if (isSuspended) upCounts.suspendedDownline++;
 
-        if (depthCounter === 0) {
-           // Direct Referral
-           upCounts.directReferrals++;
-           if (isActive) upCounts.activeReferrals++;
-           if (isDormant) upCounts.dormantReferrals++;
-           if (isSuspended) upCounts.suspendedReferrals++;
-        } else {
-           // Indirect Referral
-           upCounts.indirectReferrals++;
-           if (isActive) upCounts.activeIndirectReferrals++;
-           if (isDormant) upCounts.dormantIndirectReferrals++;
-           if (isSuspended) upCounts.suspendedIndirectReferrals++;
+           if (depthCounter === 0) {
+              upCounts.directReferrals++;
+              if (isActive) upCounts.activeReferrals++;
+              if (isDormant) upCounts.dormantReferrals++;
+              if (isSuspended) upCounts.suspendedReferrals++;
+           } else {
+              upCounts.indirectReferrals++;
+              if (isActive) upCounts.activeIndirectReferrals++;
+              if (isDormant) upCounts.dormantIndirectReferrals++;
+              if (isSuspended) upCounts.suspendedIndirectReferrals++;
+           }
         }
         
         const parentData = usersMap.get(currentId);
         if (!parentData) break;
+
+        // TRUE GENEALOGY TEAM RESOLUTION
+        
+
         currentId = parentData.sponsorId;
         maxDepth--;
         depthCounter++;
       }
       
-      // We will also use actualCounts to cache the expected uplineIds for the user
-      const userCached = actualCounts.get(userId)!;
-      userCached.uplineIds = ancestorsArray;
+      const userCached = actualCounts.get(userId);
+      if (userCached) {
+        userCached.uplineIds = ancestorsArray;
+        
+      }
     }
   }
 
-  // 3. Apply Reconciled True Values & Rebuild Leaderboards
   const batchSize = 100;
   const updates = Array.from(actualCounts.entries());
   
@@ -331,10 +486,9 @@ async function performNightlyReconciliation() {
     
     for (const [userId, counts] of chunk) {
       const uRef = usersRef.doc(userId);
-      const userDoc = snapshot.docs.find((d: any) => d.id === userId);
+      const uData = usersMap.get(userId);
       
-      if (userDoc) {
-        const uData = userDoc.data();
+      if (uData) {
         let needsUpdate = false;
         const updateObj: any = {};
         
@@ -355,21 +509,57 @@ async function performNightlyReconciliation() {
         const calculatedScore = (counts.directReferrals * 10) + (counts.indirectReferrals * 3);
         if (uData.leaderboardScore !== calculatedScore) { needsUpdate = true; updateObj.leaderboardScore = calculatedScore; }
         
-        // Also update uplineIds
         const currentUplineStr = JSON.stringify(uData.uplineIds || []);
         const newUplineStr = JSON.stringify(counts.uplineIds || []);
-        if (currentUplineStr !== newUplineStr) { needsUpdate = true; updateObj.uplineIds = counts.uplineIds || []; }
+        if (currentUplineStr !== newUplineStr) { needsUpdate = true; updateObj.uplineIds = counts.uplineIds || []; updateObj.networkDepth = (counts.uplineIds || []).length; }
+
         
+        
+        if (uData.migrationStatus === 'processing_descendant' || uData.migrationStatus === 'processing') {
+           needsUpdate = true;
+           updateObj.migrationStatus = 'idle';
+        }
+
         if (needsUpdate) {
           batch.update(uRef, updateObj);
-          batch.set(db.collection('network').doc(userId), updateObj, { merge: true });
         }
       }
     }
     await batch.commit();
   }
   
-  // 4. Reconcile Teams accurately (eliminating drift)
+  await recalculateTeamMetrics();
+
+  const settingsDoc = await db.collection('system_settings').doc('ranks').get();
+  const rankSettings = settingsDoc.exists ? settingsDoc.data() : null;
+
+  for (const [userId, uData] of Array.from(usersMap.entries())) {
+     const upCounts = actualCounts.get(userId);
+     if (upCounts) {
+       const freshData = { ...uData, ...upCounts };
+       await updateRankSafely(userId, freshData, undefined, rankSettings);
+     }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// 6. TRUE GENEALOGY TEAM METRICS (No longer reliant on teamId)
+// ----------------------------------------------------------------------------
+export const triggerTeamRecalculation = functions.https.onCall(async (data: any, context: any) => {
+   if (!context.auth) throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
+   await recalculateTeamMetrics();
+   return { success: true };
+});
+
+async function recalculateTeamMetrics() {
+  const usersRef = db.collection('users');
+  const snapshot = await usersRef.get();
+  
+  const usersMap = new Map();
+  for (const doc of snapshot.docs) {
+    usersMap.set(doc.id, doc.data());
+  }
+
   const teamsRef = db.collection('teams');
   const teamSnap = await teamsRef.get();
   
@@ -380,41 +570,56 @@ async function performNightlyReconciliation() {
     
     for (const teamDoc of chunk) {
       const teamId = teamDoc.id;
-      const teamUsers = snapshot.docs.filter((d: any) => d.data().teamId === teamId);
+      const tData = teamDoc.data();
+      const teamLeaderId = tData.teamLeaderId;
+      
+      const teamUsers = snapshot.docs.filter((d: any) => {
+         const uData = d.data();
+         return uData.uplineIds && Array.isArray(uData.uplineIds) && uData.uplineIds.includes(teamLeaderId);
+      });
       
       let totalMembers = 0, activeMembers = 0, dormantMembers = 0, suspendedMembers = 0;
+      let directReferrals = 0, indirectReferrals = 0;
       
       for (const u of teamUsers) {
         const uState = u.data().activityState;
         const uStatus = u.data().status;
+        const sponsorId = u.data().sponsorId;
         const isSuspended = uState === 'suspended' || uStatus === 'archived';
         
         totalMembers++;
         if (isSuspended) suspendedMembers++;
         else if (uState === 'active') activeMembers++;
         else if (uState === 'dormant') dormantMembers++;
+        
+        if (sponsorId === teamLeaderId) {
+          directReferrals++;
+        } else {
+          indirectReferrals++;
+        }
       }
       
-      const currentTeamData = teamDoc.data();
       const needsUpdate = 
-        currentTeamData.totalMembers !== totalMembers ||
-        currentTeamData.activeMembers !== activeMembers ||
-        currentTeamData.dormantMembers !== dormantMembers ||
-        currentTeamData.suspendedMembers !== suspendedMembers;
+        tData.totalMembers !== (totalMembers + 1) ||
+        tData.activeMembers !== activeMembers ||
+        tData.dormantMembers !== dormantMembers ||
+        tData.suspendedMembers !== suspendedMembers ||
+        tData.leaderDirectReferralsCount !== directReferrals ||
+        tData.leaderIndirectReferralsCount !== indirectReferrals;
         
       if (needsUpdate) {
         batch.update(teamsRef.doc(teamId), {
-          totalMembers, activeMembers, dormantMembers, suspendedMembers
+          totalMembers: totalMembers + 1,
+          activeMembers, 
+          dormantMembers, 
+          suspendedMembers,
+          leaderDirectReferralsCount: directReferrals,
+          leaderIndirectReferralsCount: indirectReferrals,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
       }
     }
     await batch.commit();
-  }
-
-  // Rank recalculation after true counts are placed
-  for (const doc of snapshot.docs) {
-     const upData:any = (await usersRef.doc(doc.id).get()).data();
-     await updateRankSafely(doc.id, upData);
   }
 }
 
@@ -423,12 +628,12 @@ function initCounts(map: Map<string, any>, userId: string) {
     directReferrals: 0, activeReferrals: 0, dormantReferrals: 0, suspendedReferrals: 0,
     indirectReferrals: 0, activeIndirectReferrals: 0, dormantIndirectReferrals: 0, suspendedIndirectReferrals: 0,
     totalDownline: 0, activeDownline: 0, dormantDownline: 0, suspendedDownline: 0,
-    leaderboardScore: 0, uplineIds: []
+    leaderboardScore: 0, uplineIds: [], 
   });
 }
 
 // ----------------------------------------------------------------------------
-// 5. ATOMIC SPONSOR MIGRATION & ACTIVITY ENGINE
+// 7. ACTIVITY ENGINE
 // ----------------------------------------------------------------------------
 export const handleUserUpdates = functions.firestore
   .document('users/{userId}')
@@ -436,8 +641,7 @@ export const handleUserUpdates = functions.firestore
     const newData = change.after.data();
     const oldData = change.before.data();
     
-    // Protect against recursive updates from self
-    if (newData.isMigratingSponsor) return null;
+    if (newData.migrationStatus === 'processing' || newData.migrationStatus === 'processing_descendant') return null;
 
     if (newData.status === 'archived') newData.activityState = 'suspended';
 
@@ -458,28 +662,12 @@ export const handleUserUpdates = functions.firestore
 
     if (newData.activityState !== oldData.activityState) activityStateChanged = true;
     
-    const sponsorChanged = newData.sponsorId !== oldData.sponsorId;
-    const teamChanged = newData.teamId !== oldData.teamId;
-
-    if (sponsorChanged) {
-        // Enforce strong consistency using Nightly Rebuild logic for Sponsor Changes
-        console.log(`Sponsor Migration triggered for ${context.params.userId}. Running deep repair...`);
-        // We set a lightweight lock
-        await change.after.ref.update({ isMigratingSponsor: true });
-        
-        try {
-           // Synchronously re-map this specific edge, rather than building increments, 
-           // since increments corrupted the count drift. We just trigger the full repair.
-           await performNightlyReconciliation(); 
-        } finally {
-           await change.after.ref.update({ isMigratingSponsor: false });
-        }
-        
-    } else {
-        // Standard lightweight state propagation via reconciliation later, or basic immediate update
-        if (activityStateChanged || teamChanged) {
-           await performNightlyReconciliation(); 
-        }
+    if (activityStateChanged) {
+        await db.collection('changedUsersQueue').add({
+           userId: context.params.userId,
+           uplineIds: newData.uplineIds || [],
+           timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
     }
     
     if (activityStateChanged && newCalculatedState === 'active' && oldData.activityState !== 'active') {
@@ -496,8 +684,44 @@ export const handleUserUpdates = functions.firestore
   });
 
 // ----------------------------------------------------------------------------
-// 6. ENTERPRISE SOFT DELETION
+// 9. FINAL CONSISTENCY VALIDATOR
 // ----------------------------------------------------------------------------
+export const validateSystemIntegrity = functions.https.onCall(async (data: any, context: any) => {
+  if (!context.auth) throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
+  const adminDoc = await db.collection('users').doc(context.auth.uid).get();
+  if (!adminDoc.exists || (adminDoc.data()?.role !== 'admin' && adminDoc.data()?.role !== 'super_admin')) {
+    throw new functions.https.HttpsError('permission-denied', 'Only admins can run repair.');
+  }
+
+  // Trigger full repair fallback inside a background worker or handle inline if small.
+  // For safety and timeout limits, we perform a smart queue dispatch for everyone.
+  const usersRef = db.collection('users');
+  const snapshot = await usersRef.get();
+  
+  let validCount = 0;
+  let corruptedCount = 0;
+  
+  const batch = db.batch();
+  let opCount = 0;
+  const commitSync = async () => { if (opCount > 0) { await batch.commit(); opCount = 0; } };
+
+  snapshot.docs.forEach(doc => {
+     const ref = db.collection('changedUsersQueue').doc();
+     batch.set(ref, {
+         userId: doc.id,
+         uplineIds: doc.data().uplineIds || [],
+         timestamp: admin.firestore.FieldValue.serverTimestamp()
+     });
+     opCount++;
+     corruptedCount++;
+  });
+  
+  await commitSync();
+  await repairChangedUsers();
+
+  return { success: true, message: `System Integrity Check Triggered. Requeued ${corruptedCount} users.` };
+});
+
 export const processTeamDeletion = functions.firestore
   .document('teams/{teamId}')
   .onUpdate(async (change: any, context: any) => {
@@ -508,29 +732,13 @@ export const processTeamDeletion = functions.firestore
     if (newData.status !== 'deleted' || oldData.status === 'deleted') return null;
     
     try {
-      const usersQuery = await db.collection('users').where('teamId', '==', teamId).get();
-      const userIdsToUpdate = new Set<string>();
-      usersQuery.forEach((doc: any) => userIdsToUpdate.add(doc.id));
-      if (oldData.teamLeaderId) userIdsToUpdate.add(oldData.teamLeaderId);
-      
-      const batchSize = 250;
-      const idsArray = Array.from(userIdsToUpdate);
-      
-      for (let i = 0; i < idsArray.length; i += batchSize) {
-        const chunk = idsArray.slice(i, i + batchSize);
-        const batch = db.batch();
-        
-        for (const id of chunk) {
-          const updates: any = { teamId: 'SYSTEM' };
-          if (id === oldData.teamLeaderId) updates.roleType = 'team_member'; 
-          batch.update(db.collection('users').doc(id), updates);
-        }
-        await batch.commit();
+      if (oldData.teamLeaderId) {
+         await db.collection('users').doc(oldData.teamLeaderId).update({ roleType: 'team_member' });
       }
+      
       await db.collection('teams').doc(teamId).delete();
       
-      // Auto repair team drift
-      await performNightlyReconciliation();
+      await performNightlyReconciliation(false);
       
     } catch (e) {
       console.error(`Error cleaning up after deleting team ${teamId}`, e);
@@ -550,176 +758,9 @@ export const onUserDeleted = functions.firestore
     
     try {
       await db.collection('network').doc(userId).delete();
-      await performNightlyReconciliation(); // Mend tree
+      await performNightlyReconciliation(false);
     } catch (e: any) {
       console.error("Error deleting network doc", userId, e);
     }
     return null;
   });
-
-// ----------------------------------------------------------------------------
-// 7. FINANCIAL LEDGER & WITHDRAWALS
-// ----------------------------------------------------------------------------
-export const approveWithdrawalReq = functions.https.onCall(async (data: any, context: any) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
-  const adminDoc = await db.collection('users').doc(context.auth.uid).get();
-  if (!adminDoc.exists || (adminDoc.data()?.role !== 'admin' && adminDoc.data()?.role !== 'super_admin')) {
-    throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
-  }
-
-  const withdrawalId = data.withdrawalId;
-  const requestId = data.requestId || 'MANUAL_APPROVAL';
-
-  try {
-    await db.runTransaction(async (transaction) => {
-      const wRef = db.collection('withdrawals').doc(withdrawalId);
-      const wDoc = await transaction.get(wRef);
-      if (!wDoc.exists) throw new Error("Withdrawal not found");
-      const wData = wDoc.data()!;
-      if (wData.status !== 'pending') throw new Error("Withdrawal not pending");
-
-      transaction.update(wRef, {
-        status: 'approved',
-        processedAt: admin.firestore.FieldValue.serverTimestamp(),
-        processedBy: context.auth!.uid
-      });
-
-      const txRef = db.collection('transactions').doc();
-      transaction.set(txRef, {
-        userId: wData.userId,
-        type: 'withdrawal_approved',
-        amount: -wData.amount,
-        status: 'completed',
-        withdrawalId: withdrawalId,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        metadata: { approver: context.auth!.uid, reference: requestId }
-      });
-      
-      const auditRef = db.collection('audit_logs').doc();
-      transaction.set(auditRef, {
-         action: `Approved Withdrawal ${withdrawalId}`,
-         category: 'finance',
-         user: context.auth!.uid,
-         ip: context.rawRequest ? context.rawRequest.ip : 'unknown',
-         timestamp: Date.now(),
-         severity: 'medium'
-      });
-    });
-    return { success: true };
-  } catch (err: any) {
-    throw new functions.https.HttpsError('internal', err.message);
-  }
-});
-
-export const rejectWithdrawalReq = functions.https.onCall(async (data: any, context: any) => {
-  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
-  const adminDoc = await db.collection('users').doc(context.auth.uid).get();
-  if (!adminDoc.exists || (adminDoc.data()?.role !== 'admin' && adminDoc.data()?.role !== 'super_admin')) {
-    throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
-  }
-
-  const withdrawalId = data.withdrawalId;
-  const reason = data.reason || 'Rejected by Admin';
-
-  try {
-    await db.runTransaction(async (transaction) => {
-       const wRef = db.collection('withdrawals').doc(withdrawalId);
-       const wDoc = await transaction.get(wRef);
-       if (!wDoc.exists) throw new Error("Not found");
-       const wData = wDoc.data()!;
-       if (wData.status !== 'pending') throw new Error("Not pending");
-
-       transaction.update(wRef, {
-          status: 'rejected',
-          rejectReason: reason,
-          processedAt: admin.firestore.FieldValue.serverTimestamp(),
-          processedBy: context.auth!.uid
-       });
-
-       const walletRef = db.collection('wallets').doc(wData.userId);
-       transaction.set(walletRef, {
-          balance: admin.firestore.FieldValue.increment(wData.amount)
-       }, { merge: true });
-
-       const txRef = db.collection('transactions').doc();
-       transaction.set(txRef, {
-          userId: wData.userId,
-          type: 'withdrawal_rejected_refund',
-          amount: wData.amount,
-          status: 'completed',
-          withdrawalId: withdrawalId,
-          timestamp: admin.firestore.FieldValue.serverTimestamp(),
-          metadata: { reason }
-       });
-       
-       const auditRef = db.collection('audit_logs').doc();
-       transaction.set(auditRef, {
-          action: `Rejected Withdrawal ${withdrawalId}`,
-          category: 'finance',
-          user: context.auth!.uid,
-          ip: context.rawRequest ? context.rawRequest.ip : 'unknown',
-          timestamp: Date.now(),
-          severity: 'medium'
-       });
-    });
-    return { success: true };
-  } catch (err: any) {
-    throw new functions.https.HttpsError('internal', err.message);
-  }
-});
-
-export const processManualBonus = functions.https.onCall(async (data: any, context: any) => {
-   if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
-   const adminDoc = await db.collection('users').doc(context.auth.uid).get();
-   if (!adminDoc.exists || (adminDoc.data()?.role !== 'admin' && adminDoc.data()?.role !== 'super_admin')) {
-     throw new functions.https.HttpsError('permission-denied', 'Unauthorized');
-   }
- 
-   const { userId, amount, notes } = data;
-   if (!userId || !amount || amount <= 0) throw new functions.https.HttpsError('invalid-argument', 'Invalid parameters');
-
-   try {
-     await db.runTransaction(async (transaction) => {
-        const uRef = db.collection('users').doc(userId);
-        const uDoc = await transaction.get(uRef);
-        if (!uDoc.exists) throw new Error('User not found');
-
-        const walletRef = db.collection('wallets').doc(userId);
-        transaction.set(walletRef, {
-           balance: admin.firestore.FieldValue.increment(amount)
-        }, { merge: true });
-
-        const txRef = db.collection('transactions').doc();
-        transaction.set(txRef, {
-           userId: userId,
-           type: 'bonus',
-           amount: amount,
-           status: 'completed',
-           timestamp: admin.firestore.FieldValue.serverTimestamp(),
-           metadata: { issuedBy: context.auth!.uid, notes }
-        });
-        
-        const commRef = db.collection('commissions').doc();
-        transaction.set(commRef, {
-           userId: userId,
-           type: 'manual_bonus',
-           amount: amount,
-           status: 'paid',
-           createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        const auditRef = db.collection('audit_logs').doc();
-        transaction.set(auditRef, {
-           action: `Issued Manual Bonus of $${amount} to ${userId}`,
-           category: 'finance',
-           user: context.auth!.uid,
-           ip: context.rawRequest ? context.rawRequest.ip : 'unknown',
-           timestamp: Date.now(),
-           severity: 'warning'
-        });
-     });
-     return { success: true };
-   } catch (err: any) {
-     throw new functions.https.HttpsError('internal', err.message);
-   }
-});

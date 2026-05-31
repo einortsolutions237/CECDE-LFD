@@ -14,7 +14,6 @@ interface UserData {
   referralCode: string;
   sponsorId?: string;
   currentRank: string;
-  walletBalance: number;
   totalDownlineCount?: number;
   directReferralsCount?: number;
   indirectReferralCount?: number;

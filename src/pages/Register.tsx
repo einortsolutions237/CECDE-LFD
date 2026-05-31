@@ -186,7 +186,6 @@ export default function Register() {
         dormantDownlineCount: 0,
         suspendedDownlineCount: 0,
         currentRank: 'Member',
-        walletBalance: 0,
         rankingScore: 0, // Required by rules `get('rankingScore', 0) == 0`
         role: 'member',
         status: 'active', // Allowed key is 'status' instead of 'accountStatus'

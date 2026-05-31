@@ -133,7 +133,6 @@ export default function AdminUsers() {
         roleType: userRoleType,
         accountStatus: 'active',
         currentRank: 'Bronze',
-        walletBalance: 0,
         directReferralsCount: 0,
         totalDownlineCount: 0,
         createdAt: new Date()

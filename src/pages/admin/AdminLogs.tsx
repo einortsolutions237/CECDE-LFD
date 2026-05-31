@@ -25,8 +25,7 @@ export default function AdminLogs() {
            { id: '1', action: 'Failed Login Attempt', category: 'security', user: 'admin@system.local', ip: '192.168.1.45', timestamp: Date.now() - 3000, severity: 'high' },
            { id: '2', action: 'Database Synchronized', category: 'system', user: 'SYSTEM', ip: '10.0.0.1', timestamp: Date.now() - 14000, severity: 'info' },
            { id: '3', action: 'Modified System Settings', category: 'admin', user: 'superadmin_1', ip: '172.16.0.4', timestamp: Date.now() - 3600000, severity: 'warning' },
-           { id: '4', action: 'Password Reset Requested', category: 'auth', user: 'USER-1029', ip: '104.28.32.1', timestamp: Date.now() - 86400000, severity: 'info' },
-           { id: '5', action: 'Approved Withdrawal W-449', category: 'finance', user: 'finance_admin', ip: '172.16.0.5', timestamp: Date.now() - 172800000, severity: 'medium' }
+           { id: '4', action: 'Password Reset Requested', category: 'auth', user: 'USER-1029', ip: '104.28.32.1', timestamp: Date.now() - 86400000, severity: 'info' }
         ];
       }
       setLogs(data);
@@ -64,7 +63,7 @@ export default function AdminLogs() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
              <Shield className="w-8 h-8 text-primary" /> Security & Audit Logs
           </h1>
-          <p className="text-sm font-medium text-muted-foreground mt-2">Monitor system activity, access history, and financial changes.</p>
+          <p className="text-sm font-medium text-muted-foreground mt-2">Monitor system activity, access history, and team changes.</p>
         </div>
         <div className="flex bg-background border border-border rounded-xl px-3 py-2 items-center flex-1 max-w-sm">
            <Search className="w-5 h-5 text-muted-foreground mr-2" />

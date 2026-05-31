@@ -27,76 +27,57 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchTeamInfo = async () => {
-       if (!userData?.teamId && userData?.roleType !== 'team_leader') return;
        try {
-         let members: any[] = [];
-         
-        if (userData?.teamId) {
-           const tDoc = await getDoc(doc(db, 'teams', userData.teamId));
-           let exactComputedMembers = 1; // Team leader
-           
-           const teamMembersRef = collection(db, 'users');
-           const q = query(teamMembersRef, where('teamId', '==', userData.teamId));
-           const snap = await getDocs(q);
-           
-           snap.forEach(d => {
-              const u = d.data();
-              const downlineCount = u.totalDownlineCount || 0;
-              members.push({ id: d.id, downlineCount: downlineCount });
-              
-              if (tDoc.exists() && d.id !== tDoc.data().teamLeaderId) {
-                 // Direct Member (1) + their indirect referrals (downlineCount)
-                 exactComputedMembers += (1 + downlineCount);
-              }
-           });
-           
-           if (tDoc.exists()) {
-             const data = tDoc.data();
-             
-             // Fallback to leader downline count if no members explicitly in team yet
-             if (members.length === 0 || (members.length === 1 && members[0].id === data.teamLeaderId)) {
-                 if (data.teamLeaderId) {
-                   if (data.teamLeaderId === userData.uid) {
-                      exactComputedMembers = (userData.totalDownlineCount || 0) + 1;
-                   } else {
-                      const lDoc = await getDoc(doc(db, 'users', data.teamLeaderId));
-                      if (lDoc.exists()) {
-                         exactComputedMembers = (lDoc.data().totalDownlineCount || 0) + 1;
-                      }
-                   }
+         const { deriveTeamLeaderId } = await import('../lib/teamUtils');
+         const leaderId = await deriveTeamLeaderId(userData, db);
+         if (!leaderId) return;
+
+         const qTeams = query(collection(db, 'teams'), where('teamLeaderId', '==', leaderId));
+         const tdocs = await getDocs(qTeams);
+
+         let members = [];
+         let exactComputedMembers = 1;
+
+         const qMembers = query(collection(db, 'users'), where('uplineIds', 'array-contains', leaderId));
+         const snap = await getDocs(qMembers);
+
+         snap.forEach(d => {
+            const u = d.data();
+            const downlineCount = u.totalDownlineCount || 0;
+            members.push({ id: d.id, downlineCount: downlineCount });
+            if (d.id !== leaderId) {
+                exactComputedMembers += (1 + downlineCount);
+            }
+         });
+
+         if (leaderId === userData?.uid) {
+             members.push({ id: userData?.uid, downlineCount: userData?.totalDownlineCount || 0 });
+             if (members.length === 1) {
+                exactComputedMembers = (userData?.totalDownlineCount || 0) + 1;
+             }
+         } else {
+             const leaderDoc = await getDoc(doc(db, 'users', leaderId));
+             if (leaderDoc.exists()) {
+                 members.push({ id: leaderId, downlineCount: leaderDoc.data().totalDownlineCount || 0 });
+                 if (members.length === 1) {
+                    exactComputedMembers = (leaderDoc.data().totalDownlineCount || 0) + 1;
                  }
              }
-             
-             data.calculatedTotalMembers = exactComputedMembers;
-             setTeamData(data);
-           }
-         } else if (userData?.roleType === 'team_leader') {
-           const teamMembersRef = collection(db, 'users');
-           const q = query(teamMembersRef, where('sponsorId', '==', userData.uid));
-           const snap = await getDocs(q);
-           
-           let exactComputedMembers = 1; // Team leader
-           snap.forEach(d => {
-              const u = d.data();
-              const downlineCount = u.totalDownlineCount || 0;
-              members.push({ id: d.id, downlineCount: downlineCount });
-              if (d.id !== userData.uid) {
-                  exactComputedMembers += (1 + downlineCount);
-              }
-           });
-           
-           if (members.length === 0) {
-               exactComputedMembers = (userData.totalDownlineCount || 0) + 1;
-           }
-           
-           // Fallback for legacy team leaders without a teamId
-           setTeamData({
-             teamLeaderName: userData.fullName || 'You',
-             teamLeaderId: userData.uid,
-             calculatedTotalMembers: exactComputedMembers
-           });
          }
-         
+
+         let fetchedTeamData: any = {};
+         if (!tdocs.empty) {
+             fetchedTeamData = tdocs.docs[0].data();
+         } else {
+             fetchedTeamData = {
+                 teamLeaderName: userData?.roleType === 'team_leader' ? 'Your Group' : 'Team Group',
+                 teamLeaderId: leaderId
+             };
+         }
+
+         fetchedTeamData.calculatedTotalMembers = exactComputedMembers;
+         setTeamData(fetchedTeamData);
+
          members.sort((a, b) => b.downlineCount - a.downlineCount);
          const internalRankIndex = members.findIndex(m => m.id === userData?.uid);
          setTeamRank(internalRankIndex !== -1 ? internalRankIndex + 1 : null);
@@ -110,7 +91,7 @@ export default function Dashboard() {
                if (data.teamLeaderId) {
                   try {
                      let computedTotal = 1;
-                     const mQ = query(collection(db, 'users'), where('teamId', '==', gDoc.id));
+                     const mQ = query(collection(db, 'users'), where('uplineIds', 'array-contains', data.teamLeaderId));
                      const mSnap = await getDocs(mQ);
                      let mCount = 0;
                      mSnap.forEach(md => {
@@ -213,11 +194,7 @@ export default function Dashboard() {
              // Use native fields instead of calculating locally where possible
              // Refactor TOTAL DOWNLINE logic = TOTAL INDIRECT MEMBERS
              if (userData?.roleType === 'team_leader') {
-               const conditions = [where('sponsorId', '==', userData.uid)];
-               if (userData.teamId) {
-                 conditions.push(where('teamId', '==', userData.teamId));
-               }
-               const teamQuery = query(collection(db, 'users'), or(...conditions));
+               const teamQuery = query(collection(db, 'users'), where('uplineIds', 'array-contains', userData.uid));
                const teamSnapshot = await getDocs(teamQuery);
                
                let calculatedIndirectCount = 0;
@@ -295,7 +272,7 @@ export default function Dashboard() {
           <div className="flex items-start justify-between z-10 mb-8">
             <div>
               <h2 className="text-3xl font-bold tracking-tight text-foreground mb-1 mt-2">Welcome back, {userData?.fullName?.split(' ')[0] || 'User'}!</h2>
-              <p className="text-sm font-medium text-muted-foreground max-w-sm">Manage your network growth, monitor recent activities, and track financial performance seamlessly.</p>
+              <p className="text-sm font-medium text-muted-foreground max-w-sm">Manage your network growth, monitor recent activities, and track team performance seamlessly.</p>
             </div>
             <div className="bg-primary/10 text-primary border border-primary/20 px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest shadow-sm">
               {userData?.currentRank || 'Member'}
@@ -373,7 +350,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard 
           title="Indirect Referrals" 
           value={actualDownlineCount.toLocaleString()} 
@@ -395,16 +372,9 @@ export default function Dashboard() {
           trend=""
           trendUp={null}
         />
-        <StatCard 
-          title="Wallet Balance" 
-          value={`$${(userData?.walletBalance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} 
-          icon={<DollarSign className="w-5 h-5 text-amber-500" />} 
-          trend="Available"
-          trendUp={null}
-        />
       </div>
 
-      {(userData?.teamId || userData?.roleType === 'team_leader') && (
+      {(teamData || userData?.roleType === 'team_leader') && (
         <div className="mt-2">
           <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">
             {userData.roleType === 'team_leader' ? 'Your Team Performance' : `Team: ${teamData?.teamLeaderName || 'Loading...'}`}

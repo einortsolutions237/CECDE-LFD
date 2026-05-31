@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, doc, writeBatch, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../../lib/firebase';
 import { useTheme } from '../../components/ThemeProvider';
-import { RefreshCw, Save, Settings, Shield, Bell, Palette, Database, CheckCircle, AlertTriangle, Monitor, Moon, Sun, DollarSign } from 'lucide-react';
+import { RefreshCw, Save, Settings, Shield, Bell, Palette, Database, CheckCircle, AlertTriangle, Monitor, Moon, Sun, Trophy } from 'lucide-react';
 
 export default function AdminSettings() {
   const { theme, setTheme } = useTheme();
@@ -18,28 +18,22 @@ export default function AdminSettings() {
     allowRegistrations: true,
     maintenanceMode: false,
     
-    // Commission Structure Defaults
-    directBonusPercentage: 10,
-    indirectBonusPercentageLevel2: 5,
-    indirectBonusPercentageLevel3: 2,
-    binaryPairingBonusPercentage: 8,
-    maxDailyPairingCap: 1000,
-    
     // Legacy ranking settings
     pointsPerDirectRef: 5,
     pointsPerIndirectRef: 2,
     pointsPerActiveMember: 3,
-    minWithdrawalAmount: 50,
-    
-    // Payment Integrations
-    activePaymentGateway: 'stripe', // 'stripe' | 'flutterwave' | 'paystack'
-    currencyText: 'USD',
-    currencySymbol: '$',
     
     // Security & Compliance
-    requireKYCForWithdrawal: true,
-    autoApproveWithdrawalsUnder: 0, // 0 means manual only
     maxLoginAttempts: 5,
+  });
+
+  const [ranks, setRanks] = useState<Record<string, any>>({
+    'Crown Ambassador': { minDirect: 20, minTeamSize: 1000, minActiveDirect: 0, minActiveTeam: 100 },
+    'Diamond': { minDirect: 15, minTeamSize: 500, minActiveDirect: 0, minActiveTeam: 50 },
+    'Platinum': { minDirect: 10, minTeamSize: 100, minActiveDirect: 0, minActiveTeam: 25 },
+    'Gold': { minDirect: 8, minTeamSize: 50, minActiveDirect: 0, minActiveTeam: 15 },
+    'Silver': { minDirect: 5, minTeamSize: 20, minActiveDirect: 5, minActiveTeam: 0 },
+    'Bronze': { minDirect: 3, minTeamSize: 5, minActiveDirect: 2, minActiveTeam: 0 }
   });
 
   const [loading, setLoading] = useState(true);
@@ -51,6 +45,12 @@ export default function AdminSettings() {
         const snap = await getDoc(docRef);
         if (snap.exists()) {
           setSettings(prev => ({ ...prev, ...snap.data() }));
+        }
+        
+        const rankRef = doc(db, 'system_settings', 'ranks');
+        const rankSnap = await getDoc(rankRef);
+        if (rankSnap.exists() && Object.keys(rankSnap.data()).length > 0) {
+           setRanks(rankSnap.data());
         }
       } catch (err: any) {
         console.error("Failed to load settings:", err);
@@ -65,12 +65,23 @@ export default function AdminSettings() {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
+  const handleRankChange = (rankName: string, key: string, value: any) => {
+    setRanks(prev => ({
+       ...prev,
+       [rankName]: { ...prev[rankName], [key]: parseInt(value) || 0 }
+    }));
+  };
+
   const handleSaveSettings = async () => {
     setSavingConfig(true);
     setConfigMessage(null);
     try {
       const docRef = doc(db, 'system_settings', 'global');
       await setDoc(docRef, settings, { merge: true });
+      
+      const rankRef = doc(db, 'system_settings', 'ranks');
+      await setDoc(rankRef, ranks);
+
       setConfigMessage({ type: 'success', text: 'System settings updated successfully.' });
       setTimeout(() => setConfigMessage(null), 3000);
     } catch (err: any) {
@@ -79,68 +90,6 @@ export default function AdminSettings() {
       handleFirestoreError(err, OperationType.WRITE, 'system_settings');
     } finally {
       setSavingConfig(false);
-    }
-  };
-
-  const handleSyncDownlines = async () => {
-    setSyncing(true);
-    setSyncResult('Fetching users...');
-    try {
-      const q = collection(db, 'users');
-      const snap = await getDocs(q);
-      const users: Record<string, any> = {};
-      const downlineCounts: Record<string, number> = {};
-      
-      snap.forEach(d => {
-        users[d.id] = d.data();
-        downlineCounts[d.id] = 0;
-      });
-
-      setSyncResult('Calculating exact downlines...');
-      
-      // Calculate true downlines for everyone
-      Object.keys(users).forEach(uid => {
-         let currentSponsor = users[uid].sponsorId;
-         let levels = 0;
-         while (currentSponsor && users[currentSponsor] && levels < 100) {
-            downlineCounts[currentSponsor] += 1;
-            currentSponsor = users[currentSponsor].sponsorId;
-            levels++;
-         }
-      });
-
-      setSyncResult('Updating database...');
-      
-      // Batch update
-      let batch = writeBatch(db);
-      let count = 0;
-      let totalUpdated = 0;
-
-      for (const uid of Object.keys(users)) {
-         const uRef = doc(db, 'users', uid);
-         const nRef = doc(db, 'network', uid);
-         batch.update(uRef, { totalDownlineCount: downlineCounts[uid] });
-         batch.update(nRef, { totalDownlineCount: downlineCounts[uid] });
-         count++;
-         totalUpdated++;
-         
-         if (count === 200) {
-            await batch.commit();
-            batch = writeBatch(db);
-            count = 0;
-         }
-      }
-      if (count > 0) {
-         await batch.commit();
-      }
-      setSyncResult(`Success! Synchronized downline counts for ${totalUpdated} users.`);
-
-    } catch (err: any) {
-      console.error(err);
-      setSyncResult('Error: ' + err.message);
-      handleFirestoreError(err, OperationType.WRITE, 'users');
-    } finally {
-      setSyncing(false);
     }
   };
 
@@ -247,45 +196,6 @@ export default function AdminSettings() {
            </div>
         </div>
 
-        {/* Commission Engine Configuration */}
-        <div className="card p-0 overflow-hidden flex flex-col border border-border">
-           <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
-              <DollarSign className="w-6 h-6 text-green-500" />
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">Commission Engine</h2>
-           </div>
-           <div className="p-6 flex flex-col gap-6 flex-1">
-              <div>
-                 <label className="block text-sm font-medium text-muted-foreground mb-1">Direct Bonus (%)</label>
-                 <input 
-                   type="number" 
-                   value={settings.directBonusPercentage}
-                   onChange={(e) => handleSettingChange('directBonusPercentage', parseInt(e.target.value) || 0)}
-                   className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold"
-                 />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                 <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">Level 2 Bonus (%)</label>
-                    <input 
-                      type="number" 
-                      value={settings.indirectBonusPercentageLevel2}
-                      onChange={(e) => handleSettingChange('indirectBonusPercentageLevel2', parseInt(e.target.value) || 0)}
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold"
-                    />
-                 </div>
-                 <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">Level 3 Bonus (%)</label>
-                    <input 
-                      type="number" 
-                      value={settings.indirectBonusPercentageLevel3}
-                      onChange={(e) => handleSettingChange('indirectBonusPercentageLevel3', parseInt(e.target.value) || 0)}
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold"
-                    />
-                 </div>
-              </div>
-           </div>
-        </div>
-
         {/* Security & Access */}
         <div className="card p-0 overflow-hidden flex flex-col border border-border">
            <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
@@ -314,49 +224,6 @@ export default function AdminSettings() {
                     <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-destructive"></div>
                  </div>
               </label>
-           </div>
-        </div>
-
-        {/* Payment & Localization Settings */}
-        <div className="card p-0 overflow-hidden flex flex-col border border-border">
-           <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
-              <Shield className="w-6 h-6 text-indigo-500" />
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">Payments & Regions</h2>
-           </div>
-           <div className="p-6 flex flex-col gap-6 flex-1">
-              <div>
-                 <label className="block text-sm font-medium text-muted-foreground mb-1">Active Payment Gateway</label>
-                 <select 
-                   value={settings.activePaymentGateway}
-                   onChange={(e) => handleSettingChange('activePaymentGateway', e.target.value)}
-                   className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-medium"
-                 >
-                    <option value="stripe">Stripe</option>
-                    <option value="flutterwave">Flutterwave</option>
-                    <option value="paystack">Paystack</option>
-                    <option value="manual">Manual / Bank Transfer</option>
-                 </select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                 <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">Currency Code</label>
-                    <input 
-                      type="text" 
-                      value={settings.currencyText}
-                      onChange={(e) => handleSettingChange('currencyText', e.target.value)}
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold"
-                    />
-                 </div>
-                 <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">Currency Symbol</label>
-                    <input 
-                      type="text" 
-                      value={settings.currencySymbol}
-                      onChange={(e) => handleSettingChange('currencySymbol', e.target.value)}
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold"
-                    />
-                 </div>
-              </div>
            </div>
         </div>
 
@@ -394,15 +261,62 @@ export default function AdminSettings() {
                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold text-lg"
                  />
               </div>
-              <div>
-                 <label className="block text-sm font-medium text-muted-foreground mb-1">Min Withdrawal Amt ($)</label>
-                 <input 
-                   type="number" 
-                   value={settings.minWithdrawalAmount}
-                   onChange={(e) => handleSettingChange('minWithdrawalAmount', parseInt(e.target.value) || 0)}
-                   className="w-full bg-background border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold text-lg"
-                 />
-              </div>
+           </div>
+        </div>
+
+        {/* Rank Configuration Center */}
+        <div className="card p-0 overflow-hidden flex flex-col lg:col-span-2 border border-border">
+           <div className="p-6 border-b border-border flex items-center gap-3 bg-muted/20">
+              <Trophy className="w-6 h-6 text-orange-500" />
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">Rank Configuration Center</h2>
+           </div>
+           <div className="p-6">
+               <p className="text-sm text-foreground mb-6">Dynamically configure the minimum requirements for each rank. The ranking engine uses these values.</p>
+               <div className="flex flex-col gap-6">
+                   {Object.keys(ranks).map(rank => (
+                       <div key={rank} className="bg-background border border-border p-5 rounded-xl">
+                           <h3 className="font-bold text-lg mb-4 text-foreground">{rank} Requirements</h3>
+                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                               <div>
+                                   <label className="block text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Min Directs</label>
+                                   <input 
+                                      type="number" 
+                                      value={ranks[rank].minDirect}
+                                      onChange={(e) => handleRankChange(rank, 'minDirect', e.target.value)}
+                                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                   />
+                               </div>
+                               <div>
+                                   <label className="block text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Min Team Size</label>
+                                   <input 
+                                      type="number" 
+                                      value={ranks[rank].minTeamSize}
+                                      onChange={(e) => handleRankChange(rank, 'minTeamSize', e.target.value)}
+                                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                   />
+                               </div>
+                               <div>
+                                   <label className="block text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Min Active Directs</label>
+                                   <input 
+                                      type="number" 
+                                      value={ranks[rank].minActiveDirect}
+                                      onChange={(e) => handleRankChange(rank, 'minActiveDirect', e.target.value)}
+                                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                   />
+                               </div>
+                               <div>
+                                   <label className="block text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Min Active Team</label>
+                                   <input 
+                                      type="number" 
+                                      value={ranks[rank].minActiveTeam}
+                                      onChange={(e) => handleRankChange(rank, 'minActiveTeam', e.target.value)}
+                                      className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                                   />
+                               </div>
+                           </div>
+                       </div>
+                   ))}
+               </div>
            </div>
         </div>
 
@@ -414,17 +328,31 @@ export default function AdminSettings() {
            </div>
            <div className="p-6 flex flex-col sm:flex-row sm:items-start gap-6">
               <div className="flex-1">
-                 <h3 className="font-bold text-foreground mb-1">Sync Network Downline Counts</h3>
+                 <h3 className="font-bold text-foreground mb-1">Trigger System Integrity Repair</h3>
                  <p className="text-sm text-muted-foreground mb-4">
-                   This heavy operation traverses the entire user tree and recalculates the exact <code>totalDownlineCount</code> for all users. Do not run this frequently. Use this only if the numbers become structurally out of sync due to missing transactions.
+                   This pushes all users into a smart repair queue which recalculates total downline sizes and directs. It runs asynchronously in the backend and performs tree reconstruction.
                  </p>
                  <button
-                   onClick={handleSyncDownlines}
+                   onClick={async () => {
+                       try {
+                          setSyncing(true);
+                          setSyncResult('Dispatching system integrity repair job...');
+                          const { httpsCallable } = await import('firebase/functions');
+                          const { functions } = await import('../../lib/firebase');
+                          const validator = httpsCallable(functions, 'validateSystemIntegrity');
+                          const res: any = await validator();
+                          setSyncResult(res.data.message);
+                       } catch(e: any) {
+                          setSyncResult('Error: ' + e.message);
+                       } finally {
+                          setSyncing(false);
+                       }
+                   }}
                    disabled={syncing}
                    className="flex items-center gap-2 bg-blue-500/10 text-blue-600 border border-blue-500/20 px-5 py-2.5 rounded-xl hover:bg-blue-500/20 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                  >
                    <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-                   {syncing ? 'Re-calculating Tree Data...' : 'Run Tree Recalculation Task'}
+                   {syncing ? 'Dispatching...' : 'Run Integrity Validator Queue'}
                  </button>
                  {syncResult && (
                     <div className="mt-4 p-4 rounded-xl bg-muted text-xs font-mono border border-border max-h-[150px] overflow-y-auto">

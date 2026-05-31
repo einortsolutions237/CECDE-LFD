@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Menu, X, Home, Users, Trello, Award, FileText, Settings, LogOut, ShieldAlert, CreditCard
+  Menu, X, Home, Users, Trello, Award, FileText, Settings, LogOut, ShieldAlert
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -19,7 +19,6 @@ export const Layout = () => {
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: Home, show: true },
-    { name: 'My Wallet', path: '/wallet', icon: CreditCard, show: true },
     { name: 'Network', path: '/network', icon: Users, show: true },
     { name: 'Rankings', path: '/rankings', icon: Award, show: true },
     { name: 'Team Dashboard', path: '/team-members', icon: Trello, show: userData?.roleType === 'team_leader' },

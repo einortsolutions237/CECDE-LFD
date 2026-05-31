@@ -50,7 +50,20 @@ export default function Rankings() {
   }, [activeTab]);
 
   const isTeamLeader = userData?.roleType === 'team_leader';
-  const showTeamTab = userData?.teamId || isTeamLeader;
+  const [derivedTeamLeaderId, setDerivedTeamLeaderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadTeam() {
+      if (userData && !isTeamLeader) {
+         const { deriveTeamLeaderId } = await import('../lib/teamUtils');
+         const leaderId = await deriveTeamLeaderId(userData, db);
+         setDerivedTeamLeaderId(leaderId);
+      }
+    }
+    loadTeam();
+  }, [userData, isTeamLeader]);
+
+  const showTeamTab = derivedTeamLeaderId || isTeamLeader;
 
   return (
     <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-12">

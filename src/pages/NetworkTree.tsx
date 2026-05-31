@@ -57,13 +57,9 @@ export default function NetworkTree() {
       };
 
       try {
-        // Query both direct referrals and team members of the team
         const conditions = [where('sponsorId', '==', userData.uid)];
         if (userData.referralCode) {
-          conditions.push(where('sponsorId', '==', userData.referralCode));
-        }
-        if (userData.teamId) {
-          conditions.push(where('teamId', '==', userData.teamId));
+           conditions.push(where('sponsorId', '==', userData.referralCode));
         }
         
         const q = query(collection(db, 'users'), or(...conditions));
@@ -345,7 +341,7 @@ export default function NetworkTree() {
             </div>
           </div>
           <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-2">Your Team Leader</h3>
-          <div className="text-2xl font-extrabold tracking-tight text-foreground truncate">{userData.roleType !== 'team_leader' && userData.teamId && userData.teamId !== userData.uid ? 'Managed internally' : 'You (Team Leader)'}</div>
+          <div className="text-2xl font-extrabold tracking-tight text-foreground truncate">{userData.roleType !== 'team_leader' ? 'Managed by Leader' : 'You (Team Leader)'}</div>
         </div>
 
         <div className="card card-hover flex flex-col">
