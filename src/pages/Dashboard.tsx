@@ -6,8 +6,10 @@ import { Users, UserPlus, Award, DollarSign, TrendingUp, Copy, Check } from 'luc
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '../lib/utils';
 import { handleProductionError } from '../lib/errorUtils';
+import { useTranslation } from 'react-i18next';
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { userData } = useAuth();
   const [networkStats, setNetworkStats] = useState<any>(null);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
@@ -294,11 +296,11 @@ export default function Dashboard() {
           
           <div className="flex items-start justify-between z-10 mb-8">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-foreground mb-1 mt-2">Welcome back, {userData?.fullName?.split(' ')[0] || 'User'}!</h2>
-              <p className="text-sm font-medium text-muted-foreground max-w-sm">Manage your network growth, monitor recent activities, and track network performance seamlessly.</p>
+              <h2 className="text-3xl font-bold tracking-tight text-foreground mb-1 mt-2">{t('dashboard.welcome')}, {userData?.fullName?.split(' ')[0] || 'User'}!</h2>
+              <p className="text-sm font-medium text-muted-foreground max-w-sm">{t('dashboard.description')}</p>
             </div>
             <div className="bg-primary/10 text-primary border border-primary/20 px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest shadow-sm">
-              {userData?.currentRank || 'Member'}
+              {userData?.currentRank || t('mlm.unranked')}
             </div>
           </div>
 
@@ -375,31 +377,31 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          title="Indirect Referrals" 
+          title={t('mlm.indirect_referrals')} 
           value={actualDownlineCount.toLocaleString()} 
           icon={<Users className="w-5 h-5 text-primary" />} 
           trend=""
           trendUp={null}
         />
         <StatCard 
-          title="Direct Referrals" 
+          title={t('mlm.direct_referrals')} 
           value={directCount.toLocaleString()} 
           icon={<UserPlus className="w-5 h-5 text-emerald-500" />} 
           trend=""
           trendUp={null}
         />
         <StatCard 
-          title="Active Members" 
+          title={t('mlm.active_members')} 
           value={(networkStats?.activeDownlineCount || 0).toLocaleString()} 
           icon={<TrendingUp className="w-5 h-5 text-blue-500" />} 
           trend=""
           trendUp={null}
         />
         <StatCard 
-          title="System Score" 
+          title={t('mlm.system_score')} 
           value={userData?.leaderboardScore?.toLocaleString() || '0'} 
           icon={<Award className="w-5 h-5 text-amber-500" />} 
-          trend="Points"
+          trend={t('mlm.points')}
           trendUp={null}
         />
       </div>

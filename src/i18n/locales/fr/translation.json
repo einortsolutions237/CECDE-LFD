@@ -1,0 +1,84 @@
+{
+  "auth": {
+    "login": {
+      "title": "Bon retour",
+      "subtitle": "Connectez-vous à votre tableau de bord",
+      "email": "Adresse E-mail",
+      "password": "Mot de passe",
+      "forgot_password": "Mot de passe oublié ?",
+      "sign_in": "Se connecter",
+      "signing_in": "Connexion en cours...",
+      "create_account": "Créer un compte",
+      "no_account": "Vous n'avez pas de compte ?",
+      "incorrect_credentials": "Mot de passe ou e-mail incorrect",
+      "network_error": "Erreur réseau: Veuillez vérifier votre connexion ou désactiver vos bloqueurs de publicités/VPN."
+    },
+    "register": {
+      "title": "Créer un compte",
+      "subtitle": "Rejoignez la première plateforme MLM",
+      "fullname": "Nom complet",
+      "email": "Adresse e-mail",
+      "phone": "Numéro de téléphone",
+      "password": "Mot de passe",
+      "sponsor_code": "ENTRER LE CODE DU PARRAIN",
+      "referral_code": "Code de parrainage",
+      "validating": "Validation du code...",
+      "invited_by": "Invité par:",
+      "assigned_to": "Assigné à l'équipe:",
+      "invalid_code": "Code de parrainage invalide. Veuillez vérifier votre lien.",
+      "code_required": "Un code de parrainage valide est requis pour créer un compte.",
+      "button": "Créer un compte",
+      "creating": "Création du compte...",
+      "has_account": "Vous avez déjà un compte ?",
+      "sign_in": "Se connecter"
+    }
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "network": "Réseau",
+    "rankings": "Classements",
+    "team_dashboard": "Tableau de bord de l'équipe",
+    "reports": "Rapports",
+    "settings": "Paramètres",
+    "admin_panel": "Panneau d'administration",
+    "sign_out": "Déconnexion",
+    "return_app": "Retour à l'application"
+  },
+  "roles": {
+    "super_admin": "Super Administrateur",
+    "admin": "Administrateur",
+    "team_leader": "Chef d'équipe",
+    "member": "Membre"
+  },
+  "dashboard": {
+    "welcome": "Bon retour",
+    "description": "Gérez la croissance de votre réseau, surveillez les activités récentes et suivez les performances du réseau de manière transparente."
+  },
+  "mlm": {
+    "direct_referrals": "Parrainages Directs",
+    "indirect_referrals": "Parrainages Indirects",
+    "team_members": "Membres de l'équipe",
+    "genealogy": "Généalogie",
+    "sponsor": "Parrain",
+    "leaderboard": "Classement",
+    "rank": "Rang",
+    "network_growth": "Croissance du réseau",
+    "team_growth": "Croissance de l'équipe",
+    "top_recruiters": "Meilleurs Recruteurs",
+    "points": "Points",
+    "unranked": "Non classé",
+    "system_score": "Score du système",
+    "active_members": "Membres Actifs"
+  },
+  "admin": {
+    "title": "ADMIN",
+    "system_admin": "ADMINISTRATEUR SYSTÈME",
+    "users": "Utilisateurs",
+    "teams": "Équipes",
+    "network_management": "Gestion du Réseau",
+    "reports": "Rapports",
+    "kyc": "KYC et Conformité",
+    "system_logs": "Journaux Système",
+    "settings": "Paramètres"
+  }
+}

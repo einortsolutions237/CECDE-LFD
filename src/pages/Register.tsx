@@ -5,10 +5,13 @@ import { doc, getDocs, getDoc, query, collection, where, writeBatch, arrayUnion,
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { UserPlus, Eye, EyeOff, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import LanguageSelector from '../components/LanguageSelector';
+import { useTranslation } from 'react-i18next';
 
 import toast from 'react-hot-toast';
 
 export default function Register() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get('ref') || '';
   
@@ -221,7 +224,10 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative">
+      <div className="absolute top-4 right-4 md:top-8 md:right-8">
+        <LanguageSelector />
+      </div>
       <div className="mb-6 mt-4 text-center flex flex-col items-center justify-center gap-1">
         <img src="https://i.imgur.com/Adh2bcY.png" alt="CECDE Logo" className="w-20 h-20 md:w-24 md:h-24 object-contain filter drop-shadow-sm transition-transform hover:scale-105 duration-300" />
         <div className="text-xl md:text-3xl font-bold tracking-tight tracking-[-0.02em] select-none">
@@ -230,8 +236,8 @@ export default function Register() {
       </div>
       <div className="card w-full max-w-md p-8 md:p-10 mb-8">
         <div className="flex flex-col mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Create Account</h1>
-          <p className="text-muted-foreground text-sm mt-1">Join the premier MLM platform</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('auth.register.title')}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t('auth.register.subtitle')}</p>
         </div>
 
         {error && (
@@ -242,7 +248,7 @@ export default function Register() {
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-foreground">Full Name</label>
+            <label className="block text-sm font-semibold text-foreground">{t('auth.register.fullname')}</label>
             <input 
               type="text" required
               className="input-field"
@@ -252,7 +258,7 @@ export default function Register() {
           </div>
           
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-foreground">Email Address</label>
+            <label className="block text-sm font-semibold text-foreground">{t('auth.register.email')}</label>
             <input 
               type="email" required
               className={`input-field ${emailError ? 'border-destructive focus:ring-destructive' : ''}`}
@@ -274,7 +280,7 @@ export default function Register() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-foreground">Phone Number</label>
+            <label className="block text-sm font-semibold text-foreground">{t('auth.register.phone')}</label>
             <input 
               type="tel" required
               className="input-field"
@@ -284,7 +290,7 @@ export default function Register() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-foreground">Password</label>
+            <label className="block text-sm font-semibold text-foreground">{t('auth.register.password')}</label>
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"} required minLength={8}
@@ -351,11 +357,11 @@ export default function Register() {
           </div>
 
           <div className="space-y-1.5 p-4 bg-muted/30 border border-border rounded-xl">
-            <label className="block text-sm font-semibold text-foreground text-center">Referral Code</label>
+            <label className="block text-sm font-semibold text-foreground text-center">{t('auth.register.referral_code')}</label>
             <input 
               type="text"
               required
-              placeholder="ENTER SPONSOR CODE"
+              placeholder={t('auth.register.sponsor_code')}
               className="input-field text-center uppercase tracking-widest font-mono bg-card py-3"
               value={formData.referralCode}
               onChange={e => setFormData({...formData, referralCode: e.target.value.toUpperCase()})}
@@ -372,12 +378,12 @@ export default function Register() {
                 <div className="flex flex-col">
                   <span className="text-success flex items-center gap-2 font-medium">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                    Invited by: {sponsorData.fullName} <span className="bg-primary/10 text-primary text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ml-1">{sponsorData.rank}</span>
+                    {t('auth.register.invited_by')} {sponsorData.fullName} <span className="bg-primary/10 text-primary text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ml-1">{sponsorData.rank}</span>
                   </span>
                   {sponsorData.teamName && (
                      <span className="text-primary flex items-center gap-2 font-medium text-xs mt-1">
                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                       Assigned to Team: {sponsorData.teamName}
+                       {t('auth.register.assigned_to')} {sponsorData.teamName}
                      </span>
                   )}
                 </div>
@@ -395,12 +401,12 @@ export default function Register() {
             disabled={loading || !sponsorData}
             className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:opacity-90 hover:shadow-md transition-all mt-6 disabled:opacity-50 text-sm disabled:cursor-not-allowed"
           >
-            {loading ? 'Creating account...' : 'Create Account'}
+            {loading ? t('auth.register.creating') : t('auth.register.button')}
           </button>
         </form>
 
         <div className="mt-8 text-center text-sm text-muted-foreground border-t border-border pt-6">
-          Already have an account? <Link to="/login" className="text-primary hover:underline font-bold">Sign in</Link>
+          {t('auth.register.has_account')} <Link to="/login" className="text-primary hover:underline font-bold">{t('auth.register.sign_in')}</Link>
         </div>
       </div>
     </div>

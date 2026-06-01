@@ -1,0 +1,84 @@
+{
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to your dashboard",
+      "email": "Email Address",
+      "password": "Password",
+      "forgot_password": "Forgot password?",
+      "sign_in": "Sign In",
+      "signing_in": "Signing in...",
+      "create_account": "Create account",
+      "no_account": "Don't have an account?",
+      "incorrect_credentials": "Password or Email Incorrect",
+      "network_error": "Network Error: Please check your connection or disable any adblockers/VPNs."
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Join the premier MLM platform",
+      "fullname": "Full Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "password": "Password",
+      "sponsor_code": "ENTER SPONSOR CODE",
+      "referral_code": "Referral Code",
+      "validating": "Validating code...",
+      "invited_by": "Invited by:",
+      "assigned_to": "Assigned to Team:",
+      "invalid_code": "Invalid referral code. Please check your link.",
+      "code_required": "A valid referral code is required to create an account.",
+      "button": "Create Account",
+      "creating": "Creating account...",
+      "has_account": "Already have an account?",
+      "sign_in": "Sign in"
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "network": "Network",
+    "rankings": "Rankings",
+    "team_dashboard": "Team Dashboard",
+    "reports": "Reports",
+    "settings": "Settings",
+    "admin_panel": "Admin Panel",
+    "sign_out": "Sign Out",
+    "return_app": "Return to App"
+  },
+  "roles": {
+    "super_admin": "Super Admin",
+    "admin": "Admin",
+    "team_leader": "Team Leader",
+    "member": "Member"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "description": "Manage your network growth, monitor recent activities, and track network performance seamlessly."
+  },
+  "mlm": {
+    "direct_referrals": "Direct Referrals",
+    "indirect_referrals": "Indirect Referrals",
+    "team_members": "Team Members",
+    "genealogy": "Genealogy",
+    "sponsor": "Sponsor",
+    "leaderboard": "Leaderboard",
+    "rank": "Rank",
+    "network_growth": "Network Growth",
+    "team_growth": "Team Growth",
+    "top_recruiters": "Top Recruiters",
+    "points": "Points",
+    "unranked": "Unranked",
+    "system_score": "System Score",
+    "active_members": "Active Members"
+  },
+  "admin": {
+    "title": "ADMIN",
+    "system_admin": "SYSTEM ADMIN",
+    "users": "Users",
+    "teams": "Teams",
+    "network_management": "Network Management",
+    "reports": "Reports",
+    "kyc": "KYC & Compliance",
+    "system_logs": "System Logs",
+    "settings": "Settings"
+  }
+}

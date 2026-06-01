@@ -7,23 +7,26 @@ import {
   UsersRound, ShieldAlert
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import LanguageSelector from './LanguageSelector';
+import { useTranslation } from 'react-i18next';
 
 export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { userData, logout } = useAuth();
   const isSuperAdmin = userData?.role === 'super_admin';
+  const { t } = useTranslation();
 
   const menuItems = [
-    { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Users', path: '/admin/users', icon: Users },
-    { name: 'Teams', path: '/admin/teams', icon: UsersRound },
-    { name: 'Network Management', path: '/admin/network', icon: Network },
-    { name: 'Rankings', path: '/admin/rankings', icon: Award },
-    { name: 'Reports', path: '/admin/reports', icon: BarChart3 },
-    { name: 'KYC & Compliance', path: '/admin/kyc', icon: ShieldAlert },
-    { name: 'System Logs', path: '/admin/logs', icon: FileText },
-    { name: 'Settings', path: '/admin/settings', icon: Settings },
+    { name: t('nav.dashboard'), path: '/admin/dashboard', icon: LayoutDashboard },
+    { name: t('admin.users'), path: '/admin/users', icon: Users },
+    { name: t('admin.teams'), path: '/admin/teams', icon: UsersRound },
+    { name: t('admin.network_management'), path: '/admin/network', icon: Network },
+    { name: t('nav.rankings'), path: '/admin/rankings', icon: Award },
+    { name: t('admin.reports'), path: '/admin/reports', icon: BarChart3 },
+    { name: t('admin.kyc'), path: '/admin/kyc', icon: ShieldAlert },
+    { name: t('admin.system_logs'), path: '/admin/logs', icon: FileText },
+    { name: t('admin.settings'), path: '/admin/settings', icon: Settings },
   ];
   
   // System Reset functionality removed
@@ -36,9 +39,12 @@ export function AdminLayout() {
           <img src="https://i.imgur.com/Adh2bcY.png" alt="Logo" className="w-8 h-8 object-contain" />
           <div className="text-xl font-bold text-primary tracking-tight">ADMIN</div>
         </div>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-foreground">
-          {sidebarOpen ? <X /> : <Menu />}
-        </button>
+        <div className="flex items-center gap-2">
+          <LanguageSelector />
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-foreground">
+            {sidebarOpen ? <X /> : <Menu />}
+          </button>
+        </div>
       </div>
 
       {/* Spacer for Mobile Header */}
@@ -84,7 +90,7 @@ export function AdminLayout() {
                 className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-sidebar-foreground bg-muted hover:bg-muted/80 transition-all border border-border"
               >
                 <LayoutDashboard className="w-[18px] h-[18px]" />
-                Return to App
+                {t('nav.return_app')}
               </Link>
             </div>
           </nav>
@@ -105,7 +111,7 @@ export function AdminLayout() {
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors border border-transparent hover:border-destructive/20"
           >
             <LogOut className="w-[18px] h-[18px]" />
-            Sign Out
+            {t('nav.sign_out')}
           </button>
         </div>
       </div>
@@ -118,6 +124,7 @@ export function AdminLayout() {
             <span>Admin</span> <span className="text-border">/</span> <span className="text-foreground font-medium capitalize">{location.pathname.split('/').pop()?.replace('-', ' ') || 'Dashboard'}</span>
           </div>
           <div className="flex items-center gap-6">
+            <LanguageSelector />
             <button className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors focus:outline-none">
               <Bell className="w-5 h-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full border-2 border-card"></span>

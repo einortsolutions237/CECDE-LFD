@@ -5,12 +5,15 @@ import {
   Menu, X, Home, Users, Trello, Award, FileText, Settings, LogOut, ShieldAlert, CreditCard
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import LanguageSelector from './LanguageSelector';
+import { useTranslation } from 'react-i18next';
 
 export const Layout = () => {
   const { userData, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     await logout();
@@ -18,13 +21,13 @@ export const Layout = () => {
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: Home, show: true },
-    { name: 'Network', path: '/network', icon: Users, show: true },
-    { name: 'Rankings', path: '/rankings', icon: Award, show: true },
-    { name: 'Team Dashboard', path: '/team-members', icon: Trello, show: userData?.roleType === 'team_leader' },
-    { name: 'Reports', path: '/reports', icon: FileText, show: true },
-    { name: 'Settings', path: '/settings', icon: Settings, show: true },
-    { name: 'Admin Panel', path: '/admin', icon: ShieldAlert, show: userData?.role === 'admin' || userData?.role === 'super_admin' },
+    { name: t('nav.dashboard'), path: '/dashboard', icon: Home, show: true },
+    { name: t('nav.network'), path: '/network', icon: Users, show: true },
+    { name: t('nav.rankings'), path: '/rankings', icon: Award, show: true },
+    { name: t('nav.team_dashboard'), path: '/team-members', icon: Trello, show: userData?.roleType === 'team_leader' },
+    { name: t('nav.reports'), path: '/reports', icon: FileText, show: true },
+    { name: t('nav.settings'), path: '/settings', icon: Settings, show: true },
+    { name: t('nav.admin_panel'), path: '/admin', icon: ShieldAlert, show: userData?.role === 'admin' || userData?.role === 'super_admin' },
   ];
 
   return (
@@ -34,9 +37,12 @@ export const Layout = () => {
           <img src="https://i.imgur.com/Adh2bcY.png" alt="Logo" className="w-8 h-8 object-contain" />
           <div className="text-xl font-bold text-primary">CECDE</div>
         </div>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2">
-          {sidebarOpen ? <X /> : <Menu />}
-        </button>
+        <div className="flex items-center gap-2">
+          <LanguageSelector />
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2">
+            {sidebarOpen ? <X /> : <Menu />}
+          </button>
+        </div>
       </div>
 
       {/* Spacer for Mobile Header */}
@@ -92,7 +98,7 @@ export const Layout = () => {
             className="flex items-center justify-center gap-2 text-sm text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 w-full px-4 py-2.5 rounded-xl transition-colors font-semibold"
           >
             <LogOut className="w-[18px] h-[18px]" />
-            Sign Out
+            {t('nav.sign_out')}
           </button>
         </div>
       </aside>
@@ -103,6 +109,7 @@ export const Layout = () => {
             <span>Pages</span> / <span className="text-foreground font-medium capitalize">{location.pathname.split('/')[1] || 'Dashboard'}</span>
           </div>
           <div className="flex items-center gap-6">
+            <LanguageSelector />
             <div className="bg-muted px-3 py-1.5 rounded-md text-[12px] text-muted-foreground border border-border/50">
               Ref: <strong className="text-foreground">{userData?.referralCode || 'SYSTEM-1'}</strong>
             </div>

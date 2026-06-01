@@ -4,6 +4,8 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import LanguageSelector from '../components/LanguageSelector';
+import { useTranslation } from 'react-i18next';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -13,6 +15,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const validateEmail = (val: string) => {
     setEmail(val);
@@ -39,9 +42,9 @@ export default function Login() {
       navigate('/dashboard');
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
-        setError('Password or Email Incorrect');
+        setError(t('auth.login.incorrect_credentials'));
       } else if (err.code === 'auth/network-request-failed') {
-        setError('Network Error: Please check your connection or disable any adblockers/VPNs that might be blocking the login.');
+        setError(t('auth.login.network_error'));
       } else {
         setError(err.message || 'Failed to sign in');
       }
@@ -51,7 +54,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative">
+      <div className="absolute top-4 right-4 md:top-8 md:right-8">
+        <LanguageSelector />
+      </div>
       <div className="mb-8 text-center flex flex-col items-center justify-center gap-1">
         <img src="https://i.imgur.com/Adh2bcY.png" alt="CECDE Logo" className="w-28 h-28 md:w-32 md:h-32 object-contain filter drop-shadow-sm transition-transform hover:scale-105 duration-300" />
         <div className="text-xl md:text-3xl font-bold tracking-tight tracking-[-0.02em] select-none">
@@ -60,8 +66,8 @@ export default function Login() {
       </div>
       <div className="card w-full max-w-md p-8 md:p-10">
         <div className="flex flex-col mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome Back</h1>
-          <p className="text-muted-foreground text-sm mt-1">Sign in to your dashboard</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('auth.login.title')}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t('auth.login.subtitle')}</p>
         </div>
 
         {error && (
@@ -72,7 +78,7 @@ export default function Login() {
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-foreground">Email Address</label>
+            <label className="block text-sm font-semibold text-foreground">{t('auth.login.email')}</label>
             <input 
               type="email" 
               required
@@ -94,7 +100,7 @@ export default function Login() {
             </AnimatePresence>
           </div>
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-foreground">Password</label>
+            <label className="block text-sm font-semibold text-foreground">{t('auth.login.password')}</label>
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"} 
@@ -114,7 +120,7 @@ export default function Login() {
           </div>
           
           <div className="flex justify-end items-center">
-            <Link to="/forgot-password" className="text-sm text-primary hover:underline font-medium">Forgot password?</Link>
+            <Link to="/forgot-password" className="text-sm text-primary hover:underline font-medium">{t('auth.login.forgot_password')}</Link>
           </div>
 
           <button 
@@ -122,12 +128,12 @@ export default function Login() {
             disabled={loading}
             className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:opacity-90 hover:shadow-md transition-all disabled:opacity-50 mt-2 text-sm"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? t('auth.login.signing_in') : t('auth.login.sign_in')}
           </button>
         </form>
 
         <div className="mt-8 text-center text-sm text-muted-foreground border-t border-border pt-6">
-          Don't have an account? <Link to="/register" className="text-primary hover:underline font-bold">Create account</Link>
+          {t('auth.login.no_account')} <Link to="/register" className="text-primary hover:underline font-bold">{t('auth.login.create_account')}</Link>
         </div>
       </div>
     </div>

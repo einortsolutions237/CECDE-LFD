@@ -3,6 +3,7 @@ import { User, onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface UserData {
   uid: string;
@@ -24,6 +25,7 @@ interface UserData {
   country?: string;
   activityState?: 'active' | 'dormant';
   accountStatus: 'active' | 'suspended';
+  preferredLanguage?: string;
 }
 
 interface AuthContextType {
@@ -46,6 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { i18n } = useTranslation();
 
   useEffect(() => {
     let unsubscribeSnapshot: () => void = () => {};
@@ -60,6 +63,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
              if (docSnap.exists()) {
                const data = docSnap.data();
                setUserData({ uid: currentUser.uid, email: currentUser.email || '', ...data } as UserData);
+               
+               // Load user's preferred language if set
+               if (data.preferredLanguage && data.preferredLanguage !== i18n.language) {
+                 i18n.changeLanguage(data.preferredLanguage);
+               }
              } else {
                setUserData(null);
              }
