@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { collection, query, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import TeamRankings from './TeamRankings';
+import { useTranslation } from 'react-i18next';
 
 const defaultRanks = [
   { name: 'Bronze', color: 'text-amber-700 bg-amber-700/10', requirements: '3 Directs' },
@@ -17,6 +18,7 @@ const defaultRanks = [
 
 export default function Rankings() {
   const { userData } = useAuth();
+  const { t } = useTranslation(['rankings', 'common']);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [teamLeadersLeaderboard, setTeamLeadersLeaderboard] = useState<any[]>([]);
   const [ranks, setRanks] = useState<any[]>(defaultRanks);
@@ -154,14 +156,14 @@ export default function Rankings() {
             onClick={() => setActiveTab('personal')}
             className={`px-5 py-2.5 font-semibold rounded-xl text-sm transition-all duration-200 ${activeTab === 'personal' ? 'bg-card text-foreground shadow-sm ring-1 ring-border border border-border' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            Personal Ranking
+            {t('rankings:personal_ranking')}
           </button>
           
           <button
             onClick={() => setActiveTab('team_leaders')}
             className={`px-5 py-2.5 font-semibold rounded-xl text-sm transition-all duration-200 ${activeTab === 'team_leaders' ? 'bg-card text-foreground shadow-sm ring-1 ring-border border border-border' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            Team Leaders
+            {t('rankings:team_leaders_tab')}
           </button>
           
           {isTeamLeader && (
@@ -169,7 +171,7 @@ export default function Rankings() {
               onClick={() => setActiveTab('team_leader_overview')}
               className={`px-5 py-2.5 font-semibold rounded-xl text-sm transition-all duration-200 ${activeTab === 'team_leader_overview' ? 'bg-card text-foreground shadow-sm ring-1 ring-border border border-border' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              Leader Rankings
+              {t('rankings:leader_rankings_tab')}
             </button>
           )}
 
@@ -178,7 +180,7 @@ export default function Rankings() {
               onClick={() => setActiveTab('team')}
               className={`px-5 py-2.5 font-semibold rounded-xl text-sm transition-all duration-200 ${activeTab === 'team' ? 'bg-card text-foreground shadow-sm ring-1 ring-border border border-border' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              My Team Ranking
+              {t('rankings:my_team_ranking_tab')}
             </button>
           )}
         </div>
@@ -187,8 +189,8 @@ export default function Rankings() {
       {activeTab === 'personal' && (
         <div className="flex flex-col gap-6 w-full">
           <div className="flex flex-col">
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">Rankings & Leaderboard</h1>
-            <p className="text-sm font-medium text-muted-foreground mt-1">Track your progress and see top performers.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">{t('rankings:title')}</h1>
+            <p className="text-sm font-medium text-muted-foreground mt-1">{t('rankings:subtitle')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -196,13 +198,13 @@ export default function Rankings() {
               <div className="w-24 h-24 rounded-[2rem] bg-primary/10 flex items-center justify-center mb-6 shadow-sm border border-primary/20">
                  <Trophy className="w-12 h-12 text-primary" />
               </div>
-              <h2 className="text-sm uppercase tracking-widest font-bold text-muted-foreground mb-2">Your Current Rank</h2>
+              <h2 className="text-sm uppercase tracking-widest font-bold text-muted-foreground mb-2">{t('rankings:your_current_rank')}</h2>
               <div className="text-4xl font-extrabold tracking-tight text-foreground mb-3">{userData?.currentRank || 'Member'}</div>
-              <p className="text-sm font-medium text-muted-foreground">Keep building your network to reach the next tier.</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('rankings:reach_next_tier')}</p>
             </div>
 
             <div className="md:col-span-2 card">
-              <h3 className="text-2xl font-bold tracking-tight text-foreground mb-6">Rank Requirements</h3>
+              <h3 className="text-2xl font-bold tracking-tight text-foreground mb-6">{t('rankings:rank_requirements')}</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
                 {ranks.map(r => (
                   <div key={r.name} className="flex flex-col gap-2 p-4 rounded-xl border border-border card-hover">
@@ -221,23 +223,23 @@ export default function Rankings() {
           
           <div className="card p-0 overflow-hidden border border-border mt-2">
               <div className="p-6 border-b border-border bg-muted/20 flex items-center justify-between">
-                 <h2 className="text-2xl font-bold tracking-tight text-foreground">Global Individual Leaderboard</h2>
+                 <h2 className="text-2xl font-bold tracking-tight text-foreground">{t('rankings:global_leaderboard')}</h2>
               </div>
               <div className="table-scroll-container">
                  <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
                    <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border whitespace-nowrap">
                      <tr>
-                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Pos</th>
-                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">User</th>
-                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Rank</th>
-                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Directs</th>
-                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Team Size</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('rankings:pos')}</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('rankings:user')}</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('rankings:rank')}</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('rankings:directs')}</th>
+                       <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('rankings:team_size')}</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-border">
                       {loading ? (
                         <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">Loading leaderboard...</td>
+                          <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">{t('rankings:loading_leaderboard')}</td>
                         </tr>
                       ) : leaderboard.length > 0 ? leaderboard.map((user, pos) => (
                         <tr key={user.id} className="hover:bg-muted/50 transition-colors">
@@ -261,8 +263,8 @@ export default function Rankings() {
                           <td colSpan={5} className="px-6 py-16 text-center whitespace-nowrap">
                             <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
                                <Award className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                               <p className="text-lg font-bold text-foreground mb-1">No Rankings Available</p>
-                               <p className="text-sm text-muted-foreground">The individual leaderboard is currently empty.</p>
+                               <p className="text-lg font-bold text-foreground mb-1">{t('rankings:no_rankings')}</p>
+                               <p className="text-sm text-muted-foreground">{t('rankings:no_rankings_desc')}</p>
                             </div>
                           </td>
                         </tr>
@@ -277,30 +279,30 @@ export default function Rankings() {
       {activeTab === 'team_leaders' && (
         <div className="flex flex-col gap-6 w-full">
           <div className="flex flex-col">
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">Team Leaders Ranking</h1>
-            <p className="text-sm font-medium text-muted-foreground mt-1">Ranking of all team leaders based on their team's total membership size.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">{t('rankings:team_leaders_title')}</h1>
+            <p className="text-sm font-medium text-muted-foreground mt-1">{t('rankings:team_leaders_subtitle')}</p>
           </div>
 
           <div className="card p-0 overflow-hidden border border-border mt-2">
             <div className="p-6 border-b border-border bg-muted/20 flex items-center justify-between">
-               <h2 className="text-2xl font-bold tracking-tight text-foreground">Team Leader Ranking Table</h2>
+               <h2 className="text-2xl font-bold tracking-tight text-foreground">{t('rankings:team_leader_ranking_table')}</h2>
                <Trophy className="w-6 h-6 text-primary" />
             </div>
             <div className="table-scroll-container">
                <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
                  <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border whitespace-nowrap">
                    <tr>
-                     <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Rank</th>
-                     <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Team Leader</th>
-                     <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Team Name</th>
-                     <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap text-center">Total Team Members</th>
-                     <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap text-center">Active Members</th>
+                     <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('rankings:rank')}</th>
+                     <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('rankings:team_leader')}</th>
+                     <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('rankings:team_name')}</th>
+                     <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap text-center">{t('rankings:total_team_members')}</th>
+                     <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap text-center">{t('rankings:active_members')}</th>
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-border">
                     {loadingTeamLeaders ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">Loading team leaders ranking...</td>
+                        <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">{t('rankings:loading_team_leaders')}</td>
                       </tr>
                     ) : teamLeadersLeaderboard.length > 0 ? teamLeadersLeaderboard.map((team, pos) => (
                       <tr key={team.id} className="hover:bg-muted/50 transition-colors">
@@ -338,8 +340,8 @@ export default function Rankings() {
                         <td colSpan={5} className="px-6 py-16 text-center whitespace-nowrap">
                           <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
                              <Trophy className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                             <p className="text-lg font-bold text-foreground mb-1">No Team Leaders Ranked Yet</p>
-                             <p className="text-sm text-muted-foreground">Team rankings will appear here once teams are established.</p>
+                             <p className="text-lg font-bold text-foreground mb-1">{t('rankings:no_team_leaders')}</p>
+                             <p className="text-sm text-muted-foreground">{t('rankings:no_team_leaders_desc')}</p>
                           </div>
                         </td>
                       </tr>

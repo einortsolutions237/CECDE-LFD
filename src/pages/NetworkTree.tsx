@@ -14,6 +14,8 @@ import {
   PieChart, Pie, Cell 
 } from 'recharts';
 
+import { useTranslation, Trans } from 'react-i18next';
+
 interface TreeNode {
   uid: string;
   fullName: string;
@@ -29,6 +31,7 @@ const rankOrder = ['Member', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Team Leade
 
 export default function NetworkTree() {
   const { userData } = useAuth();
+  const { t } = useTranslation(['network', 'common']);
   const [treeData, setTreeData] = useState<TreeNode | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandAll, setExpandAll] = useState(false);
@@ -249,7 +252,7 @@ export default function NetworkTree() {
   const copyReferralLink = () => {
     if (userData?.referralCode) {
       navigator.clipboard.writeText(`${window.location.origin}/register?ref=${userData.referralCode}`);
-      toast.success("Referral link copied!");
+      toast.success(t('common:copied'));
     }
   };
 
@@ -299,18 +302,18 @@ export default function NetworkTree() {
       <div className="flex flex-col gap-6 max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Network Management</h1>
-            <p className="text-sm font-medium text-muted-foreground mt-2">View your referral network, team growth, and genealogy tree.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{t('network:title')}</h1>
+            <p className="text-sm font-medium text-muted-foreground mt-2">{t('network:subtitle')}</p>
           </div>
         </div>
         <div className="card flex flex-col items-center justify-center text-center p-12">
           <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
             <Users className="w-10 h-10 text-primary" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-3">No Network Yet</h2>
-          <p className="text-muted-foreground font-medium mb-8 max-w-md">Start growing your network by inviting members. Share your referral link to expand your downline.</p>
+          <h2 className="text-2xl font-bold text-foreground mb-3">{t('network:no_network_yet')}</h2>
+          <p className="text-muted-foreground font-medium mb-8 max-w-md">{t('network:start_growing')}</p>
           <button onClick={copyReferralLink} className="flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground font-bold rounded-xl hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 transition-all">
-            <UserPlus className="w-5 h-5" /> Invite First Member
+            <UserPlus className="w-5 h-5" /> {t('network:invite_first')}
           </button>
         </div>
       </div>
@@ -323,15 +326,15 @@ export default function NetworkTree() {
       {/* PAGE HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Network Management</h1>
-          <p className="text-sm font-medium text-muted-foreground mt-2">View your referral network, team growth, and genealogy tree.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{t('network:title')}</h1>
+          <p className="text-sm font-medium text-muted-foreground mt-2">{t('network:subtitle')}</p>
         </div>
         <div className="flex gap-4 w-full md:w-auto">
           <button onClick={copyReferralLink} className="btn-secondary">
-            <Copy className="w-4 h-4" /> Copy Link
+            <Copy className="w-4 h-4" /> {t('network:copy_link')}
           </button>
           <button onClick={copyReferralLink} className="flex-1 sm:flex-none btn-primary shadow-sm hover:shadow-md">
-            <UserPlus className="w-4 h-4" /> Invite Member
+            <UserPlus className="w-4 h-4" /> {t('network:invite_member')}
           </button>
         </div>
       </div>
@@ -344,8 +347,8 @@ export default function NetworkTree() {
               <Award className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-2">Your Team Leader</h3>
-          <div className="text-2xl font-extrabold tracking-tight text-foreground truncate">{userData.roleType !== 'team_leader' && userData.teamId && userData.teamId !== userData.uid ? 'Managed internally' : 'You (Team Leader)'}</div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-2">{t('network:your_team_leader')}</h3>
+          <div className="text-2xl font-extrabold tracking-tight text-foreground truncate">{userData.roleType !== 'team_leader' && userData.teamId && userData.teamId !== userData.uid ? t('network:managed_internally') : t('network:you_team_leader')}</div>
         </div>
 
         <div className="card card-hover flex flex-col">
@@ -354,7 +357,7 @@ export default function NetworkTree() {
               <Users className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Direct Members</h3>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">{t('network:direct_members')}</h3>
           <div className="text-4xl font-extrabold text-foreground">{directCount}</div>
         </div>
 
@@ -364,7 +367,7 @@ export default function NetworkTree() {
               <Network className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Indirect Referrals</h3>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">{t('network:indirect_referrals')}</h3>
           <div className="text-4xl font-extrabold text-foreground">{actualDownlineCount.toLocaleString()}</div>
         </div>
 
@@ -374,7 +377,7 @@ export default function NetworkTree() {
               <UserCheck className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-success mb-2">Active Directs</h3>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-success mb-2">{t('network:active_directs')}</h3>
           <div className="text-4xl font-extrabold text-foreground">{directMembers.filter(m => m.activityState === 'active').length}</div>
         </div>
 
@@ -384,8 +387,11 @@ export default function NetworkTree() {
               <FolderTree className="w-6 h-6" />
             </div>
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Network Depth</h3>
-          <div className="text-4xl font-extrabold text-foreground">{'~'} <span className="text-base font-semibold text-muted-foreground tracking-wide">levels</span></div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">{t('network:network_depth')}</h3>
+          <div className="text-4xl font-extrabold text-foreground">
+            {t('network:levels_approx', { count: 3 }).replace(/3\s?/, '')}
+            <span className="text-base font-semibold text-muted-foreground tracking-wide">3</span>
+          </div>
         </div>
       </div>
 
@@ -394,21 +400,21 @@ export default function NetworkTree() {
         <div className="lg:col-span-3 card flex flex-col overflow-hidden relative">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-6">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">Genealogy Tree</h2>
-              <p className="text-sm font-medium text-muted-foreground">Interactive view of your network structure.</p>
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">{t('network:genealogy_tree')}</h2>
+              <p className="text-sm font-medium text-muted-foreground">{t('network:interactive_view')}</p>
             </div>
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => setExpandAll(true)}
                 className="text-sm font-bold px-4 py-2 rounded-xl border border-border bg-card hover:bg-muted transition-colors text-foreground shadow-sm"
               >
-                Expand All
+                {t('network:expand_all')}
               </button>
               <button 
                 onClick={() => setExpandAll(false)}
                 className="text-sm font-bold px-4 py-2 rounded-xl border border-border bg-card hover:bg-muted transition-colors text-foreground shadow-sm"
               >
-                Reset
+                {t('network:reset')}
               </button>
             </div>
           </div>
@@ -422,7 +428,7 @@ export default function NetworkTree() {
 
         {/* TEAM RANK DISTRIBUTION */}
         <div className="card flex flex-col h-full overflow-hidden">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">Team Rank Distribution</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">{t('network:team_rank_distribution')}</h2>
           <div className="w-full h-[200px] mb-6">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -453,21 +459,21 @@ export default function NetworkTree() {
                   <div className="font-bold text-foreground">{entry.value}</div>
                 </div>
             )) : (
-                <div className="text-center text-muted-foreground text-sm">No ranks distributed.</div>
+                <div className="text-center text-muted-foreground text-sm">{t('network:no_ranks_distributed')}</div>
             )}
           </div>
         </div>
 
         {/* ACTIVITY OVERVIEW CHART */}
         <div className="card flex flex-col h-full overflow-hidden">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">Activity Status</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">{t('network:activity_status')}</h2>
           <div className="w-full h-[200px] mb-6">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                   <Pie
                   data={[
-                    { name: 'Active', value: activeM },
-                    { name: 'Dormant', value: dormantM }
+                    { name: t('network:active'), value: activeM },
+                    { name: t('network:dormant'), value: dormantM }
                   ]}
                   innerRadius={60}
                   outerRadius={80}
@@ -488,14 +494,14 @@ export default function NetworkTree() {
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2 font-medium text-muted-foreground">
                   <div className="w-3 h-3 rounded-full bg-success" />
-                  Active Members
+                  {t('network:active_members')}
                 </div>
                 <div className="font-bold text-foreground">{activeM}</div>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2 font-medium text-muted-foreground">
                   <div className="w-3 h-3 rounded-full bg-purple-500" />
-                  Dormant Members
+                  {t('network:dormant_members')}
                 </div>
                 <div className="font-bold text-foreground">{dormantM}</div>
               </div>
@@ -505,7 +511,7 @@ export default function NetworkTree() {
         {/* TOP PERFORMERS SECTION */}
         <div className="card flex flex-col h-full">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">Top Recruiters</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">{t('network:top_recruiters')}</h2>
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <Award className="w-5 h-5 text-primary" />
             </div>
@@ -524,11 +530,11 @@ export default function NetworkTree() {
                 </div>
                 <div className="flex flex-col items-end">
                   <div className="text-sm font-bold text-foreground">{recruiter.directReferralsCount || recruiter.directReferrals || 0}</div>
-                  <div className="text-[10px] text-muted-foreground uppercase">Directs</div>
+                  <div className="text-[10px] text-muted-foreground uppercase">{t('network:directs', 'Directs')}</div>
                 </div>
               </div>
             )) : (
-              <div className="text-center text-muted-foreground text-sm p-4">No recruiters found.</div>
+              <div className="text-center text-muted-foreground text-sm p-4">{t('network:no_recruiters')}</div>
             )}
           </div>
         </div>
@@ -537,7 +543,7 @@ export default function NetworkTree() {
       {/* TEAM GROWTH CHART */}
       <div className="card flex flex-col">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-6">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Network Growth (Last 6 Months)</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">{t('network:network_growth')}</h2>
         </div>
         <div className="w-full h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -548,8 +554,8 @@ export default function NetworkTree() {
               <RechartsTooltip 
                   contentStyle={{ backgroundColor: 'var(--color-card)', borderColor: 'var(--color-border)', borderRadius: '1rem', fontSize: '0.875rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
               />
-              <Line type="monotone" dataKey="members" name="Est. New Network Size" stroke="#6C3BAA" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} activeDot={{r: 6}} />
-              <Line type="monotone" dataKey="referrals" name="New Directs" stroke="#16A34A" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} />
+              <Line type="monotone" dataKey="members" name={t('network:est_new_network_size', 'Est. New Network Size')} stroke="#6C3BAA" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} activeDot={{r: 6}} />
+              <Line type="monotone" dataKey="referrals" name={t('network:new_directs', 'New Directs')} stroke="#16A34A" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -559,25 +565,25 @@ export default function NetworkTree() {
       <div className="card p-0 overflow-hidden border border-border">
         <div className="p-6 border-b border-border flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-muted/20">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground whitespace-nowrap">Team Members</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground whitespace-nowrap">{t('network:team_members')}</h2>
             <div className="flex bg-muted p-1 rounded-xl border border-border text-xs font-semibold">
               <button
                 onClick={() => setMemberTypeFilter('all')}
                 className={cn("px-3 py-1.5 rounded-lg transition-all", memberTypeFilter === 'all' ? "bg-card text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground")}
               >
-                All Team
+                {t('network:all_team')}
               </button>
               <button
                 onClick={() => setMemberTypeFilter('direct')}
                 className={cn("px-3 py-1.5 rounded-lg transition-all", memberTypeFilter === 'direct' ? "bg-card text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground")}
               >
-                Direct Referrals
+                {t('network:direct_referrals')}
               </button>
               <button
                 onClick={() => setMemberTypeFilter('indirect')}
                 className={cn("px-3 py-1.5 rounded-lg transition-all", memberTypeFilter === 'indirect' ? "bg-card text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground")}
               >
-                Indirect Referrals
+                {t('network:indirect_referrals')}
               </button>
             </div>
           </div>
@@ -586,7 +592,7 @@ export default function NetworkTree() {
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input 
                 type="text" 
-                placeholder="Search member..." 
+                placeholder={t('network:search_member')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full sm:w-64 pl-9 pr-3 py-2 bg-muted border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
@@ -600,9 +606,9 @@ export default function NetworkTree() {
             </button>
             {showFilterDropdown && (
               <div className="absolute top-12 right-0 w-48 bg-card border border-border rounded-xl shadow-lg z-10 py-1 flex flex-col text-sm">
-                <button onClick={() => { setActivityFilter('all'); setShowFilterDropdown(false); }} className={cn("px-4 py-2 text-left hover:bg-muted font-medium", activityFilter === 'all' ? "text-primary" : "text-foreground")}>All Members</button>
-                <button onClick={() => { setActivityFilter('active'); setShowFilterDropdown(false); }} className={cn("px-4 py-2 text-left hover:bg-muted font-medium", activityFilter === 'active' ? "text-primary" : "text-foreground")}>Active Members</button>
-                <button onClick={() => { setActivityFilter('dormant'); setShowFilterDropdown(false); }} className={cn("px-4 py-2 text-left hover:bg-muted font-medium", activityFilter === 'dormant' ? "text-primary" : "text-foreground")}>Dormant Members</button>
+                <button onClick={() => { setActivityFilter('all'); setShowFilterDropdown(false); }} className={cn("px-4 py-2 text-left hover:bg-muted font-medium", activityFilter === 'all' ? "text-primary" : "text-foreground")}>{t('network:all_members')}</button>
+                <button onClick={() => { setActivityFilter('active'); setShowFilterDropdown(false); }} className={cn("px-4 py-2 text-left hover:bg-muted font-medium", activityFilter === 'active' ? "text-primary" : "text-foreground")}>{t('network:active_members')}</button>
+                <button onClick={() => { setActivityFilter('dormant'); setShowFilterDropdown(false); }} className={cn("px-4 py-2 text-left hover:bg-muted font-medium", activityFilter === 'dormant' ? "text-primary" : "text-foreground")}>{t('network:dormant_members')}</button>
               </div>
             )}
           </div>
@@ -611,14 +617,14 @@ export default function NetworkTree() {
           <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
             <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border whitespace-nowrap">
               <tr>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">User</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Rank</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Sponsor Code</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Direct Referrals</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Activity State</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Indirect Referrals</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Status</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Join Date</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('network:user')}</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('network:rank')}</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('network:sponsor_code')}</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('network:direct_referrals')}</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('network:activity_state')}</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('network:indirect_referrals')}</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('network:status')}</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('network:join_date')}</th>
                 <th className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap"></th>
               </tr>
             </thead>
@@ -652,11 +658,11 @@ export default function NetworkTree() {
                   <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
                     {member.activityState === 'active' ? (
                       <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-success/10 text-success border border-success/20 w-fit whitespace-nowrap">
-                        Active
+                        {t('network:active')}
                       </span>
                     ) : (
                       <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-500 border border-purple-500/20 w-fit whitespace-nowrap">
-                        Dormant
+                        {t('network:dormant')}
                       </span>
                     )}
                   </td>
@@ -667,12 +673,12 @@ export default function NetworkTree() {
                     {member.accountStatus === 'active' ? (
                       <span className="text-success font-medium flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-success"></span>
-                        Active
+                        {t('network:active')}
                       </span>
                     ) : (
                       <span className="text-muted-foreground font-medium flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground"></span>
-                        Inactive
+                        {t('network:inactive')}
                       </span>
                     )}
                   </td>
@@ -697,7 +703,7 @@ export default function NetworkTree() {
                 .filter(m => (m.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) || (m.referralCode || '').toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
                 <tr>
                    <td colSpan={9} className="px-6 py-12 text-center text-muted-foreground whitespace-nowrap">
-                      No members matching the criteria found.
+                      {t('network:no_members_found')}
                    </td>
                 </tr>
               )}

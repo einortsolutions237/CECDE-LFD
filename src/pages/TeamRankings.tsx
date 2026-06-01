@@ -3,9 +3,11 @@ import { collection, query, where, orderBy, getDocs, onSnapshot, or } from 'fire
 import { db } from '../lib/firebase';
 import { Trophy, Award, Users, Filter, Medal } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 export default function TeamRankings({ inTab = false }: { inTab?: boolean }) {
   const { userData } = useAuth();
+  const { t } = useTranslation(['rankings', 'common']);
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -80,8 +82,8 @@ export default function TeamRankings({ inTab = false }: { inTab?: boolean }) {
     <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Team Internal Rankings</h1>
-          <p className="text-sm text-muted-foreground mt-1">Ranking of members inside your team.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('rankings:team_internal_rankings')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('rankings:team_internal_desc')}</p>
         </div>
       </div>
 
@@ -89,19 +91,19 @@ export default function TeamRankings({ inTab = false }: { inTab?: boolean }) {
         <div className="p-6 border-b border-border flex justify-between items-center bg-muted/20">
            <h2 className="font-bold flex items-center gap-2">
              <Users className="w-5 h-5 text-primary"/>
-             Team Members
+             {t('rankings:team_members')}
            </h2>
         </div>
         <div className="table-scroll-container">
           <table className="w-full text-left min-w-[700px] md:min-w-full">
             <thead>
               <tr className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
-                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold whitespace-nowrap">Position</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold whitespace-nowrap">Member Name</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Rank Badge</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Directs</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">Status</th>
-                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-right whitespace-nowrap">Contribution Score</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold whitespace-nowrap">{t('rankings:position')}</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold whitespace-nowrap">{t('rankings:member_name')}</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">{t('rankings:rank_badge')}</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">{t('rankings:directs', 'Directs')}</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-center whitespace-nowrap">{t('rankings:status')}</th>
+                <th className="px-4 py-3 md:px-6 md:py-4 font-semibold text-right whitespace-nowrap">{t('rankings:contribution_score')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -120,9 +122,9 @@ export default function TeamRankings({ inTab = false }: { inTab?: boolean }) {
                       </div>
                       <div>
                         <span className="font-bold text-foreground">
-                          {member.fullName} {member.id === userData?.uid ? '(You)' : ''}
+                          {member.fullName} {member.id === userData?.uid ? t('rankings:you') : ''}
                         </span>
-                        <p className="text-xs text-muted-foreground">Team Member</p>
+                        <p className="text-xs text-muted-foreground">{t('rankings:team_member_role')}</p>
                       </div>
                     </div>
                   </td>
@@ -134,12 +136,12 @@ export default function TeamRankings({ inTab = false }: { inTab?: boolean }) {
                   </td>
                   <td className="px-4 py-3 md:px-6 md:py-4 text-center whitespace-nowrap">
                     <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${member.activityState === 'active' ? 'bg-success/10 text-success' : 'bg-purple-500/10 text-purple-500'}`}>
-                      {member.activityState === 'active' ? 'Active' : 'Dormant'}
+                      {member.activityState === 'active' ? t('rankings:active') : t('rankings:dormant')}
                     </span>
                   </td>
                   <td className="px-4 py-3 md:px-6 md:py-4 text-right whitespace-nowrap">
                     <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-bold">
-                      {member.contributionScore || 0} pts
+                      {member.contributionScore || 0} {t('rankings:pts')}
                     </span>
                   </td>
                 </tr>
@@ -149,8 +151,8 @@ export default function TeamRankings({ inTab = false }: { inTab?: boolean }) {
                   <td colSpan={6} className="px-6 py-16 text-center whitespace-nowrap">
                     <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
                        <Users className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                       <p className="text-lg font-bold text-foreground mb-1">No Team Members Found</p>
-                       <p className="text-sm text-muted-foreground">You currently have no members in your network.</p>
+                       <p className="text-lg font-bold text-foreground mb-1">{t('rankings:no_team_members')}</p>
+                       <p className="text-sm text-muted-foreground">{t('rankings:no_team_members_desc')}</p>
                     </div>
                   </td>
                 </tr>

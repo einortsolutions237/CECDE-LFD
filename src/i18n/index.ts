@@ -12,7 +12,7 @@ i18n
   .init({
     fallbackLng: 'en',
     supportedLngs: ['en', 'fr'],
-    ns: ['translation'],
+    ns: ['translation', 'common', 'auth', 'dashboard', 'admin', 'network', 'rankings', 'settings', 'reports', 'validation'],
     defaultNS: 'translation',
     
     interpolation: {

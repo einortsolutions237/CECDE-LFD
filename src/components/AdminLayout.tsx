@@ -37,7 +37,7 @@ export function AdminLayout() {
       <div className="md:hidden fixed top-0 w-full z-50 flex items-center justify-between bg-card p-4 sm:p-6 border-b border-border shadow-sm shrink-0">
         <div className="flex items-center gap-2">
           <img src="https://i.imgur.com/Adh2bcY.png" alt="Logo" className="w-8 h-8 object-contain" />
-          <div className="text-xl font-bold text-primary tracking-tight">ADMIN</div>
+          <div className="text-xl font-bold text-primary tracking-tight">{t('admin.title')}</div>
         </div>
         <div className="flex items-center gap-2">
           <LanguageSelector />
@@ -58,7 +58,7 @@ export function AdminLayout() {
         <div className="p-6 hidden md:flex flex-col items-center gap-6 border-b border-border">
           <img src="https://i.imgur.com/Adh2bcY.png" alt="Logo" className="w-12 h-12 object-contain" />
           <div className="text-xl font-bold tracking-tight text-sidebar-foreground">
-            SYSTEM ADMIN
+            {t('admin.system_admin')}
           </div>
         </div>
         
@@ -102,8 +102,8 @@ export function AdminLayout() {
               {userData?.fullName?.charAt(0) || 'A'}
             </div>
             <div className="flex-1 overflow-hidden">
-              <div className="font-semibold text-sm text-foreground truncate">{userData?.fullName || 'Administrator'}</div>
-              <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider mt-0.5">{userData?.role?.replace('_', ' ') || 'SYSTEM ADMIN'}</div>
+              <div className="font-semibold text-sm text-foreground truncate">{userData?.fullName || t('roles.admin')}</div>
+              <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider mt-0.5">{userData?.role ? t(`roles.${userData.role}`) : t('admin.system_admin')}</div>
             </div>
           </div>
           <button 
@@ -121,7 +121,7 @@ export function AdminLayout() {
         {/* Top Navbar */}
         <header className="hidden md:flex items-center justify-between px-8 bg-card border-b border-border h-[72px] shadow-sm z-10 shrink-0">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Admin</span> <span className="text-border">/</span> <span className="text-foreground font-medium capitalize">{location.pathname.split('/').pop()?.replace('-', ' ') || 'Dashboard'}</span>
+            <span>{t('admin.title')}</span> <span className="text-border">/</span> <span className="text-foreground font-medium capitalize">{location.pathname.split('/').pop()?.replace('-', ' ') || t('nav.dashboard')}</span>
           </div>
           <div className="flex items-center gap-6">
             <LanguageSelector />
@@ -134,8 +134,8 @@ export function AdminLayout() {
                  {userData?.fullName?.charAt(0) || 'A'}
               </div>
               <div className="hidden lg:block text-left">
-                <div className="text-sm font-semibold text-foreground leading-none mb-1">{userData?.fullName || 'Admin'}</div>
-                <div className="text-[11px] text-muted-foreground font-medium uppercase leading-none">{userData?.role?.replace('_', ' ') || 'Admin'}</div>
+                <div className="text-sm font-semibold text-foreground leading-none mb-1">{userData?.fullName || t('roles.admin')}</div>
+                <div className="text-[11px] text-muted-foreground font-medium uppercase leading-none">{userData?.role ? t(`roles.${userData.role}`) : t('roles.admin')}</div>
               </div>
             </div>
           </div>

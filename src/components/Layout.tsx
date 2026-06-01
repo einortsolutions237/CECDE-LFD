@@ -106,12 +106,12 @@ export const Layout = () => {
       <main className="flex-1 flex flex-col h-full overflow-hidden min-w-0 min-h-0">
         <header className="hidden md:flex h-[72px] bg-card border-b border-border items-center justify-between px-8 shrink-0 shadow-sm z-10">
           <div className="flex items-center gap-2 text-[14px] text-muted-foreground">
-            <span>Pages</span> / <span className="text-foreground font-medium capitalize">{location.pathname.split('/')[1] || 'Dashboard'}</span>
+            <span>{t('common:general.pages', 'Pages')}</span> / <span className="text-foreground font-medium capitalize">{location.pathname.split('/')[1] || t('nav.dashboard')}</span>
           </div>
           <div className="flex items-center gap-6">
             <LanguageSelector />
             <div className="bg-muted px-3 py-1.5 rounded-md text-[12px] text-muted-foreground border border-border/50">
-              Ref: <strong className="text-foreground">{userData?.referralCode || 'SYSTEM-1'}</strong>
+              {t('common:general.ref', 'Ref')}: <strong className="text-foreground">{userData?.referralCode || 'SYSTEM-1'}</strong>
             </div>
           </div>
         </header>

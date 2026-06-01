@@ -4,9 +4,11 @@ import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { Users, Award, Shield, User, TrendingUp } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useTranslation } from 'react-i18next';
 
 export default function TeamMembers() {
   const { userData } = useAuth();
+  const { t } = useTranslation(['team', 'common']);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -81,7 +83,7 @@ export default function TeamMembers() {
             });
           } catch (err) {
             console.error("Error fetching team members:", err);
-            setError("Failed to load team members.");
+            setError(t('team:failed_load'));
           } finally {
             setLoading(false);
           }
@@ -90,7 +92,7 @@ export default function TeamMembers() {
         fetchMembersData();
       } catch (err: any) {
         console.error("Setup error:", err);
-        setError("Failed to setup team members listener.");
+        setError(t('team:failed_setup'));
         setLoading(false);
       }
     };
@@ -116,9 +118,9 @@ export default function TeamMembers() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <Shield className="w-16 h-16 text-muted-foreground/30 mb-4" />
-        <h2 className="text-3xl font-bold tracking-tight text-foreground">Access Denied</h2>
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">{t('team:access_denied')}</h2>
         <p className="text-muted-foreground mt-2 max-w-md">
-          This page is restricted to Team Leaders. If you believe this is an error, please contact the administrator.
+          {t('team:access_denied_desc')}
         </p>
       </div>
     );
@@ -128,8 +130,8 @@ export default function TeamMembers() {
     <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto pb-12">
       <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-2">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">Team Dashboard</h1>
-          <p className="text-sm font-medium text-muted-foreground">Manage and view the performance of your assigned team members.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">{t('team:team_dashboard')}</h1>
+          <p className="text-sm font-medium text-muted-foreground">{t('team:team_dashboard_subtitle')}</p>
         </div>
       </div>
 
@@ -146,7 +148,7 @@ export default function TeamMembers() {
                   <Users className="w-6 h-6" />
                 </div>
               </div>
-              <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Total Team Members</p>
+              <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">{t('team:total_team_members')}</p>
               <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{teamStats.totalMembers?.toLocaleString()}</h3>
             </div>
             
@@ -156,7 +158,7 @@ export default function TeamMembers() {
                   <Award className="w-6 h-6" />
                 </div>
               </div>
-              <p className="text-sm font-bold uppercase tracking-widest text-success mb-2">Active Members</p>
+              <p className="text-sm font-bold uppercase tracking-widest text-success mb-2">{t('team:active_members')}</p>
               <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{teamStats.activeMembers?.toLocaleString()}</h3>
             </div>
 
@@ -166,7 +168,7 @@ export default function TeamMembers() {
                   <TrendingUp className="w-6 h-6" />
                 </div>
               </div>
-              <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Indirect Referrals</p>
+              <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">{t('team:indirect_referrals')}</p>
               <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{teamStats.totalDownline?.toLocaleString()}</h3>
             </div>
           </div>
@@ -175,26 +177,26 @@ export default function TeamMembers() {
             <div className="p-6 border-b border-border bg-muted/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="font-bold text-2xl tracking-tight text-foreground flex items-center gap-3">
                 <User className="w-5 h-5 text-primary" />
-                Team Members
+                {t('team:team_members')}
               </h2>
               <div className="flex bg-muted p-1 rounded-xl border border-border text-xs font-semibold">
                 <button
                   onClick={() => setMemberTypeFilter('all')}
                   className={cn("px-3 py-1.5 rounded-lg transition-all", memberTypeFilter === 'all' ? "bg-card text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground")}
                 >
-                  All Team
+                  {t('team:all_team')}
                 </button>
                 <button
                   onClick={() => setMemberTypeFilter('direct')}
                   className={cn("px-3 py-1.5 rounded-lg transition-all", memberTypeFilter === 'direct' ? "bg-card text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground")}
                 >
-                  Direct Referrals
+                  {t('team:direct_referrals')}
                 </button>
                 <button
                   onClick={() => setMemberTypeFilter('indirect')}
                   className={cn("px-3 py-1.5 rounded-lg transition-all", memberTypeFilter === 'indirect' ? "bg-card text-foreground shadow-sm font-bold" : "text-muted-foreground hover:text-foreground")}
                 >
-                  Indirect Referrals
+                  {t('team:indirect_referrals')}
                 </button>
               </div>
             </div>
@@ -209,10 +211,10 @@ export default function TeamMembers() {
                 <table className="w-full text-sm text-left min-w-[700px] md:min-w-full">
                   <thead className="bg-muted/30 text-muted-foreground text-xs uppercase font-semibold border-b border-border tracking-wider whitespace-nowrap">
                     <tr>
-                      <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Name & Email</th>
-                      <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Rank</th>
-                      <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Referrals</th>
-                      <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">Status</th>
+                      <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('team:name_email')}</th>
+                      <th className="px-4 py-3 md:px-6 md:py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('team:rank')}</th>
+                      <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('team:referrals')}</th>
+                      <th className="px-4 py-3 md:px-6 md:py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border bg-muted/30 whitespace-nowrap">{t('team:status')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -224,19 +226,19 @@ export default function TeamMembers() {
                     }).map(member => (
                       <tr key={member.id} className="hover:bg-muted/50 transition-colors">
                         <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap">
-                          <div className="font-bold text-foreground">{member.fullName || 'Unknown'}</div>
+                          <div className="font-bold text-foreground">{member.fullName || t('team:unknown')}</div>
                           <div className="text-xs text-muted-foreground">{member.email}</div>
-                          <div className="text-xs text-muted-foreground mt-1">Ref Code: <span className="font-mono text-primary">{member.referralCode}</span></div>
+                          <div className="text-xs text-muted-foreground mt-1">{t('team:ref_code')}: <span className="font-mono text-primary">{member.referralCode}</span></div>
                         </td>
                         <td className="px-4 py-3 md:px-6 md:py-4 font-medium text-primary whitespace-nowrap">
-                          {member.currentRank || 'Unranked'}
+                          {member.currentRank || t('team:unranked')}
                         </td>
                         <td className="px-4 py-3 md:px-6 md:py-4 text-center font-bold whitespace-nowrap">
                           {member.directReferralsCount || member.directReferrals || 0}
                         </td>
                         <td className="px-4 py-3 md:px-6 md:py-4 text-center whitespace-nowrap">
                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${member.accountStatus === 'active' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
-                            {member.accountStatus || 'Pending'}
+                            {member.accountStatus || t('team:pending')}
                           </span>
                         </td>
                       </tr>
@@ -248,9 +250,9 @@ export default function TeamMembers() {
                   <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                     <Users className="w-8 h-8 text-muted-foreground/50" />
                   </div>
-                  <h3 className="text-xl font-semibold tracking-tight text-foreground mb-1">No Members Yet</h3>
+                  <h3 className="text-xl font-semibold tracking-tight text-foreground mb-1">{t('team:no_members')}</h3>
                   <p className="text-sm text-muted-foreground max-w-sm">
-                    You don't have any members in your team yet. Users who sign up under your referral link will appear here.
+                    {t('team:no_members_desc')}
                   </p>
                 </div>
               )}

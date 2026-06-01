@@ -1,0 +1,43 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "network": "Réseau",
+    "rankings": "Classements",
+    "team_dashboard": "Tableau de bord de l'équipe",
+    "reports": "Rapports",
+    "settings": "Paramètres",
+    "admin_panel": "Panneau d'administration",
+    "sign_out": "Déconnexion",
+    "return_app": "Retour à l'application"
+  },
+  "roles": {
+    "super_admin": "Super Administrateur",
+    "admin": "Administrateur",
+    "team_leader": "Chef d'équipe",
+    "member": "Membre"
+  },
+  "buttons": {
+    "save_changes": "Enregistrer",
+    "saving": "Enregistrement...",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "view_all": "Voir tout",
+    "go_back": "Retour"
+  },
+  "status": {
+    "active": "Actif",
+    "inactive": "Inactif",
+    "pending": "En attente",
+    "suspended": "Suspendu"
+  },
+  "general": {
+    "search": "Rechercher...",
+    "loading": "Chargement...",
+    "no_data": "Aucune donnée disponible",
+    "all": "Tout",
+    "pages": "Pages",
+    "ref": "Réf"
+  }
+}

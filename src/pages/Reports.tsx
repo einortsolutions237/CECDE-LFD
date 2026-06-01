@@ -4,6 +4,7 @@ import { Download, Filter, FileText, TrendingUp, Users, Target } from 'lucide-re
 import { useAuth } from '../context/AuthContext';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { useTranslation } from 'react-i18next';
 
 const COLORS = ['#16A34A', '#6C3BAA', '#F59E0B', '#3B82F6', '#EC4899'];
 const AREA_COLORS = { primary: '#6C3BAA', secondary: '#16A34A' };
@@ -11,6 +12,7 @@ const AREA_COLORS = { primary: '#6C3BAA', secondary: '#16A34A' };
 export default function Reports() {
   const { userData } = useAuth();
   const [directMembers, setDirectMembers] = useState<any[]>([]);
+  const { t } = useTranslation(['reports', 'common']);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,14 +51,18 @@ export default function Reports() {
     
     // Bar data array mapping weeks 1 to 4 ago.
     const bData = [
-      { name: '3 Wks Ago', referrals: 0, active: 0, dormant: 0 },
-      { name: '2 Wks Ago', referrals: 0, active: 0, dormant: 0 },
-      { name: 'Last Week', referrals: 0, active: 0, dormant: 0 },
-      { name: 'This Week', referrals: 0, active: 0, dormant: 0 }
+      { name: t('reports:weeks_ago', { count: 3 }), referrals: 0, active: 0, dormant: 0 },
+      { name: t('reports:weeks_ago', { count: 2 }), referrals: 0, active: 0, dormant: 0 },
+      { name: t('reports:last_week'), referrals: 0, active: 0, dormant: 0 },
+      { name: t('reports:this_week_label'), referrals: 0, active: 0, dormant: 0 }
     ];
 
     // Area data array mapping months 1 to 6 ago.
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      t('reports:months.jan'), t('reports:months.feb'), t('reports:months.mar'), t('reports:months.apr'), 
+      t('reports:months.may'), t('reports:months.jun'), t('reports:months.jul'), t('reports:months.aug'), 
+      t('reports:months.sep'), t('reports:months.oct'), t('reports:months.nov'), t('reports:months.dec')
+    ];
     const currentMonth = new Date().getMonth();
     const aData = new Array(6).fill(0).map((_, i) => ({
       name: months[(currentMonth - 5 + i + 12) % 12],
@@ -127,15 +133,15 @@ export default function Reports() {
     <div className="flex flex-col gap-6 max-w-7xl mx-auto pb-12">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-2">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">Analytics & Reports</h1>
-          <p className="text-sm font-medium text-muted-foreground mt-1">Detailed performance metrics, conversion rates, and network growth.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">{t('reports:title')}</h1>
+          <p className="text-sm font-medium text-muted-foreground mt-1">{t('reports:subtitle')}</p>
         </div>
         <div className="flex gap-3 w-full sm:w-auto">
           <button className="btn-secondary">
-            <Filter className="w-4 h-4" /> Filter
+            <Filter className="w-4 h-4" /> {t('reports:filter')}
           </button>
           <button className="flex-1 sm:flex-none btn-primary">
-            <Download className="w-4 h-4" /> Export CSV
+            <Download className="w-4 h-4" /> {t('reports:export_csv')}
           </button>
         </div>
       </div>
@@ -147,7 +153,7 @@ export default function Reports() {
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-bold uppercase tracking-widest text-primary mb-2">Total Referrals</p>
+            <p className="text-sm font-bold uppercase tracking-widest text-primary mb-2">{t('reports:total_referrals')}</p>
             <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{metrics.totalReferrals?.toLocaleString()}</h3>
           </div>
         </div>
@@ -157,7 +163,7 @@ export default function Reports() {
             <Target className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-bold uppercase tracking-widest text-success mb-2">Active Referrals</p>
+            <p className="text-sm font-bold uppercase tracking-widest text-success mb-2">{t('reports:active_referrals')}</p>
             <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{metrics.activeReferrals?.toLocaleString()}</h3>
           </div>
         </div>
@@ -167,7 +173,7 @@ export default function Reports() {
             <TrendingUp className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Conversion Rate</p>
+            <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">{t('reports:conversion_rate')}</p>
             <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{metrics.conversionRate}%</h3>
           </div>
         </div>
@@ -177,8 +183,8 @@ export default function Reports() {
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Recent Growth</p>
-            <h3 className="text-4xl font-extrabold tracking-tight text-foreground">+{metrics.recentGrowth} <span className="text-lg font-medium text-muted-foreground lowercase">this week</span></h3>
+            <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">{t('reports:recent_growth')}</p>
+            <h3 className="text-4xl font-extrabold tracking-tight text-foreground">+{metrics.recentGrowth} <span className="text-lg font-medium text-muted-foreground lowercase">{t('reports:this_week')}</span></h3>
           </div>
         </div>
       </div>
@@ -186,7 +192,7 @@ export default function Reports() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* NETWORK GROWTH OVER TIME (AREA CHART) */}
         <div className="xl:col-span-2 card flex flex-col">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">Cumulative Network Growth (6 Months)</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">{t('reports:cumulative_growth')}</h2>
           <div className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={areaData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -206,8 +212,8 @@ export default function Reports() {
                 <Tooltip 
                    contentStyle={{ backgroundColor: 'var(--color-card)', borderColor: 'var(--color-border)', borderRadius: '1rem', fontSize: '0.875rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
-                <Area type="monotone" dataKey="totalGrowth" name="Total Network Size" stroke={AREA_COLORS.primary} fillOpacity={1} fill="url(#colorTotal)" strokeWidth={2} />
-                <Area type="monotone" dataKey="activeGrowth" name="Active Network Size" stroke={AREA_COLORS.secondary} fillOpacity={1} fill="url(#colorActive)" strokeWidth={2} />
+                <Area type="monotone" dataKey="totalGrowth" name={t('reports:total_network_size')} stroke={AREA_COLORS.primary} fillOpacity={1} fill="url(#colorTotal)" strokeWidth={2} />
+                <Area type="monotone" dataKey="activeGrowth" name={t('reports:active_network_size')} stroke={AREA_COLORS.secondary} fillOpacity={1} fill="url(#colorActive)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -215,7 +221,7 @@ export default function Reports() {
 
         {/* RANK DISTRIBUTION PIE CHART */}
         <div className="card flex flex-col">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">Directs Rank Distribution</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">{t('reports:directs_rank_distribution')}</h2>
           <div className="w-full h-[220px] mb-4">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -246,7 +252,7 @@ export default function Reports() {
                   <div className="font-bold text-foreground">{entry.value}</div>
                 </div>
              )) : (
-                <div className="text-center text-sm text-muted-foreground">No data available</div>
+                <div className="text-center text-sm text-muted-foreground">{t('common.no_data', 'No data available')}</div>
              )}
           </div>
         </div>
@@ -254,19 +260,19 @@ export default function Reports() {
 
       {/* REFERRAL PERFORMANCE BARCHART */}
       <div className="card flex flex-col">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">Recent Referral Performance (Last 4 Weeks)</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">{t('reports:recent_performance')}</h2>
         <div className="flex gap-6 mb-4 items-center">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                <span className="w-3 h-3 rounded-sm bg-primary block"></span>
-               Total Referrals Added
+               {t('reports:total_referrals_added')}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                <span className="w-3 h-3 rounded-sm bg-secondary block"></span>
-               Became Active
+               {t('reports:became_active')}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                <span className="w-3 h-3 rounded-sm bg-border block"></span>
-               Remained Dormant
+               {t('reports:remained_dormant')}
             </div>
         </div>
         <div className="w-full h-[300px]">
@@ -279,8 +285,8 @@ export default function Reports() {
                  contentStyle={{ backgroundColor: 'var(--color-card)', borderColor: 'var(--color-border)', borderRadius: '1rem', fontSize: '0.875rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                  cursor={{fill: 'var(--color-muted)', opacity: 0.4}}
               />
-              <Bar dataKey="active" stackId="a" name="Active Joiners" fill="var(--color-secondary)" radius={[0, 0, 4, 4]} />
-              <Bar dataKey="dormant" stackId="a" name="Dormant Joiners" fill="var(--color-border)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="active" stackId="a" name={t('reports:active_joiners')} fill="var(--color-secondary)" radius={[0, 0, 4, 4]} />
+              <Bar dataKey="dormant" stackId="a" name={t('reports:dormant_joiners')} fill="var(--color-border)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -292,8 +298,8 @@ export default function Reports() {
              <FileText className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-foreground mb-1">Generate Monthly Analytics PDF</h3>
-            <p className="text-xs text-muted-foreground">Download a detailed overview of all network stats, referral conversion rates, and ranks for the previous month.</p>
+            <h3 className="text-sm font-bold text-foreground mb-1">{t('reports:generate_pdf')}</h3>
+            <p className="text-xs text-muted-foreground">{t('reports:generate_pdf_desc')}</p>
           </div>
         </div>
         <div className="card flex items-start gap-6 cursor-pointer hover:bg-muted/30 transition-colors">
@@ -301,8 +307,8 @@ export default function Reports() {
              <FileText className="w-6 h-6 text-secondary" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-foreground mb-1">Full Database CSV Export</h3>
-            <p className="text-xs text-muted-foreground">Download raw CSV data for offline analysis of registrations and network structure.</p>
+            <h3 className="text-sm font-bold text-foreground mb-1">{t('reports:full_csv_export')}</h3>
+            <p className="text-xs text-muted-foreground">{t('reports:full_csv_export_desc')}</p>
           </div>
         </div>
       </div>

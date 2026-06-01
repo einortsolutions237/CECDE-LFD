@@ -1,0 +1,43 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "network": "Network",
+    "rankings": "Rankings",
+    "team_dashboard": "Team Dashboard",
+    "reports": "Reports",
+    "settings": "Settings",
+    "admin_panel": "Admin Panel",
+    "sign_out": "Sign Out",
+    "return_app": "Return to App"
+  },
+  "roles": {
+    "super_admin": "Super Admin",
+    "admin": "Admin",
+    "team_leader": "Team Leader",
+    "member": "Member"
+  },
+  "buttons": {
+    "save_changes": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "close": "Close",
+    "view_all": "View All",
+    "go_back": "Go Back"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "suspended": "Suspended"
+  },
+  "general": {
+    "search": "Search...",
+    "loading": "Loading...",
+    "no_data": "No data available",
+    "all": "All",
+    "pages": "Pages",
+    "ref": "Ref"
+  }
+}

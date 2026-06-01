@@ -6,10 +6,10 @@ import { Users, UserPlus, Award, DollarSign, TrendingUp, Copy, Check } from 'luc
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '../lib/utils';
 import { handleProductionError } from '../lib/errorUtils';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 
 export default function Dashboard() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['translation', 'dashboard', 'common']);
   const { userData } = useAuth();
   const [networkStats, setNetworkStats] = useState<any>(null);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
@@ -296,16 +296,16 @@ export default function Dashboard() {
           
           <div className="flex items-start justify-between z-10 mb-8">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-foreground mb-1 mt-2">{t('dashboard.welcome')}, {userData?.fullName?.split(' ')[0] || 'User'}!</h2>
-              <p className="text-sm font-medium text-muted-foreground max-w-sm">{t('dashboard.description')}</p>
+              <h2 className="text-3xl font-bold tracking-tight text-foreground mb-1 mt-2">{t('dashboard:welcome')}, {userData?.fullName?.split(' ')[0] || 'User'}!</h2>
+              <p className="text-sm font-medium text-muted-foreground max-w-sm">{t('dashboard:description')}</p>
             </div>
             <div className="bg-primary/10 text-primary border border-primary/20 px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest shadow-sm">
-              {userData?.currentRank || t('mlm.unranked')}
+              {userData?.currentRank || t('dashboard:unranked')}
             </div>
           </div>
 
           <div>
-            <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground mb-4">Your Referral Gateway</h3>
+            <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground mb-4">{t('dashboard:gateway_title')}</h3>
             
             <div className="flex items-center gap-3 mb-5 bg-background px-5 py-4 rounded-xl border border-border shadow-sm">
               <div className="flex-1 font-mono text-sm md:text-base font-bold tracking-wider text-foreground">
@@ -321,7 +321,7 @@ export default function Dashboard() {
                 title="Copy Code"
               >
                 {codeCopied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
-                {codeCopied ? 'COPIED' : 'COPY'}
+                {codeCopied ? t('dashboard:copied') : t('dashboard:copy')}
               </button>
             </div>
 
@@ -334,7 +334,7 @@ export default function Dashboard() {
                 className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 bg-primary text-white border border-primary-hover px-6 py-3.5 rounded-xl shadow-[0_2px_10px_rgb(108,59,255,0.2)] hover:shadow-[0_4px_14px_rgb(108,59,255,0.3)] hover:-translate-y-0.5 transition-all text-sm font-bold"
               >
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                {copied ? 'Link Copied' : 'Copy Link'}
+                {copied ? t('dashboard:link_copied') : t('dashboard:copy_link')}
               </button>
             </div>
 
@@ -345,32 +345,36 @@ export default function Dashboard() {
                  rel="noreferrer"
                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all rounded-xl text-sm font-bold shadow-sm"
                >
-                 WhatsApp
+                 {t('dashboard:whatsapp')}
                </a>
                <a 
                  href={`mailto:?subject=Join my CECDE Network&body=Hi!%0A%0AJoin%20my%20network%20using%20the%20link%20below:%0A${encodeURIComponent(referralLink)}%0A%0AOr%20use%20my%20code:%20${displayReferralCode}`}
                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-card hover:bg-muted text-foreground transition-all rounded-xl border border-border text-sm font-bold shadow-sm"
                >
-                 Email Share
+                 {t('dashboard:email_share')}
                </a>
             </div>
           </div>
         </div>
 
         <div className="card flex flex-col justify-center border-l-4 border-l-primary/60">
-           <h3 className="text-sm font-bold tracking-widest uppercase text-muted-foreground mb-6">Rank Trajectory</h3>
+           <h3 className="text-sm font-bold tracking-widest uppercase text-muted-foreground mb-6">{t('dashboard:rank_trajectory')}</h3>
            <div className="flex items-end gap-3 mb-4">
              <div className="text-5xl font-black tracking-tighter text-foreground">{progressPercent}<span className="text-2xl text-muted-foreground font-semibold ml-1">%</span></div>
-             <div className="text-sm text-primary font-bold mb-1.5 uppercase tracking-wide">{nextRank === 'Max Rank' ? 'Maxed' : `to ${nextRank}`}</div>
+             <div className="text-sm text-primary font-bold mb-1.5 uppercase tracking-wide">{nextRank === 'Max Rank' ? t('dashboard:maxed') : t('dashboard:to_rank', { rank: nextRank })}</div>
            </div>
            
            <div className="w-full bg-muted rounded-full h-3 mb-4 overflow-hidden shadow-inner">
              <div className="bg-primary h-3 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgb(108,59,255,0.4)]" style={{ width: `${progressPercent}%` }}></div>
            </div>
            {nextRank !== 'Max Rank' ? (
-             <p className="text-sm text-muted-foreground font-medium leading-relaxed">Require <strong className="text-foreground tracking-wide font-mono bg-muted px-2 py-1 rounded-md text-xs">{remaining}</strong> further active recruits to mature your rank profile.</p>
+             <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+               <Trans i18nKey="dashboard:require_more" count={remaining}>
+                 Require <strong className="text-foreground tracking-wide font-mono bg-muted px-2 py-1 rounded-md text-xs">{remaining}</strong> further active recruits to mature your rank profile.
+               </Trans>
+             </p>
            ) : (
-             <p className="text-sm text-muted-foreground font-medium leading-relaxed">Global ceiling reached. Maintenance operational.</p>
+             <p className="text-sm text-muted-foreground font-medium leading-relaxed">{t('dashboard:global_ceiling')}</p>
            )}
         </div>
       </div>
@@ -409,33 +413,33 @@ export default function Dashboard() {
       {(userData?.teamId || userData?.roleType === 'team_leader') && (
         <div className="mt-2">
           <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">
-            {userData.roleType === 'team_leader' ? 'Your Team Performance' : `Team: ${teamData?.teamLeaderName || 'Loading...'}`}
+            {userData.roleType === 'team_leader' ? t('dashboard:your_team_perf') : t('dashboard:team_name', { name: teamData?.teamLeaderName || 'Loading...' })}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div className="card border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors">
-               <p className="text-sm text-primary font-bold uppercase tracking-widest mb-2">Total Team Members</p>
+               <p className="text-sm text-primary font-bold uppercase tracking-widest mb-2">{t('dashboard:total_team_members')}</p>
                <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{teamData?.calculatedTotalMembers?.toLocaleString() || teamData?.totalMembers?.toLocaleString() || 0}</h3>
             </div>
             {userData.roleType === 'team_leader' ? (
               <div className="card border-yellow-500/20 bg-yellow-500/5 hover:bg-yellow-500/10 transition-colors">
-                 <p className="text-sm text-yellow-600 font-bold uppercase tracking-widest mb-2">Global Team Rank</p>
+                 <p className="text-sm text-yellow-600 font-bold uppercase tracking-widest mb-2">{t('dashboard:global_team_rank')}</p>
                  <h3 className="text-4xl font-extrabold tracking-tight text-foreground">#{globalRank || '-'}</h3>
               </div>
             ) : (
               <div className="card border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-colors">
-                 <p className="text-sm text-blue-600 font-bold uppercase tracking-widest mb-2">My Rank in Team</p>
+                 <p className="text-sm text-blue-600 font-bold uppercase tracking-widest mb-2">{t('dashboard:my_rank_in_team')}</p>
                  <h3 className="text-4xl font-extrabold tracking-tight text-foreground">#{teamRank || '-'}</h3>
               </div>
             )}
             
             <div className="card border-success/20 bg-success/5 hover:bg-success/10 transition-colors">
-               <p className="text-sm text-success font-bold uppercase tracking-widest mb-2">Active Members</p>
+               <p className="text-sm text-success font-bold uppercase tracking-widest mb-2">{t('dashboard:active_members_title')}</p>
                <h3 className="text-4xl font-extrabold tracking-tight text-foreground">{teamData?.activeMembers?.toLocaleString() || 0}</h3>
             </div>
             
             {userData.roleType !== 'team_leader' && (
               <div className="card">
-                 <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest mb-2">Leader Name</p>
+                 <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest mb-2">{t('dashboard:leader_name')}</p>
                  <h3 className="text-4xl font-extrabold tracking-tight text-foreground">
                    {teamData?.teamLeaderName || '-'}
                  </h3>
@@ -447,21 +451,21 @@ export default function Dashboard() {
       )}
 
       <div className="mb-8">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">Team Activity Status</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground mb-6">{t('dashboard:team_activity_status')}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="card border-success/20 flex flex-col relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-success/5 rounded-bl-full -z-10"></div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-success"></div>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Active Directs</h3>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t('dashboard:active_directs')}</h3>
               </div>
             </div>
             <div className="flex items-baseline gap-3 mb-2">
               <span className="text-3xl font-extrabold tracking-tight text-foreground">{activeMembers?.toLocaleString()}</span>
               <span className="text-xs font-bold text-success bg-success/10 px-2 py-0.5 rounded-md">{actualDirectCount > 0 ? Math.round((activeMembers / actualDirectCount) * 100) : 0}%</span>
             </div>
-            <p className="text-xs font-medium text-muted-foreground">Active personal refers</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('dashboard:active_personal_refers')}</p>
           </div>
 
           <div className="card border-success/20 flex flex-col relative overflow-hidden">
@@ -469,14 +473,14 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-success"></div>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Active Indirects</h3>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t('dashboard:active_indirects')}</h3>
               </div>
             </div>
             <div className="flex items-baseline gap-3 mb-2">
               <span className="text-3xl font-extrabold tracking-tight text-foreground">{(userData?.activeIndirectReferralCount || 0).toLocaleString()}</span>
               <span className="text-xs font-bold text-success bg-success/10 px-2 py-0.5 rounded-md">{actualDownlineCount > 0 ? Math.round(((userData?.activeIndirectReferralCount || 0) / actualDownlineCount) * 100) : 0}%</span>
             </div>
-            <p className="text-xs font-medium text-muted-foreground">Active level 2 refers</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('dashboard:active_level2_refers')}</p>
           </div>
 
           <div className="card border-destructive/20 flex flex-col relative overflow-hidden">
@@ -484,14 +488,14 @@ export default function Dashboard() {
              <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-destructive"></div>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Dormant Directs</h3>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t('dashboard:dormant_directs')}</h3>
               </div>
             </div>
             <div className="flex items-baseline gap-3 mb-2">
               <span className="text-3xl font-extrabold tracking-tight text-foreground">{dormantMembers?.toLocaleString()}</span>
               <span className="text-xs font-bold text-destructive bg-destructive/10 px-2 py-0.5 rounded-md">{actualDirectCount > 0 ? Math.round((dormantMembers / actualDirectCount) * 100) : 0}%</span>
             </div>
-            <p className="text-xs font-medium text-muted-foreground">Dormant personal refers</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('dashboard:dormant_personal_refers')}</p>
           </div>
 
           <div className="card border-destructive/20 flex flex-col relative overflow-hidden">
@@ -499,14 +503,14 @@ export default function Dashboard() {
              <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-destructive"></div>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Dormant Indirects</h3>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{t('dashboard:dormant_indirects')}</h3>
               </div>
             </div>
             <div className="flex items-baseline gap-3 mb-2">
               <span className="text-3xl font-extrabold tracking-tight text-foreground">{(userData?.dormantIndirectReferralCount || 0).toLocaleString()}</span>
               <span className="text-xs font-bold text-destructive bg-destructive/10 px-2 py-0.5 rounded-md">{actualDownlineCount > 0 ? Math.round(((userData?.dormantIndirectReferralCount || 0) / actualDownlineCount) * 100) : 0}%</span>
             </div>
-            <p className="text-xs font-medium text-muted-foreground">Dormant level 2 refers</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('dashboard:dormant_level2_refers')}</p>
           </div>
         </div>
       </div>
@@ -514,7 +518,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
         <div className="card flex flex-col">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">Referral Growth</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">{t('dashboard:referral_growth')}</h2>
           </div>
           <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -539,7 +543,7 @@ export default function Dashboard() {
         </div>
 
         <div className="card flex flex-col">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">Recent Activity</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">{t('dashboard:recent_activity')}</h2>
           <div className="flex flex-col gap-6">
             {recentActivities.length > 0 ? recentActivities.map((act, i) => (
                <div key={i} className="flex gap-4 group">
@@ -547,8 +551,8 @@ export default function Dashboard() {
                     <UserPlus className="w-5 h-5 text-secondary" />
                  </div>
                  <div className="flex-1">
-                   <p className="text-sm font-bold text-foreground mb-1">New referral joined</p>
-                   <p className="text-sm font-medium text-muted-foreground mb-2">{act.fullName || 'A new user'} registered using your link.</p>
+                   <p className="text-sm font-bold text-foreground mb-1">{t('dashboard:new_referral')}</p>
+                   <p className="text-sm font-medium text-muted-foreground mb-2">{t('dashboard:new_user_joined', { name: act.fullName || 'A new user' })}</p>
                    <p className="text-xs uppercase font-bold tracking-wider text-muted-foreground/60">
                      {new Date(act.timestamp).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric'})}
                    </p>
@@ -559,7 +563,7 @@ export default function Dashboard() {
                  <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
                    <Users className="w-5 h-5 text-muted-foreground" />
                  </div>
-                 <p className="text-sm font-medium text-muted-foreground">No recent activity found. Share your link to grow your network!</p>
+                 <p className="text-sm font-medium text-muted-foreground">{t('dashboard:no_recent_activity')}</p>
                </div>
             )}
           </div>
